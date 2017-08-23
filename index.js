@@ -1,19 +1,27 @@
-'use strict'
+export { pull } from './pull'
 
-var sources  = require('./sources')
-var sinks    = require('./sinks')
-var throughs = require('./throughs')
+export { collect } from './sinks/collect'
+export { concat } from './sinks/concat'
+export { drain } from './sinks/drain'
+export { find } from './sinks/find'
+export { log } from './sinks/log'
+export { onEnd } from './sinks/on-end'
+export { reduce } from './sinks/reduce'
 
-exports = module.exports = require('./pull')
+export { count } from './sources/count'
+export { empty } from './sources/empty'
+export { error } from './sources/error'
+export { infinite } from './sources/infinite'
+export { keys } from './sources/keys'
+export { once } from './sources/once'
+export { values } from './sources/values'
 
-exports.pull = exports
-
-for(var k in sources)
-  exports[k] = sources[k]
-
-for(var k in throughs)
-  exports[k] = throughs[k]
-
-for(var k in sinks)
-  exports[k] = sinks[k]
-
+export { asyncMap } from './throughs/async-map'
+export { filter } from './throughs/filter'
+export { filterNot } from './throughs/filter-not'
+export { flatten } from './throughs/flatten'
+export { map } from './throughs/map'
+export { nonUnique } from './throughs/non-unique'
+export { take } from './throughs/take'
+export { through } from './throughs/through'
+export { unique } from './throughs/unique'

@@ -1,11 +1,16 @@
+import {
+  drain,
+  map,
+  pull,
+  take,
+  through
+} from '../index'
 
-
-var tape = require('tape')
-var pull = require('../')
-//var abortable = require('pull-abortable')
+const tape = require('tape')
 
 function hang (values, onAbort) {
   var i = 0
+  var _cb
   return function (abort, cb) {
     if(i < values.length)
       cb(null, values[i++])
@@ -51,7 +56,7 @@ function test (name, trx) {
       }),
       trx,
       a,
-      pull.drain(function (e) {
+      drain(function (e) {
         if(e === 3)
           setImmediate(function () {
             a.abort()
@@ -62,7 +67,6 @@ function test (name, trx) {
   })
 }
 
-test('through', pull.through())
-test('map', pull.map(function (e) { return e }))
-test('take', pull.take(Boolean))
-
+test('through', through())
+test('map', map(function (e) { return e }))
+test('take', take(Boolean))

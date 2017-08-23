@@ -1,20 +1,35 @@
 {
-  "name": "pull-stream",
+  "name": "ts-pull-stream",
   "description": "minimal pull stream",
-  "version": "3.6.0",
-  "homepage": "https://pull-stream.github.io",
+  "version": "0.9.0",
+  "homepage": "https://github.com/escapace/ts-pull-stream",
   "repository": {
     "type": "git",
-    "url": "git://github.com/pull-stream/pull-stream.git"
+    "url": "git://github.com/escapace/ts-pull-stream.git"
+  },
+  "types": "./types/index.d.ts",
+  "main": "lib/index.js",
+  "browsers": "lib/index.js",
+  "scripts": {
+    "build": "rm -rf types lib && tsc",
+    "test": "ts-node node_modules/.bin/tape test/*.js test/*.ts"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.80",
+    "@types/tape": "^4.2.31",
     "fastbench": "^1.0.1",
-    "pull-abortable": "~2.0.0",
-    "tape": "~2.12.3"
-  },
-  "scripts": {
-    "test": "set -e; for t in test/*.js; do node $t; done"
+    "tape": "~4.8.0",
+    "ts-node": "^3.3.0",
+    "tslint": "^5.8.0",
+    "tslint-config-prettier": "^1.6.0",
+    "tslint-config-standard": "^7.0.0",
+    "tslint-microsoft-contrib": "^5.0.1",
+    "typescript": "^2.5.3"
   },
   "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://dominictarr.com)",
-  "license": "MIT"
+  "license": "MPL-2.0",
+  "dependencies": {
+    "lodash": "^4.17.4",
+    "lodash-es": "^4.17.4"
+  }
 }

@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "downlevelIteration": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": false,
+    "noImplicitThis": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true,
+    "outDir": "lib",
+    "suppressImplicitAnyIndexErrors": true,
+    "target": "es5",
+    "typeRoots" : ["node_modules/@types"],
+    "lib": [
+      "ES2015",
+      "ES2016",
+      "ES2017",
+      "ES5",
+      "ES6",
+      "ES7",
+      "ESNext",
+      "ES2015.Promise",
+      "ScriptHost"
+    ]
+  },
+  "exclude": [
+    "node_modules",
+    "test",
+    "drafts",
+    "benchmarks"
+  ]
+}

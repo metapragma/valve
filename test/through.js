@@ -1,19 +1,26 @@
+import {
+  collect,
+  infinite,
+  pull,
+  take,
+  through
+} from '../index'
 
+const tape = require('tape')
 
-var pull = require('../')
-require('tape')('through - onEnd', function (t) {
+tape('through - onEnd', function (t) {
   t.plan(2)
   pull(
-    pull.infinite(),
-    pull.through(null, function (err) {
+    infinite(),
+    through(null, function (err) {
       console.log('end')
       t.ok(true)
       process.nextTick(function () {
         t.end()
       })
     }),
-    pull.take(10),
-    pull.collect(function (err, ary) {
+    take(10),
+    collect(function (err, ary) {
       console.log(ary)
       t.ok(true)
     })
