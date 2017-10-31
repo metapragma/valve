@@ -14,15 +14,15 @@
     "target": "es5",
     "typeRoots" : ["node_modules/@types"],
     "lib": [
-      "ES2015",
-      "ES2016",
-      "ES2017",
-      "ES5",
-      "ES6",
-      "ES7",
-      "ESNext",
-      "ES2015.Promise",
-      "ScriptHost"
+      "es2015",
+      "es2016",
+      "es2017",
+      "es5",
+      "es6",
+      "es7",
+      "esnext",
+      "es2015.promise",
+      "scripthost"
     ]
   },
   "exclude": [
