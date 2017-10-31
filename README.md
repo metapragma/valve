@@ -29,7 +29,7 @@ pull(
 ## License
 
 This program is free software: you can redistribute it and/or modify it under
-the terms of the Mozilla Public License, version 2.0.
+the terms of the [MPL 2.0](/LICENSE).
 
 This program uses third-party libraries or other resources that may be
 distributed under different licenses. Please refer to the specific files and/or
@@ -41,4 +41,4 @@ and licenses.
 We are very grateful to the following people and projects for their
 contributions to this product:
 
-* [pull-stream](https://github.com/pull-stream/pull-stream) minimal pipeable pull-stream ([Dominic Tarr](https://github.com/dominictarr))
+* [pull-stream](https://github.com/pull-stream/pull-stream) minimal pipeable pull-stream ([Dominic Tarr](https://github.com/dominictarr) and [contributors](https://github.com/pull-stream/pull-stream/graphs/contributors))
