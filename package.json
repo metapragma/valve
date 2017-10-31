@@ -1,7 +1,7 @@
 {
   "name": "ts-pull-stream",
   "description": "minimal pull stream",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "homepage": "https://github.com/escapace/ts-pull-stream",
   "repository": {
     "type": "git",
