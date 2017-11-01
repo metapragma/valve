@@ -1,5 +1,5 @@
 import {
-  SinkStreamAbort,
+  StreamSinkAbort,
   StreamAbort,
   StreamSink,
   StreamSource
@@ -28,9 +28,6 @@ export function reduce <P, R, E = Error>(
   cb: (end?: StreamAbort<E>, acc?: P | R) => void,
   acc?: P | R
 ): StreamSink<P, E> {
-  // TODO: alternative signature
-  // if (typeof cb === 'undefined') (cb = acc), (acc = null)
-
   const sink = drain<P, E>(
     data => {
       acc = reducer(acc, data)

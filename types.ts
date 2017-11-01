@@ -6,12 +6,12 @@ export type StreamCallback<P, E = Error> =
 export type StreamSource<P, E = Error> =
   (abort: StreamAbort<E>, cb: StreamCallback<P, E>) => void
 
-export type SinkStreamAbort<P, E> =
+export type StreamSinkAbort<P, E> =
   (err?: StreamAbort<E>, cb?: StreamCallback<P, E>) => void
 
 export interface StreamSink<P, E = Error> {
   (source: StreamSource<P, E>): void
-  abort?: SinkStreamAbort<P, E>
+  abort?: StreamSinkAbort<P, E>
 }
 
 export interface StreamThrough<P, R, E = Error> {

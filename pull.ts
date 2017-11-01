@@ -16,27 +16,17 @@ export function isSink <P, E> (
   return (typeof stream === 'function' && stream.length === 1)
 }
 
-// Source -> ...Through
+// // export function pull <P, E = Error>(
+// //   A1: StreamSink<P, E>,
+// // ): StreamSink<P, E>
+// export function pull <P, E = Error>(
+//   A1: StreamSource<P, E>,
+//   RR: StreamSink<P, E>
+// ): void
 
-export function pull <P1, P2, E = Error>(
-  A1: StreamSource<P1, E>,
-  A2: StreamThrough<P1, P2, E>
-): StreamSource<P2, E>
-
-export function pull <P1, P2, P3, E = Error>(
-  A1: StreamSource<P1, E>,
-  A2: StreamThrough<P1, P2, E>,
-  A3: StreamThrough<P2, P3, E>
-): StreamSource<P3, E>
-
-export function pull <P1, P2, P3, P4, E = Error>(
-  A1: StreamSource<P1, E>,
-  A2: StreamThrough<P1, P2, E>,
-  A3: StreamThrough<P2, P3, E>,
-  A4: StreamThrough<P3, P4, E>
-): StreamSource<P4, E>
-
-// TODO: finish this
+// export function pull <P, E = Error>(
+//   A1: StreamSource<P, E>
+// ): StreamSource<P, E>
 
 // Source -> ...Through -> Sink
 
@@ -103,6 +93,46 @@ export function pull <P1, P2, P3, P4, P5, P6, P7, P8, E = Error>(
   RR: StreamSink<P8, E>,
 ): void
 
+// ...Through -> Sink (TODO: finish this)
+
+export function pull <P1, P2, E = Error>(
+  A1: StreamThrough<P1, P2, E>,
+  A2: StreamSink<P2, E>
+): StreamSink<P2, E>
+
+export function pull <P1, P2, P3, E = Error>(
+  A1: StreamThrough<P1, P2, E>,
+  A2: StreamThrough<P2, P3, E>,
+  A3: StreamSink<P3, E>
+): StreamSink<P3, E>
+
+export function pull <P1, P2, P3, P4, E = Error>(
+  A1: StreamThrough<P1, P2, E>,
+  A2: StreamThrough<P2, P3, E>,
+  A3: StreamThrough<P3, P4, E>,
+  A4: StreamSink<P4, E>
+): StreamSink<P4, E>
+
+// Source -> ...Through (TODO: finish this)
+
+export function pull <P1, P2, E = Error>(
+  A1: StreamSource<P1, E>,
+  A2: StreamThrough<P1, P2, E>
+): StreamSource<P2, E>
+
+export function pull <P1, P2, P3, E = Error>(
+  A1: StreamSource<P1, E>,
+  A2: StreamThrough<P1, P2, E>,
+  A3: StreamThrough<P2, P3, E>
+): StreamSource<P3, E>
+
+export function pull <P1, P2, P3, P4, E = Error>(
+  A1: StreamSource<P1, E>,
+  A2: StreamThrough<P1, P2, E>,
+  A3: StreamThrough<P2, P3, E>,
+  A4: StreamThrough<P3, P4, E>
+): StreamSource<P4, E>
+
 // ...Through
 
 export function pull <P1, P2, E = Error>(
@@ -154,27 +184,30 @@ export function pull <P1, P2, P3, P4, P5, P6, P7, P8, E = Error>(
   A7: StreamThrough<P7, P8, E>
 ): StreamThrough<P1, P8, E>
 
-// ---
-
-export function pull <P, E = Error>(
-  A1: StreamSource<P, E>,
-  RR: StreamSink<P, E>
-): void
-
-export function pull <P, E = Error>(
-  A1: StreamSource<P, E>
-): StreamSource<P, E>
-
-export function pull <P, E = Error>(
-  A1: StreamSink<P, E>,
-): StreamSink<P, E>
-
-// TODO: Duplex
-// TODO: Prioritize common case of small number of pulls
+export function pull <E = Error>(
+  ...props: Array<
+    StreamThrough<any, any, E>
+  >
+): StreamThrough<any, any, E>
 
 export function pull <E = Error>(
-  ...props: Array<StreamSink<any, E> | StreamSource<any, E>>
-): void | StreamSource<any, E> | StreamSink<any, E> {
+  A1: StreamSource<any, E>, 
+  ...props: Array<
+    StreamThrough<any, any, E>
+  >
+): StreamSource<any, E>
+
+export function pull <E = Error>(
+  ...props: Array<
+    StreamSink<any, E> |
+    StreamSource<any, E> |
+    StreamThrough<any, any, E>
+  >
+): void |
+  StreamSource<any, E> |
+  StreamSink<any, E> |
+  StreamThrough<any, any, E>
+{
   const length = props.length
   const a: StreamSource<any, E> | StreamSink<any, E> = props[0]
 

@@ -9,7 +9,7 @@ import {
 // drop items you have already seen
 
 export function unique <P, K extends keyof P, E = Error>(
-  field: K | RegExp | ((data: P) => boolean), invert?: boolean
+  field?: K | RegExp | ((data: P) => boolean), invert?: boolean
 ): StreamThrough<P, P, E> {
   const test = prop(field) || id
 

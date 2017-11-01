@@ -1,5 +1,5 @@
 import {
-  SinkStreamAbort,
+  StreamSinkAbort,
   StreamAbort,
   StreamSink,
   StreamSource
@@ -17,7 +17,7 @@ export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end
   // tslint:disable-next-line no-unnecessary-local-variable
   const sink: StreamSink<P, E> = assign<
     (source: StreamSource<P, E>) => void,
-    { abort: SinkStreamAbort<P, E> }
+    { abort: StreamSinkAbort<P, E> }
   >(
     _read => {
       read = _read
@@ -61,8 +61,6 @@ export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end
     },
     {
       abort: (err, cb) => {
-        // TODO: alternate signature
-        if (typeof err === 'function') (cb = err), (err = true)
         abort = err || true
         if (read) return read(abort, cb || noop)
       }
