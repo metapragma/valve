@@ -16,19 +16,20 @@ export function isSink <P, E> (
   return (typeof stream === 'function' && stream.length === 1)
 }
 
-// // export function pull <P, E = Error>(
-// //   A1: StreamSink<P, E>,
-// // ): StreamSink<P, E>
-// export function pull <P, E = Error>(
-//   A1: StreamSource<P, E>,
-//   RR: StreamSink<P, E>
-// ): void
-
-// export function pull <P, E = Error>(
-//   A1: StreamSource<P, E>
-// ): StreamSource<P, E>
+export function pull <P, E = Error>(
+  A1: StreamSink<P, E>,
+): StreamSink<P, E>
 
 // Source -> ...Through -> Sink
+
+export function pull <P, E = Error>(
+  A1: StreamSource<P, E>
+): StreamSource<P, E>
+
+export function pull <P1, E = Error>(
+  A1: StreamSource<P1, E>,
+  RR: StreamSink<P1, E>,
+): void
 
 export function pull <P1, P2, E = Error>(
   A1: StreamSource<P1, E>,
@@ -196,6 +197,11 @@ export function pull <E = Error>(
     StreamThrough<any, any, E>
   >
 ): StreamSource<any, E>
+
+export function pull <E = Error>(
+  A1: StreamSource<any, E>,
+  A2: StreamSink<any, E>
+): void 
 
 export function pull <E = Error>(
   ...props: Array<

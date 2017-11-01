@@ -5,21 +5,25 @@ import {
   values
 } from '../index'
 
+import {
+  StreamThrough
+} from '../types'
+
 import test = require('tape')
 
 // test through streams compose on pipe!
 
 test('join through streams with pipe', t => {
-  const pipeline = pull<string, string, string, string>(
-    map(d => {
+  const pipeline: StreamThrough<string, string, Error> = pull<string, string, string, string, Error>(
+    map((d: string) => {
       // make exciting!
       return `${d}!`
     }),
-    map(d => {
+    map((d: string) => {
       // make loud
       return d.toUpperCase()
     }),
-    map(d => {
+    map((d: string) => {
       // add sparkles
       return `*** ${d} ***`
     })

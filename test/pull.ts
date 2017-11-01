@@ -93,7 +93,7 @@ tape('wrap pull streams into stream', t => {
 tape('turn pull(through,...) -> Through', t => {
   pull(
     values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-    pull(
+    pull<number, number, number, Error>(
       map((e: number) => {
         return e * e
       }),
@@ -131,7 +131,7 @@ tape('turn pull(through,...) -> Through', t => {
 tape('writable pull() should throw when called twice', t => {
   t.plan(2)
 
-  const stream = pull(
+  const stream: StreamSink<number, Error> = pull<number, number, Error>(
     map((e: number) => {
       return e * e
     }),
