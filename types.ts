@@ -10,10 +10,32 @@ export type StreamSinkAbort<P, E> =
   (err?: StreamAbort<E>, cb?: StreamCallback<P, E>) => void
 
 export interface StreamSink<P, E = Error> {
-  (source: StreamSource<P, E>): void
+  (source: IStreamSource<P, E>): void
   abort?: StreamSinkAbort<P, E>
 }
 
 export interface StreamThrough<P, R, E = Error> {
-  (source: StreamSource<P, E>): (abort: StreamAbort<E>, cb: StreamCallback<R, E>) => void
+  (source: IStreamSource<P, E>): IStreamSource<R, E> 
+  abort?: StreamSinkAbort<P, E>
+}
+
+export enum StreamType {
+  Source,
+  Sink,
+  Through
+}
+
+export interface IStreamSink<P, E = Error> {
+  type: StreamType.Sink
+  sink: StreamSink<P, E>
+}
+
+export interface IStreamSource<P, E = Error> {
+  type: StreamType.Source
+  source: StreamSource<P, E>
+}
+
+export interface IStreamThrough<P, R, E = Error> {
+  type: StreamType.Through
+  sink: StreamThrough<P, R, E>
 }

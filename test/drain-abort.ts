@@ -8,7 +8,7 @@ import {
 } from '../index'
 
 import {
-  StreamSink
+  IStreamSink
 } from '../types'
 
 import tape = require('tape')
@@ -38,10 +38,10 @@ function delay () {
 
 tape('abort on drain - async', t => {
   let c = 100
-  const drain: StreamSink<{}, Error> = pullDrain(
+  const drain: IStreamSink<{}, Error> = pullDrain(
     () => {
       if (c < 0) throw new Error('stream should have aborted')
-      if (!--c) return drain.abort()
+      if (!--c) return drain.sink.abort()
     },
     () => {
       t.end()
@@ -53,10 +53,10 @@ tape('abort on drain - async', t => {
 
 tape('abort on drain - sync', t => {
   let c = 100
-  const drain: StreamSink<{}, Error> = pullDrain(
+  const drain: IStreamSink<{}, Error> = pullDrain(
     () => {
       if (c < 0) throw new Error('stream should have aborted')
-      if (!--c) return drain.abort()
+      if (!--c) return drain.sink.abort()
     },
     () => {
       t.end()
@@ -84,6 +84,6 @@ tape('abort on drain - async, out of cb', t => {
   pull(infinite(), delay(), drain)
 
   setTimeout(() => {
-    drain.abort(ERR)
+    drain.sink.abort(ERR)
   }, 100)
 })

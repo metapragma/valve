@@ -1,18 +1,19 @@
 // tslint:disable no-conditional-assignment no-shadowed-variable
 
 import {
+  IStreamThrough,
   StreamAbort,
   StreamCallback,
-  StreamThrough
+  StreamType
 } from '../types'
 
-type TakeTest<P> = (data: P) => void | boolean | number
+export type TakeTest<P> = (data: P) => void | boolean | number
 
 // read a number of items and then stop.
 export function take<P, E = Error>(
   test: number | TakeTest<P>,
   opts?: { last?: boolean }
-): StreamThrough<P, P, E> {
+): IStreamThrough<P, P, E> {
   opts = opts || {}
   let last = opts.last || false // whether the first item for which !test(item) should still pass
   let ended: StreamAbort<E> = false
@@ -30,29 +31,35 @@ export function take<P, E = Error>(
     tester = test
   }
 
-  return read => {
-    function terminate(cb: StreamCallback<P, E>) {
-      read(true, err => {
-        last = false
-        cb(err || true)
-      })
-    }
-
-    return (end: StreamAbort<E>, cb: StreamCallback<P, E>) => {
-      if (ended) last ? terminate(cb) : cb(ended)
-      else if ((ended = end)) read(ended, cb)
-      else {
-        read(null, (end, data) => {
-          if ((ended = ended || end)) {
-            // last ? terminate(cb) :
-            cb(ended)
-          } else if (!tester(data)) {
-            ended = true
-            last ? cb(null, data) : terminate(cb)
-          } else {
-            cb(null, data)
-          }
+  return {
+    type: StreamType.Through,
+    sink(source) {
+      function terminate(cb: StreamCallback<P, E>) {
+        source.source(true, err => {
+          last = false
+          cb(err || true)
         })
+      }
+
+      return {
+        type: StreamType.Source,
+        source(end: StreamAbort<E>, cb: StreamCallback<P, E>) {
+          if (ended) last ? terminate(cb) : cb(ended)
+          else if ((ended = end)) source.source(ended, cb)
+          else {
+            source.source(null, (end, data) => {
+              if ((ended = ended || end)) {
+                // last ? terminate(cb) :
+                cb(ended)
+              } else if (!tester(data)) {
+                ended = true
+                last ? cb(null, data) : terminate(cb)
+              } else {
+                cb(null, data)
+              }
+            })
+          }
+        }
       }
     }
   }

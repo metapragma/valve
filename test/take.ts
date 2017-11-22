@@ -3,9 +3,11 @@
 import { collect, pull, take, through, values } from '../index'
 
 import {
+  IStreamThrough,
   StreamAbort,
   StreamCallback,
-  StreamSource
+  StreamSource,
+  StreamType
 } from '../types'
 
 import test = require('tape')
@@ -78,15 +80,25 @@ test('take - include last', t => {
 test('take 5 causes 5 reads upstream', t => {
   let reads = 0
 
+  const thr = <P, E = Error>(): IStreamThrough<P, P, E> => (
+    {
+      type: StreamType.Through,
+      sink (read) {
+        return {
+          type: StreamType.Source,
+          source (end, cb) {
+            if (end !== true) reads++
+            console.log(reads, end)
+            read.source(end, cb)
+          }
+        }
+      }
+    }
+  )
+
   pull(
     values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-    <P, E>(read: StreamSource<number, E>) => {
-      return (end: StreamAbort<E>, cb: StreamCallback<number, E>) => {
-        if (end !== true) reads++
-        console.log(reads, end)
-        read(end, cb)
-      }
-    },
+    thr(),
     take(5),
     collect((_, five) => {
       t.deepEqual(five, [1, 2, 3, 4, 5])
@@ -104,10 +116,13 @@ test("take doesn't abort until the last read", t => {
   let i = 0
 
   const read = pull(
-    (abort: StreamAbort<Error>, cb: StreamCallback<number, Error>) => {
-      if (abort) cb((aborted = true))
-      else if (i > ary.length) cb(true)
-      else cb(null, ary[i++])
+    {
+      type: StreamType.Source,
+      source (abort: StreamAbort<Error>, cb: StreamCallback<number, Error>) {
+        if (abort) cb((aborted = true))
+        else if (i > ary.length) cb(true)
+        else cb(null, ary[i++])
+      }
     },
     take(
       d => {
@@ -117,13 +132,13 @@ test("take doesn't abort until the last read", t => {
     )
   )
 
-  read(null, (_, __) => {
+  read.source(null, (_, __) => {
     t.notOk(aborted, "hasn't aborted yet")
-    read(null, (_, __) => {
+    read.source(null, (_, __) => {
       t.notOk(aborted, "hasn't aborted yet")
-      read(null, (_, __) => {
+      read.source(null, (_, __) => {
         t.notOk(aborted, "hasn't aborted yet")
-        read(null, (end, d) => {
+        read.source(null, (end, d) => {
           t.ok(end, 'stream ended')
           t.equal(d, undefined, 'data undefined')
           t.ok(aborted, 'has aborted by now')

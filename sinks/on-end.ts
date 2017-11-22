@@ -1,10 +1,10 @@
 import { drain } from './drain'
 
 import {
+  IStreamSink,
   StreamAbort,
-  StreamSink
 } from '../types'
 
-export function onEnd <P, E = Error>(done: (end: StreamAbort<E>) => void): StreamSink<P, E> {
+export function onEnd <P, E = Error>(done: (end: StreamAbort<E>) => void): IStreamSink<P, E> {
   return drain(null, done)
 }

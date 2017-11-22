@@ -53,11 +53,11 @@ tape('values, abort', t => {
     t.end()
   })
 
-  read(null, (_, one) => {
+  read.source(null, (_, one) => {
     t.notOk(_)
     t.equal(one, 1)
 
-    read(err, _err => {
+    read.source(err, _err => {
       t.equal(_err, err)
     })
   })

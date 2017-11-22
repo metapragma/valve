@@ -3,14 +3,15 @@ import { filter } from './filter'
 import { id } from '../util/id'
 
 import {
-  StreamThrough
+  IStreamThrough,
+  StreamType
 } from '../types'
 
 // drop items you have already seen
 
 export function unique <P, K extends keyof P, E = Error>(
   field?: K | RegExp | ((data: P) => boolean), invert?: boolean
-): StreamThrough<P, P, E> {
+): IStreamThrough<P, P, E> {
   const test = prop(field) || id
 
   const seen: { [key: string]: boolean } = {}

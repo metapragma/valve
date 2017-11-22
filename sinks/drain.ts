@@ -1,8 +1,11 @@
 import {
-  StreamSinkAbort,
+  IStreamSink,
+  IStreamSource,
   StreamAbort,
   StreamSink,
-  StreamSource
+  StreamSinkAbort,
+  StreamSource,
+  StreamType
 } from '../types'
 
 import {
@@ -10,17 +13,17 @@ import {
   noop
 } from 'lodash'
 
-export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end: StreamAbort<E>) => void): StreamSink<P, E> {
+export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end: StreamAbort<E>) => void): IStreamSink<P, E> {
   let read: StreamSource<P, E>
   let abort: StreamAbort<E>
 
   // tslint:disable-next-line no-unnecessary-local-variable
   const sink: StreamSink<P, E> = assign<
-    (source: StreamSource<P, E>) => void,
+    (source: IStreamSource<P, E>) => void,
     { abort: StreamSinkAbort<P, E> }
   >(
     _read => {
-      read = _read
+      read = _read.source
 
       if (abort) {
         return sink.abort()
@@ -67,5 +70,8 @@ export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end
     }
   )
 
-  return sink
+  return {
+    type: StreamType.Sink,
+    sink
+  } 
 }

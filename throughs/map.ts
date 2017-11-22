@@ -1,23 +1,31 @@
 import {
-  StreamThrough
+  IStreamThrough,
+  StreamType
 } from '../types'
 
-export function map <P, R, E = Error>(mapper: ((data: P) => R)): StreamThrough<P, R, E> {
-  return read => {
-    return (abort, cb) => {
-      read(abort, (end, data) => {
-        let newData: R
+export function map <P, R, E = Error>(mapper: ((data: P) => R)): IStreamThrough<P, R, E> {
 
-        try {
-          newData = !end ? mapper(data) : null
-        } catch (err) {
-          return read(err, () => {
-            return cb(err)
+  return {
+    type: StreamType.Through,
+    sink(source) {
+      return {
+        type: StreamType.Source,
+        source(abort, cb) {
+          source.source(abort, (end, data) => {
+            let newData: R
+
+            try {
+              newData = !end ? mapper(data) : null
+            } catch (err) {
+              return source.source(err, () => {
+                return cb(err)
+              })
+            }
+
+            cb(end, newData)
           })
         }
-
-        cb(end, newData)
-      })
+      }
     }
   }
 }

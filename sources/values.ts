@@ -1,6 +1,7 @@
 import {
+  IStreamSource,
   StreamAbort,
-  StreamSource
+  StreamType
 } from '../types'
 
 import {
@@ -13,34 +14,40 @@ import { abortCb } from '../util/abort-cb'
 export function values <P, E = Error>(
   input: P[],
   onAbort?: (abort: StreamAbort<E>) => void
-): StreamSource<P, E>
+): IStreamSource<P, E>
 
 export function values <P, K extends keyof P, E = Error>(
   input: P,
   onAbort?: (abort: StreamAbort<E>) => void
-): StreamSource<P[K], E>
+): IStreamSource<P[K], E>
 
 export function values <P, K extends keyof P, E = Error>(
   input: P,
   onAbort?: (abort: StreamAbort<E>) => void
-): StreamSource<P[K], E> {
+): IStreamSource<P[K], E> {
   if (typeof input === 'undefined') {
-    return (abort, cb) => {
-      if (abort) return abortCb(cb, abort, onAbort)
+    return {
+      type: StreamType.Source,
+      source(abort, cb) {
+        if (abort) return abortCb(cb, abort, onAbort)
 
-      return cb(true)
-    }
+        return cb(true)
+      }
+    } 
   }
 
   const array: P[K][] = _values(input)
 
   let i = -1
 
-  return (abort, cb) => {
-    if (abort) return abortCb(cb, abort, onAbort)
-    if (i >= array.length - 1) cb(true)
-    else {
-      cb(null, array[i+=1])
-    }
+  return {
+      type: StreamType.Source,
+      source(abort, cb) {
+        if (abort) return abortCb(cb, abort, onAbort)
+        if (i >= array.length - 1) cb(true)
+        else {
+          cb(null, array[i += 1])
+        }
+      }
   }
 }

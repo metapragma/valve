@@ -131,7 +131,7 @@ tape('turn pull(through,...) -> Through', t => {
 tape('writable pull() should throw when called twice', t => {
   t.plan(2)
 
-  const stream: StreamSink<number, Error> = pull<number, number, Error>(
+  const stream = pull<number, number, Error>(
     map((e: number) => {
       return e * e
     }),
@@ -145,9 +145,9 @@ tape('writable pull() should throw when called twice', t => {
     )
   )
 
-  stream(values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+  stream.sink(values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
 
   t.throws(() =>{
-    stream(values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+    stream.sink(values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
   }, TypeError)
 })

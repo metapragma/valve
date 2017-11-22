@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+npmSetup () {
+    rm -f "${HOME}/.npmrc"
+    npm config set loglevel error
+
+    if [ ! -z "${NPM_TOKEN}" ]
+    then
+        echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> "${HOME}/.npmrc"
+    fi
+}

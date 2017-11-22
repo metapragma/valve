@@ -1,34 +1,46 @@
 import { tester } from '../util/tester'
 
 import {
-  StreamThrough
+  IStreamThrough,
+  StreamAbort,
+  StreamCallback,
+  StreamType,
 } from '../types'
 
-export function filter <P, K extends keyof P, E = Error>(test: K): StreamThrough<P, P, E>
-export function filter <P, E = Error>(test: RegExp): StreamThrough<P, P, E>
+export function filter <P, K extends keyof P, E = Error>(test: K): IStreamThrough<P, P, E>
+export function filter <P, E = Error>(test: RegExp): IStreamThrough<P, P, E>
 // tslint:disable-next-line unified-signatures
-export function filter <P, E = Error>(test: ((data: P) => boolean)): StreamThrough<P, P, E>
-export function filter <P, K extends keyof P, E = Error>(test: RegExp | K | ((data: P) => boolean)): StreamThrough<P, P, E> {
+export function filter <P, E = Error>(test: ((data: P) => boolean)): IStreamThrough<P, P, E>
+export function filter <P, K extends keyof P, E = Error>(test: RegExp | K | ((data: P) => boolean)): IStreamThrough<P, P, E> {
   const t = tester(test)
 
-  return read => {
-    // tslint:disable-next-line no-function-expression
-    return function next (end, cb) {
+  return {
+    type: StreamType.Through,
+    sink (source) {
+      // tslint:disable-next-line no-function-expression
+       
+      function next (end: StreamAbort<E>, cb: StreamCallback<P, E>) {
 
-      let sync: boolean
-      let loop = true
+        let sync: boolean
+        let loop = true
 
-      while (loop) {
-        loop = false
-        sync = true
+        while (loop) {
+          loop = false
+          sync = true
 
-        // tslint:disable-next-line no-shadowed-variable
-        read(end, (end, data) => {
-          if (!end && !t(data)) return sync ? (loop = true) : next(end, cb)
-          cb(end, data)
-        })
+          // tslint:disable-next-line no-shadowed-variable
+          source.source(end, (end, data) => {
+            if (!end && !t(data)) return sync ? (loop = true) : next(end, cb)
+            cb(end, data)
+          })
 
-        sync = false
+          sync = false
+        }
+      }
+
+      return {
+        type: StreamType.Source,
+        source: next 
       }
     }
   }

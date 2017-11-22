@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#
+# vim: set ft=sh:
+#
+# @description release valve
+# @import github.com/escapace/stack-tools/release/commit
+
+main ()
+{
+    verbose true
+    strict true
+
+    _ commit "${1}" "$2"
+}

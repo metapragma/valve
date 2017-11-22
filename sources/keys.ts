@@ -5,9 +5,9 @@ import {
 } from 'lodash'
 
 import {
-  StreamSource
+  IStreamSource
 } from '../types'
 
-export function keys <P, K extends keyof P, E = Error>(obj: P): StreamSource<K, E> {
+export function keys <P, K extends keyof P, E = Error>(obj: P): IStreamSource<K, E> {
   return values<K, E>(_keys(obj) as Array<K>)
 }

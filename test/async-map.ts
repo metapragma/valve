@@ -1,3 +1,5 @@
+import 'setimmediate'
+
 import {
   asyncMap,
   collect,
@@ -11,8 +13,10 @@ import {
 import tape = require('tape')
 
 import {
+  IStreamSource,
   StreamAbort,
-  StreamCallback
+  StreamCallback,
+  StreamType
 } from '../types'
 
 tape('async-map', t => {
@@ -43,12 +47,12 @@ tape('abort async map', t => {
     })
   )
 
-  read(null, end => {
+  read.source(null, end => {
     if(!end) throw new Error('expected read to end')
     t.ok(end, "read's callback")
   })
 
-  read(err, end => {
+  read.source(err, end => {
     if(!end) throw new Error('expected abort to end')
     t.ok(end, "Abort's callback")
     t.end()
@@ -62,11 +66,14 @@ tape('abort async map (async source)', t => {
 
   const read = pull(
     // tslint:disable-next-line no-shadowed-variable
-    (_: StreamAbort<Error>, cb: StreamCallback<string, Error>) => {
-      setImmediate(() => {
-        if (err) return cb(err)
-        cb(null, 'x')
-      })
+    {
+      type: StreamType.Source,
+      source (_: StreamAbort<Error>, cb: StreamCallback<string, Error>) {
+        setImmediate(() => {
+          if (err) return cb(err)
+          cb(null, 'x')
+        })
+    }
     },
     asyncMap((data, cb) => {
       setImmediate(() => {
@@ -75,12 +82,12 @@ tape('abort async map (async source)', t => {
     })
   )
 
-  read(null, end => {
+  read.source(null, end => {
     if(!end) throw new Error('expected read to end')
     t.ok(end, "read's callback")
   })
 
-  read(err, end => {
+  read.source(err, end => {
     if(!end) throw new Error('expected abort to end')
     t.ok(end, "Abort's callback")
     t.end()

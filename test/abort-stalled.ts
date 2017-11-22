@@ -1,5 +1,7 @@
 /* tslint:disable no-increment-decrement */
 
+import 'setimmediate'
+
 import {
   drain,
   map,
@@ -9,12 +11,15 @@ import {
 } from '../index'
 
 import {
+  IStreamSource,
+  IStreamThrough,
   StreamAbort,
   StreamCallback,
   StreamSink,
   StreamSinkAbort,
   StreamSource,
-  StreamThrough
+  StreamThrough,
+  StreamType
 } from '../types'
 
 import {
@@ -24,43 +29,52 @@ import {
 
 import tape = require('tape')
 
-function hang<P, E>(values: P[], onAbort?: () => void): StreamSource<P, E> {
+function hang<P, E>(values: P[], onAbort?: () => void): IStreamSource<P, E> {
   let i = 0
   let _cb: StreamCallback<P, E>
 
-  return (abort, cb) => {
-    if (i < values.length) {
-      cb(null, values[i++])
-    } else if (!abort) {
-      _cb = cb
-    } else {
-      _cb(abort)
-      cb(abort) // ??
-      // tslint:disable-next-line no-unused-expression
-      onAbort && onAbort()
+  return {
+    type: StreamType.Source,
+    source (abort, cb) {
+      if (i < values.length) {
+        cb(null, values[i++])
+      } else if (!abort) {
+        _cb = cb
+      } else {
+        _cb(abort)
+        cb(abort) // ??
+        // tslint:disable-next-line no-unused-expression
+        onAbort && onAbort()
+      }
     }
   }
 }
 
-interface LocalStreamThrough<P, R, E = Error> {
-  (source: StreamSource<P, E>): (abort: StreamAbort<E>, cb: StreamCallback<R, E>) => void
-  abort?: StreamSinkAbort<P, E>
-}
+// interface LocalStreamThrough<P, R, E = Error> {
+//   (source: StreamSource<P, E>): (abort: StreamAbort<E>, cb: StreamCallback<R, E>) => void
+//   abort?: StreamSinkAbort<P, E>
+// }
 
-function abortable<P, E>(): LocalStreamThrough<P, P, E> {
-  let _read: StreamSource<P, E>
+function abortable<P, E>(): IStreamThrough<P, P, E> {
+  let _read: IStreamSource<P, E>
   let aborted: StreamAbort<E>
 
-  const reader: LocalStreamThrough<P, P, E> = read => {
+  const reader: IStreamThrough<P, P, E> = {
+    type: StreamType.Through,
+    sink (read) {
       _read = read
 
-      return (abort: StreamAbort<E>, cb: StreamCallback<P, E>) => {
-        if (abort) aborted = abort
-        read(abort, cb)
+      return {
+        type: StreamType.Source,
+        source (abort: StreamAbort<E>, cb: StreamCallback<P, E>) {
+          if (abort) aborted = abort
+          read.source(abort, cb)
+        }
       }
+    }
   }
 
-  reader.abort = (_, cb) => {
+  reader.sink.abort = (_, cb) => {
     if (!cb) {
       cb = err => {
         if (err && err !== true) throw err
@@ -73,28 +87,33 @@ function abortable<P, E>(): LocalStreamThrough<P, P, E> {
     if (aborted) {
       cb(aborted)
     } else {
-      _read(true, cb)
+      _read.source(true, cb)
     }
   }
 
   return reader
 }
 
-function test <E>(name: string, trx: StreamThrough<number, E>) {
+function test <E>(name: string, trx: IStreamThrough<number, number, E>) {
   tape(`test abort: + ${name}`, t => {
     const a = abortable()
-    const s: StreamSource<number, E> = hang([1, 2, 3], () => {
-        t.end()
-      })
+    // const s: StreamSource<number, E> = hang([1, 2, 3], () => {
+    //     t.end()
+    //   })
+
+    const s = (): IStreamSource<number, E> => hang([1, 2, 3], () => {
+      t.end()
+    })
+
 
     pull(
-      s,
+      s(),
       trx,
       a,
       drain(e => {
         if (e === 3) {
           setImmediate(() => {
-            a.abort()
+            a.sink.abort()
           })
         }
       },

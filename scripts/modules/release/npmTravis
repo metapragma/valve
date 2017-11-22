@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# @import release/npmSetup
+# @import console/error
+# @import lang/exists
+
+npmTravis ()
+{
+    exists jq || {
+        error "Cannot find jq"
+        return 1
+    }
+
+    local code=0
+    local version
+    local versionRegex='v([0-9]+)\.([0-9]+)\.([0-9]+)([\.0-9A-Za-z-]*)?'
+
+    version="$(jq -r '.version // empty' < package.json)"
+
+    if [[ -n "${TRAVIS_TAG}"                    ]] &&
+       [[ "${TRAVIS_TAG}" =~ ^${versionRegex}$  ]] &&
+       [[ "${TRAVIS_SECURE_ENV_VARS}" == "true" ]] &&
+       [[ -n "${NPM_TOKEN}"                     ]] &&
+       [[ "v${version}" == "${TRAVIS_TAG}"      ]]
+    then
+        npm run test:travis || ((code++))
+
+        if (( code == 0 ))
+        then
+            npmSetup
+            npm publish
+        fi
+    elif [[ "${TRAVIS_PULL_REQUEST}" == "false" ]] &&
+         [[ "${TRAVIS_BRANCH}" == "master" ]] &&
+         [[ "${TRAVIS_SECURE_ENV_VARS}" == "true" ]] &&
+         [[ -n "${NPM_TOKEN}" ]] &&
+         [[ -n "${TRAVIS_COMMIT}" ]]
+    then
+        # Here we need to run the tests and publish it as a nightly package
+
+        npm run test:travis || ((code++))
+
+        if (( code == 0 ))
+        then
+            npmSetup
+            version="${version}-next.${TRAVIS_COMMIT:0:7}"
+            npm --no-git-tag-version version "${version}"
+            npm publish --tag next
+        fi
+
+    else
+        # Here we need to run just the tests
+        npm run test:travis || code=$?
+    fi
+
+    return "${code}"
+}
