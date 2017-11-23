@@ -22,7 +22,18 @@ npmTravis ()
        [[ -n "${NPM_TOKEN}"                     ]] &&
        [[ "v${version}" == "${TRAVIS_TAG}"      ]]
     then
-        npm run test:travis || ((code++))
+        npm run test:travis || {
+            error "Failed on 'npm run test:travis'"
+            ((code++))
+        }
+
+        if (( code == 0 ))
+        then
+            npm run build || {
+                error "Failed on 'npm run build'"
+                ((code++))
+            }
+        fi
 
         if (( code == 0 ))
         then
@@ -37,7 +48,18 @@ npmTravis ()
     then
         # Here we need to run the tests and publish it as a nightly package
 
-        npm run test:travis || ((code++))
+        npm run test:travis || {
+            error "Failed on 'npm run test:travis'"
+            ((code++))
+        }
+
+        if (( code == 0 ))
+        then
+            npm run build || {
+                error "Failed on 'npm run build'"
+                ((code++))
+            }
+        fi
 
         if (( code == 0 ))
         then
@@ -48,8 +70,15 @@ npmTravis ()
         fi
 
     else
-        # Here we need to run just the tests
-        npm run test:travis || code=$?
+        npm run build || {
+            error "Failed on 'npm run build'"
+            ((code++))
+        }
+
+        npm run test:travis || {
+            error "Failed on 'npm run test:travis'"
+            ((code++))
+        }
     fi
 
     return "${code}"
