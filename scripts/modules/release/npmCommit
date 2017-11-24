@@ -76,7 +76,10 @@ function npmCommit () {
                 git commit -q --gpg-sign="${GIT_USER_SIGNINGKEY}" -m "${message}"
             }
 
+
+            git push origin :"${tag}" &> /dev/null || true
             git tag -d "${tag}" &> /dev/null || true
+
             git tag -m "${message}" -s "${tag}"
 
             git push --quiet --follow-tags
