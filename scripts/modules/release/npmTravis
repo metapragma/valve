@@ -14,7 +14,7 @@ npmTravis ()
     local version
     local versionRegex='v([0-9]+)\.([0-9]+)\.([0-9]+)([\.0-9A-Za-z-]*)?'
 
-    version="$(jq -r '.version // empty' < package.json)"
+    version="$(jq -r '.version // empty' < "${MANAGE_REPOSITORY}/package.json")"
 
     if [[ -n "${TRAVIS_TAG}"                    ]] &&
        [[ "${TRAVIS_TAG}" =~ ^${versionRegex}$  ]] &&
