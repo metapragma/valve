@@ -1,6 +1,12 @@
 /* tslint:disable no-increment-decrement */
 
-import 'setimmediate'
+// tslint:disable-next-line no-import-side-effect
+import 'mocha'
+import { expect } from 'chai'
+import { spy } from 'sinon'
+
+// tslint:disable-next-line
+import immediate = require('immediate')
 
 import {
   drain,
@@ -26,8 +32,6 @@ import {
   assign,
   noop
 } from 'lodash'
-
-import tape = require('tape')
 
 function hang<P, E>(values: P[], onAbort?: () => void): IStreamSource<P, E> {
   let i = 0
@@ -94,17 +98,12 @@ function abortable<P, E>(): IStreamThrough<P, P, E> {
   return reader
 }
 
-function test <E>(name: string, trx: IStreamThrough<number, number, E>) {
-  tape(`test abort: + ${name}`, t => {
+function test <E>(trx: IStreamThrough<number, number, E>, done: (err?: any) => void) {
     const a = abortable()
-    // const s: StreamSource<number, E> = hang([1, 2, 3], () => {
-    //     t.end()
-    //   })
 
     const s = (): IStreamSource<number, E> => hang([1, 2, 3], () => {
-      t.end()
+      done()
     })
-
 
     pull(
       s(),
@@ -112,17 +111,28 @@ function test <E>(name: string, trx: IStreamThrough<number, number, E>) {
       a,
       drain(e => {
         if (e === 3) {
-          setImmediate(() => {
+          immediate(() => {
             a.sink.abort()
           })
         }
       },
-        err => { t.notOk(err) }
+        err => {
+          expect(err).to.equal(null)
+        }
       )
     )
-  })
 }
 
-test('through', through(e => e))
-test('map', map(e => e))
-test('take', take(Boolean))
+describe('test/abort-stalled', () => {
+  it('through', done => {
+    test(through(e => e), done)
+  })
+
+  it('map', done => {
+    test(map(e => e), done)
+  })
+
+  it('take', done => {
+    test(take(e => e), done)
+  })
+})

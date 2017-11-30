@@ -9,6 +9,7 @@ script:
 - gpg --keyserver ha.pool.sks-keyservers.net --recv-key 13F26F82E955B8B8CE469054F29CCEBC83FD4525
 - mkdir -p ~/bin && curl -sSL -o ~/bin/jq $JQ_BINARY && chmod +x ~/bin/jq
 - ./manage ci
+after_success: npm run test:codecov
 env:
   global:
   - JQ_BINARY="https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64"

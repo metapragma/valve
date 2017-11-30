@@ -10,12 +10,18 @@ import {
 
 import {
   assign,
-  noop
+  noop,
 } from 'lodash'
+
+import {
+  once
+} from '../util/once'
 
 export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end: StreamAbort<E>) => void): IStreamSink<P, E> {
   let read: StreamSource<P, E>
   let abort: StreamAbort<E>
+  let aborted = false
+  const d = once(done)
 
   // tslint:disable-next-line no-unnecessary-local-variable
   const sink: StreamSink<P, E> = assign<
@@ -34,7 +40,7 @@ export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end
       // we do not blow the stack if the stream happens to be sync.
 
       // tslint:disable-next-line no-function-expression
-      (function next() {
+      ;(function next() {
         let loop = true
         let cbed = false
 
@@ -42,14 +48,15 @@ export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end
           cbed = false
           read(null, (end, data) => {
             cbed = true
-            // tslint:disable-next-line no-conditional-assignment
+            // tslint:disable-next-line no-conditional-assignment no-parameter-reassignment
             if ((end = end || abort)) {
               loop = false
-              if (done) done(end === true ? null : end)
+              if (done) d(end === true ? null : end)
               else if (end && end !== true) throw end
             } else if ((op && false === op(data)) || abort) {
               loop = false
-              read(abort || true, done || noop)
+
+              sink.abort(abort)
             } else if (!loop) {
               next()
             }
@@ -65,7 +72,17 @@ export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end
     {
       abort: (err, cb) => {
         abort = err || true
-        if (read) return read(abort, cb || noop)
+        if (read && aborted === false) {
+          aborted = true
+
+          return read(abort, (end, data) => {
+            if (cb) {
+              cb(end, data)
+            }
+
+            return d(end)
+          })
+        }
       }
     }
   )
@@ -73,5 +90,5 @@ export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end
   return {
     type: StreamType.Sink,
     sink
-  } 
+  }
 }

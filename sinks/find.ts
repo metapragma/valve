@@ -1,6 +1,9 @@
 import { prop } from '../util/prop'
 import { drain } from './drain'
-import { id } from '../util/id'
+
+import {
+  identity
+} from 'lodash'
 
 import {
   IStreamSink,
@@ -12,7 +15,7 @@ export function find <P, K extends keyof P, E = Error>(
 ): IStreamSink<P, E> {
   let ended = false
 
-  const tester = prop(test) || id
+  const tester = prop(test) || identity
 
   return drain(
     data => {

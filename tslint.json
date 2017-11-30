@@ -8,6 +8,8 @@
     ],
     "jsRules": {},
     "rules": {
+      "no-parameter-reassignment": true,
+      "chai-vague-errors": false,
       "export-name": false,
       "callable-types": false,
       "prefer-array-literal": false,

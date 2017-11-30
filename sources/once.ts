@@ -10,14 +10,17 @@ export function once <P, E = Error>(
   value: P,
   onAbort?: (abort: StreamAbort<E>) => void
 ): IStreamSource<P, E> {
+  let localValue = value
+
   return {
     type: StreamType.Source,
     source (abort, cb) {
       if (abort) return abortCb(cb, abort, onAbort)
-      if (value != null) {
-        const _value = value
-        value = null
-        cb(null, _value)
+
+      if (localValue != null) {
+        const _localValue = localValue
+        localValue = null
+        cb(null, _localValue)
       } else cb(true)
     }
   }

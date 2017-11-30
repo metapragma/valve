@@ -4,10 +4,11 @@ process.env.CHROME_BIN = require('puppeteer').executablePath()
 
 module.exports = function(config) {
   config.set({
-    frameworks: ['karma-typescript', 'tap'],
+    frameworks: ['mocha', 'karma-typescript'],
     files: [
       'index.ts',
       'pull.ts',
+      'pull.spec.ts',
       'types.ts',
       'util/**/*.ts',
       'sinks/**/*.ts',
@@ -16,7 +17,8 @@ module.exports = function(config) {
       'throughs/**/*.ts'
     ],
     preprocessors: {
-      '**/*.ts': 'karma-typescript'
+      '**/*.ts': 'karma-typescript',
+      '*.ts': 'karma-typescript',
     },
     reporters: ['progress', 'karma-typescript'],
     browsers: ['puppeteer'],
@@ -31,70 +33,57 @@ module.exports = function(config) {
         module: "CommonJS",
         sourceMap: true,
         target: "ES5"
-      },
-      bundlerOptions: {
-        transforms: [
-          require("karma-typescript-es6-transform")()
-        ]
       }
     }
   })
 
   if (process.env['SAUCE_USERNAME'] && process.env['SAUCE_ACCESS_KEY']) {
     const customLaunchers = {
-      "SL_Firefox": {
+      sl_firefox: {
         base: "SauceLabs",
         browserName: "Firefox",
         version: '55'
       },
-      "SL_Chrome": {
+      sl_chrome: {
         base: "SauceLabs",
         browserName: "Chrome",
         version: "61"
       },
-      // "SL_Safari": {
-      //   base: "SauceLabs",
-      //   browserName: "Safari",
-      //   version: "10"
-      // },
-      // "SL_Edge": {
+      sl_safari: {
+        base: "SauceLabs",
+        browserName: "Safari",
+        version: "10"
+      },
+      sl_edge: {
+        base: 'SauceLabs',
+        browserName: 'MicrosoftEdge',
+        version: '15'
+      },
+      // sl_ios: {
       //   base: 'SauceLabs',
-      //   browserName: 'MicrosoftEdge',
-      //   version: '15'
+      //   deviceName: "iPad (5th generation) Simulator",
+      //   deviceOrientation: "portrait",
+      //   platformVersion: "11.0",
+      //   platformName: "iOS",
+      //   browserName: "Safari"
       // },
-      // sl_firefox: {
-      //   base: 'SauceLabs',
-      //   browserName: 'firefox',
-      //   version: '30'
-      // },
-      // sl_ios_safari: {
-      //   base: 'SauceLabs',
-      //   browserName: 'iphone',
-      //   platform: 'OS X 10.9',
-      //   version: '7.1'
-      // },
-      // sl_ie_11: {
-      //   base: 'SauceLabs',
-      //   browserName: 'internet explorer',
-      //   platform: 'Windows 8.1',
-      //   version: '11'
-      // },
-      // sl_android: {
-      //   base: 'SauceLabs',
-      //   browserName: 'Browser',
-      //   platform: 'Android',
-      //   version: '4.4',
-      //   deviceName: 'Samsung Galaxy S3 Emulator',
-      //   deviceOrientation: 'portrait'
-      // }
+      sl_android: {
+        base: 'SauceLabs',
+        deviceName: "Android Emulator",
+        deviceOrientation: "portrait",
+        browserName: "Chrome",
+        platformVersion: "6.0",
+        platformName: "Android"
+      }
     }
 
     config.set({
       client: {
         captureConsole: false
       },
+      retryLimit: 3,
       concurrency: 2,
-      captureTimeout: 60 * 1000,
+      captureTimeout: 85 * 1000,
       browserNoActivityTimeout: 120 * 1000,
       browserDisconnectTimeout: 15 * 1000,
       browserDisconnectTolerance: 3,

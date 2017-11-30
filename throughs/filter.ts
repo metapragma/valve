@@ -18,7 +18,7 @@ export function filter <P, K extends keyof P, E = Error>(test: RegExp | K | ((da
     type: StreamType.Through,
     sink (source) {
       // tslint:disable-next-line no-function-expression
-       
+
       function next (end: StreamAbort<E>, cb: StreamCallback<P, E>) {
 
         let sync: boolean

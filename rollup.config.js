@@ -11,7 +11,9 @@ export default {
   ],
   plugins: [
     typescript({
-      typescript: require('typescript')
+      typescript: require('typescript'),
+      module: "es2015",
+      target: "es5"
     })
   ]
 }

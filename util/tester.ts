@@ -1,5 +1,8 @@
-import { isRegExp } from 'lodash'
-import { id } from './id'
+import {
+  identity,
+  isRegExp
+} from 'lodash'
+
 import { prop } from './prop'
 
 export function tester (test?: any): (data: any) => any
@@ -13,6 +16,6 @@ export function tester <P, K extends keyof P, F>(test?: RegExp | K | ((data: P) 
       return test.test(data)
     }
   } else {
-    return prop(test) || id
+    return prop(test) || identity
   }
 }

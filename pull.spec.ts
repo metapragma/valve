@@ -6,14 +6,20 @@ import {
   reduce,
   through,
   values
-} from '../index'
+} from './index'
 
-import tape = require('tape')
+import {
+  noop
+} from 'lodash'
 
 import {
   StreamSink,
   StreamSource
-} from '../types'
+} from './types'
+
+// tslint:disable-next-line no-import-side-effect
+import 'mocha'
+import { expect } from 'chai';
 
 // function curry <P, E>(fun) {
 //   // tslint:disable-next-line no-function-expression
@@ -68,86 +74,72 @@ import {
 //   }
 // })
 
-tape('wrap pull streams into stream', t => {
-  pull(
-    values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-    map(e => {
-      return e * e
-    }),
-    through(
-      data => console.log(data)
-    ),
-    reduce(
-      (acc, data) => {
-        return acc + data
-      },
-      (err, value) => {
-        t.notOk(err)
-        t.equal(value, 385)
-        t.end()
-      }
-    )
-  )
-})
-
-tape('turn pull(through,...) -> Through', t => {
-  pull(
-    values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-    pull<number, number, number, Error>(
-      map((e: number) => {
+describe('pull', () => {
+  it('wrap pull streams into stream', done => {
+    pull(
+      values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+      map(e => {
         return e * e
       }),
       through(
-        data => console.log(data)
+        noop
+      ),
+      reduce(
+        (acc, data) => {
+          return acc + data
+        },
+        (err, value) => {
+          expect(err).to.equal(null)
+          expect(value).to.equal(385)
+          done()
+        }
       )
-    ),
-    reduce(
-      (acc: number, data: number) => {
-        return acc + data
-      },
-      (err, value) => {
-        t.notOk(err)
-        t.equal(value, 385)
-        t.end()
-      }
     )
-  )
-})
+  })
 
-//  pull(
-//    values ([1 2 3 4 5 6 7 8 9 10])
-//    pull(
-//      map({x y;: e*e })
-//      log()
-//    )
-//    sum({
-//      err value:
-//        t.equal(value 385)
-//        t.end()
-//      })
-//  )
-//
-
-tape('writable pull() should throw when called twice', t => {
-  t.plan(2)
-
-  const stream = pull<number, number, Error>(
-    map((e: number) => {
-      return e * e
-    }),
-    reduce(
-      (acc: number, data: number) => {
-        return acc + data
-      },
-      (_, value) => {
-        t.equal(value, 385)
-      }
+  it('turn pull(through,...) -> Through', done => {
+    pull(
+      values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+      pull(
+        map((e: number) => {
+          return e * e
+        }),
+        through(
+          noop
+        )
+      ),
+      reduce(
+        (acc: number, data: number) => {
+          return acc + data
+        },
+        (err, value) => {
+          expect(err).to.equal(null)
+          expect(value).to.equal(385)
+          done()
+        }
+      )
     )
-  )
+  })
 
-  stream.sink(values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+  it('writable pull() should throw when called twice', () => {
+    const stream = pull(
+      map((e: number) => {
+        return e * e
+      }),
+      reduce(
+        (acc: number, data: number) => {
+          return acc + data
+        },
+        (_, value) => {
+          expect(value).to.equal(385)
+        }
+      )
+    )
 
-  t.throws(() =>{
     stream.sink(values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
-  }, TypeError)
+
+    expect(() =>{
+      stream.sink(values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+    }).to.throw(TypeError)
+  })
 })

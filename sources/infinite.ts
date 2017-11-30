@@ -4,6 +4,7 @@ import {
 } from '../types'
 
 export function infinite (): IStreamSource<number>
+export function infinite <P>(generate?: () => P): IStreamSource<P>
 export function infinite <P = number>(generate?: () => P): IStreamSource<P | number> {
   const f = (typeof generate === 'undefined')
     // tslint:disable-next-line insecure-random

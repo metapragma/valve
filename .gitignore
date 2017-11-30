@@ -1,3 +1,4 @@
+coverage.lcov
 .manage_modules
 coverage
 drafts
@@ -5,3 +6,4 @@ lib
 node_modules
 npm_debug.log
 types
+.nyc_output/

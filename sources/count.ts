@@ -11,7 +11,7 @@ export function count (max?: number): IStreamSource<number> {
     type: StreamType.Source,
     source (end, cb) {
       if (end) return cb && cb(end)
-      if (i > max) return cb(true)
+      if (i >= max) return cb(true)
       cb(null, i+=1)
     }
   }
