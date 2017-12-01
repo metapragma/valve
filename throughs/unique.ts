@@ -1,18 +1,21 @@
 import { prop } from '../util/prop'
 import { filter } from './filter'
-import { id } from '../util/id'
 
 import {
   IStreamThrough,
   StreamType
 } from '../types'
 
+import {
+  identity
+} from 'lodash'
+
 // drop items you have already seen
 
 export function unique <P, K extends keyof P, E = Error>(
   field?: K | RegExp | ((data: P) => boolean), invert?: boolean
 ): IStreamThrough<P, P, E> {
-  const test = prop(field) || id
+  const test = prop(field) || identity
 
   const seen: { [key: string]: boolean } = {}
 
