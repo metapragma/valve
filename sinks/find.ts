@@ -28,7 +28,8 @@ export function find <P, K extends keyof P, E = Error>(
     },
     err => {
       if (ended) return // already called back
-      cb(err === true ? null : err, null)
+      // cb(err === true ? null : err, null)
+      cb(err, null)
     }
   )
 }

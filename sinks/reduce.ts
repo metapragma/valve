@@ -8,8 +8,7 @@ import {
 } from '../types'
 
 import {
-  assign,
-  noop,
+  assign
 } from 'lodash'
 
 import { drain } from './drain'

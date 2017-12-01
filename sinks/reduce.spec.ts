@@ -1,4 +1,6 @@
 import {
+  empty,
+  error,
   pull,
   reduce,
   values
@@ -36,6 +38,40 @@ describe('sinks/reduce', () => {
         (err, val) => {
           expect(err).to.equal(null)
           expect(val).to.equal(6)
+          done()
+        }
+      )
+    )
+  })
+
+  it('error', done => {
+    const ERR = new Error('qweo')
+
+    pull(
+      error(ERR),
+      reduce(
+        (a: number, b: number) => {
+          return a + b
+        },
+        (err, val) => {
+          expect(err).to.equal(ERR)
+          expect(val).to.equal(undefined)
+          done()
+        }
+      )
+    )
+  })
+
+  it('empty', done => {
+    pull(
+      empty(),
+      reduce(
+        (a: number, b: number) => {
+          return a + b
+        },
+        (err, val) => {
+          expect(err).to.equal(null)
+          expect(val).to.equal(undefined)
           done()
         }
       )

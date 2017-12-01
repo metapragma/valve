@@ -9,10 +9,6 @@ import {
 import 'mocha'
 import { expect } from 'chai'
 
-import {
-  noop
-} from 'lodash'
-
 describe('sources/values', () => {
   it('array', done => {
     pull(

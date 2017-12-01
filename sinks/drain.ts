@@ -32,7 +32,7 @@ export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end
       read = _read.source
 
       if (abort) {
-        return sink.abort()
+        return sink.abort(abort)
       }
 
       // this function is much simpler to write if you

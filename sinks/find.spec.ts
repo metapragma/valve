@@ -1,5 +1,7 @@
 import {
   asyncMap,
+  empty,
+  error,
   find,
   pull,
   values
@@ -74,7 +76,7 @@ describe('sinks/find', () => {
 
   it('there can only be one', done => {
     pull(
-      values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+      values([1, 2, 3, 4, 5, 6, 7, 7, 8, 9, 10]),
       asyncMap((e, cb) => {
         immediate(() => {
           cb(null, e)
@@ -101,6 +103,27 @@ describe('sinks/find', () => {
         expect(err).to.equal(null)
         done()
       }, null)
+    )
+  })
+
+  it('error', done => {
+    const ERR = new Error('test')
+    pull(
+      error(ERR),
+      find((err, _) => {
+        expect(err).to.equal(ERR)
+        done()
+      }, () => true)
+    )
+  })
+
+  it('empty', done => {
+    pull(
+      empty(),
+      find((err, _) => {
+        expect(err).to.equal(null)
+        done()
+      }, () => true)
     )
   })
 })

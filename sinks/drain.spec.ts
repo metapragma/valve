@@ -3,6 +3,8 @@ import { abortCb } from '../util/abort-cb'
 import {
   asyncMap,
   drain as pullDrain,
+  empty,
+  error,
   infinite,
   pull,
   values
@@ -209,5 +211,57 @@ describe('sinks/drain', () => {
         done()
       })
     }, 100)
+  })
+
+  it('error', () => {
+    const ERR = new Error('qwe')
+
+    expect(() =>
+      pull(
+        error(ERR),
+        pullDrain(
+          data => {
+            expect(data).to.equal(undefined)
+          },
+        )
+      )
+    ).to.throw(ERR)
+  })
+
+  it('empty', () => {
+    const ERR = new Error('qwe')
+
+    pull(
+      empty(),
+      pullDrain(
+        data => {
+          expect(data).to.equal(undefined)
+        },
+      )
+    )
+  })
+
+  it('initial abort', done => {
+    const ERR = new Error('qwe')
+    const s = spy()
+
+    const stream = pullDrain(
+      data => {
+        s()
+        expect(data).to.equal(undefined)
+      },
+      err => {
+        expect(err).to.equal(ERR)
+        expect(s.callCount).to.equal(0)
+        done()
+      }
+    )
+
+    stream.sink.abort(ERR)
+
+    pull(
+      values([1, 2, 3, 4]),
+      stream
+    )
   })
 })

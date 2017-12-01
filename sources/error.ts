@@ -10,6 +10,6 @@ export function error <E = Error>(err: E): IStreamSource<void, E> {
     type: StreamType.Source,
     source (_, cb) {
       cb(err)
-    } 
+    }
   }
 }
