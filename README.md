@@ -1,4 +1,4 @@
-# ts-pull-stream
+# valve
 
 Minimal Pipeable Pull-stream
 
@@ -10,7 +10,9 @@ data is pulled out of the source stream, into the destination.  `pull-stream`
 is a minimal take on streams, pull streams work great for "object" streams as
 well as streams of raw text or binary data.
 
-[![build status](https://secure.travis-ci.org/escapace/ts-pull-stream.png)](https://travis-ci.org/escapace/ts-pull-stream)
+[![build status](https://secure.travis-ci.org/escapace/valve.png)](https://travis-ci.org/escapace/valve)
+[![codecov](https://codecov.io/gh/escapace/valve/branch/master/graph/badge.svg)](https://codecov.io/gh/escapace/valve)
+[![license](https://img.shields.io/badge/license-Mozilla%20Public%20License%20Version%202.0-blue.svg)]()
 
 ## Quick Example
 
@@ -18,9 +20,9 @@ Stat some files:
 
 ```js
 pull(
-  pull.values(['file1', 'file2', 'file3']),
-  pull.asyncMap(fs.stat),
-  pull.collect(function (err, array) {
+  values(['file1', 'file2', 'file3']),
+  asyncMap(fs.stat),
+  collect((err, array) => {
     console.log(array)
   })
 )
