@@ -12,6 +12,7 @@ well as streams of raw text or binary data.
 
 [![build status](https://secure.travis-ci.org/escapace/valve.png)](https://travis-ci.org/escapace/valve)
 [![codecov](https://codecov.io/gh/escapace/valve/branch/master/graph/badge.svg)](https://codecov.io/gh/escapace/valve)
+[![Greenkeeper badge](https://badges.greenkeeper.io/escapace/valve.svg)](https://greenkeeper.io/)
 [![license](https://img.shields.io/badge/license-Mozilla%20Public%20License%20Version%202.0-blue.svg)]()
 
 ## Quick Example
