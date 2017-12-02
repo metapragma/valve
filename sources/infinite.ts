@@ -1,18 +1,18 @@
 import {
-  IStreamSource,
-  StreamType
+  ValveSource,
+  ValveType
 } from '../types'
 
-export function infinite (): IStreamSource<number>
-export function infinite <P>(generate?: () => P): IStreamSource<P>
-export function infinite <P = number>(generate?: () => P): IStreamSource<P | number> {
+export function infinite (): ValveSource<number>
+export function infinite <P>(generate?: () => P): ValveSource<P>
+export function infinite <P = number>(generate?: () => P): ValveSource<P | number> {
   const f = (typeof generate === 'undefined')
     // tslint:disable-next-line insecure-random
     ? Math.random
     : generate
 
   return {
-    type: StreamType.Source,
+    type: ValveType.Source,
     source(end, cb) {
       if (end) return cb && cb(end)
 

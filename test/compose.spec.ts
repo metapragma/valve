@@ -6,7 +6,7 @@ import {
 } from '../index'
 
 import {
-  IStreamThrough
+  ValveThrough
 } from '../types'
 
 // tslint:disable-next-line no-import-side-effect

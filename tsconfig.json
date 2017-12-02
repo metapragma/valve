@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    "module": "es2015",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "downlevelIteration": true,
     "noImplicitAny": true,
-    "noImplicitReturns": false,
     "noImplicitThis": true,
+    "preserveConstEnums": true,
     "declaration": true,
     "declarationDir": "lib/types",
     "noUnusedLocals": false,
@@ -29,12 +29,9 @@
     ]
   },
   "exclude": [
-    "*.spec.ts",
-    "**/*.spec.ts",
     "benchmarks",
     "node_modules",
     "scripts",
-    "test",
     "vendor"
   ]
 }

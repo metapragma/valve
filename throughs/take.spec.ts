@@ -1,11 +1,11 @@
 import { collect, pull, take, through, values } from '../index'
 
 import {
-  IStreamThrough,
-  StreamAbort,
-  StreamCallback,
-  StreamSource,
-  StreamType
+  ValveThrough,
+  ValveAbort,
+  ValveCallback,
+  ValveSourceFunction,
+  ValveType
 } from '../types'
 
 // tslint:disable-next-line
@@ -65,12 +65,12 @@ describe('throughs/take', () => {
   it('upstream', done => {
     let reads = 0
 
-    const thr = <P, E = Error>(): IStreamThrough<P, P, E> => (
+    const thr = <P, E = Error>(): ValveThrough<P, P, E> => (
       {
-        type: StreamType.Through,
+        type: ValveType.Through,
         sink (read) {
           return {
-            type: StreamType.Source,
+            type: ValveType.Source,
             source (end, cb) {
               // tslint:disable-next-line no-increment-decrement
               if (end !== true) reads++
@@ -102,8 +102,8 @@ describe('throughs/take', () => {
 
     const read = pull(
       {
-        type: StreamType.Source,
-        source (abort: StreamAbort<Error>, cb: StreamCallback<number, Error>) {
+        type: ValveType.Source,
+        source (abort: ValveAbort<Error>, cb: ValveCallback<number, Error>) {
           if (abort) cb((aborted = true))
           else if (i > ary.length) cb(true)
           // tslint:disable-next-line no-increment-decrement

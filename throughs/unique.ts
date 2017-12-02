@@ -2,8 +2,8 @@ import { prop } from '../util/prop'
 import { filter } from './filter'
 
 import {
-  IStreamThrough,
-  StreamType
+  ValveThrough,
+  ValveType
 } from '../types'
 
 import {
@@ -14,7 +14,7 @@ import {
 
 export function unique <P, K extends keyof P, E = Error>(
   field?: K | RegExp | ((data: P) => boolean), invert?: boolean
-): IStreamThrough<P, P, E> {
+): ValveThrough<P, P, E> {
   const test = prop(field) || identity
 
   const seen: { [key: string]: boolean } = {}

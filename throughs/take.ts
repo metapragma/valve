@@ -1,10 +1,10 @@
 // tslint:disable no-conditional-assignment no-shadowed-variable
 
 import {
-  IStreamThrough,
-  StreamAbort,
-  StreamCallback,
-  StreamType
+  ValveThrough,
+  ValveAbort,
+  ValveCallback,
+  ValveType
 } from '../types'
 
 export type TakeTest<P> = (data: P) => void | boolean | number
@@ -13,10 +13,10 @@ export type TakeTest<P> = (data: P) => void | boolean | number
 export function take<P, E = Error>(
   test: number | TakeTest<P>,
   opts?: { last?: boolean }
-): IStreamThrough<P, P, E> {
+): ValveThrough<P, P, E> {
   opts = opts || {}
   let last = opts.last || false // whether the first item for which !test(item) should still pass
-  let ended: StreamAbort<E> = false
+  let ended: ValveAbort<E> | false = false
   let tester: TakeTest<P>
 
   if (typeof test === 'number') {
@@ -32,9 +32,9 @@ export function take<P, E = Error>(
   }
 
   return {
-    type: StreamType.Through,
+    type: ValveType.Through,
     sink(source) {
-      function terminate(cb: StreamCallback<P, E>) {
+      function terminate(cb: ValveCallback<P, E>) {
         source.source(true, err => {
           last = false
           cb(err || true)
@@ -42,8 +42,8 @@ export function take<P, E = Error>(
       }
 
       return {
-        type: StreamType.Source,
-        source(end: StreamAbort<E>, cb: StreamCallback<P, E>) {
+        type: ValveType.Source,
+        source(end: ValveAbort<E>, cb: ValveCallback<P, E>) {
           if (ended) last ? terminate(cb) : cb(ended)
           else if ((ended = end)) source.source(ended, cb)
           else {

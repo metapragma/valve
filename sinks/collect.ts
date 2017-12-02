@@ -1,11 +1,11 @@
 import { reduce } from './reduce'
 
 import {
-  IStreamSink,
-  StreamAbort
+  ValveSink,
+  ValveError
 } from '../types'
 
-export function collect <P, E = Error>(cb: (end?: StreamAbort<E>, acc?: P[]) => void): IStreamSink<P, E> {
+export function collect <P, E = Error>(cb: (end?: ValveError<E>, acc?: P[]) => void): ValveSink<P, E> {
   return reduce<P, P[], E>(
     (arr, item) => {
       arr.push(item)

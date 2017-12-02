@@ -1,10 +1,10 @@
 import {
-  IStreamSink,
-  StreamAbort,
-  StreamSink,
-  StreamSinkAbort,
-  StreamSource,
-  StreamType
+  ValveSink,
+  ValveError,
+  ValveSinkFunction,
+  ValveAbortFunction,
+  ValveSourceFunction,
+  ValveType
 } from '../types'
 
 import {
@@ -15,20 +15,20 @@ import { drain } from './drain'
 
 export function reduce <P, E = Error>(
   reducer: (acc: P, data: P) => P,
-  cb: (end?: StreamAbort<E>, acc?: P) => void
-): IStreamSink<P, E>
+  cb: (end?: ValveError<E>, acc?: P) => void
+): ValveSink<P, E>
 
 export function reduce <P, R, E = Error>(
   reducer: (acc: R, data: P) => R,
-  cb: (end?: StreamAbort<E>, acc?: R) => void,
+  cb: (end?: ValveError<E>, acc?: R) => void,
   acc?: R
-): IStreamSink<P, E>
+): ValveSink<P, E>
 
 export function reduce <P, R, E = Error>(
   reducer: (acc: P | R, data: P) => P | R,
-  cb: (end?: StreamAbort<E>, acc?: P | R) => void,
+  cb: (end?: ValveError<E>, acc?: P | R) => void,
   acc?: P | R
-): IStreamSink<P, E> {
+): ValveSink<P, E> {
   const sink = drain<P, E>(
     data => {
       acc = reducer(acc, data)
@@ -40,7 +40,7 @@ export function reduce <P, R, E = Error>(
 
   if (typeof acc === 'undefined') {
     return {
-      type: StreamType.Sink,
+      type: ValveType.Sink,
       sink(source) {
         source.source(null, (end, data) => {
           // if ended immediately, and no initial...

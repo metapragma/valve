@@ -6,13 +6,13 @@ import {
 } from 'lodash'
 
 import {
-  IStreamSink,
-  StreamCallback
+  ValveSink,
+  ValveCallback
 } from '../types'
 
 export function find <P, K extends keyof P, E = Error>(
-  cb: StreamCallback<P, E>, test?: K | RegExp | ((data: P) => boolean)
-): IStreamSink<P, E> {
+  cb: ValveCallback<P, E>, test?: K | RegExp | ((data: P) => boolean)
+): ValveSink<P, E> {
   let ended = false
 
   const tester = prop(test) || identity

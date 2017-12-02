@@ -6,11 +6,10 @@ import { once } from '../sources/once'
 // convert a stream of arrays or streams into just a stream.
 
 import {
-  IStreamSource,
-  IStreamThrough,
-  StreamAbort,
-  StreamCallback,
-  StreamType
+  ValveSource,
+  ValveThrough,
+  ValveCallback,
+  ValveType
 } from '../types'
 
 // export function flatten <P, E = Error>(
@@ -24,8 +23,8 @@ import {
 
 import {
   isArray,
-  isPlainObject,
-  noop
+  isPlainObject
+  // noop
 } from 'lodash'
 
 
@@ -35,26 +34,26 @@ import {
 export function flatten <
   S,
   E = Error
->(): IStreamThrough<
-  IStreamSource<S, E> | S[] | S,
+>(): ValveThrough<
+  ValveSource<S, E> | S[] | S,
   S,
   E
 > {
   return {
-    type: StreamType.Through,
+    type: ValveType.Through,
     sink (source) { // read
-      let _source: IStreamSource<S, E>
+      let _source: ValveSource<S, E>
 
       return {
-        type: StreamType.Source,
+        type: ValveType.Source,
         source (abort, cb) {
           if (abort) {
             // abort the current stream, and then stream of streams.
             _source
               ? _source.source(abort, err => {
-                source.source(err || abort, cb as StreamCallback<{}, E>)
+                source.source(err || abort, cb as ValveCallback<{}, E>)
               })
-              : source.source(abort, cb as StreamCallback<{}, E>)
+              : source.source(abort, cb as ValveCallback<{}, E>)
           } else if (_source) {
             nextChunk()
           } else {
@@ -83,14 +82,14 @@ export function flatten <
             source.source(null, (end, stream) => {
               if (end) return cb(end)
 
-              function isSource(x: IStreamSource<{}, E>): x is IStreamSource<S, E> {
-                return isPlainObject(x) && x.type === StreamType.Source
+              function isSource(x: ValveSource<{}, E>): x is ValveSource<S, E> {
+                return isPlainObject(x) && x.type === ValveType.Source
               }
 
               if (isArray(stream)) {
                 _source = values(stream)
-              } else if (isSource(stream as IStreamSource<S, E>)) {
-                _source = stream as IStreamSource<S, E>
+              } else if (isSource(stream as ValveSource<S, E>)) {
+                _source = stream as ValveSource<S, E>
               // } else if (isPlainObject(stream)) {
               //   _source = values(stream as O)
               } else {

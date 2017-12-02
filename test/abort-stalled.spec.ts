@@ -17,15 +17,15 @@ import {
 } from '../index'
 
 import {
-  IStreamSource,
-  IStreamThrough,
-  StreamAbort,
-  StreamCallback,
-  StreamSink,
-  StreamSinkAbort,
-  StreamSource,
-  StreamThrough,
-  StreamType
+  ValveSource,
+  ValveThrough,
+  ValveSinkFunction,
+  ValveAbortFunction,
+  ValveSourceFunction,
+  ValveThroughFunction,
+  ValveAbort,
+  ValveCallback,
+  ValveType
 } from '../types'
 
 import {
@@ -33,12 +33,12 @@ import {
   noop
 } from 'lodash'
 
-function hang<P, E>(values: P[], onAbort?: () => void): IStreamSource<P, E> {
+function hang<P, E>(values: P[], onAbort?: () => void): ValveSource<P, E> {
   let i = 0
-  let _cb: StreamCallback<P, E>
+  let _cb: ValveCallback<P, E>
 
   return {
-    type: StreamType.Source,
+    type: ValveType.Source,
     source (abort, cb) {
       if (i < values.length) {
         cb(null, values[i++])
@@ -55,22 +55,22 @@ function hang<P, E>(values: P[], onAbort?: () => void): IStreamSource<P, E> {
 }
 
 // interface LocalStreamThrough<P, R, E = Error> {
-//   (source: StreamSource<P, E>): (abort: StreamAbort<E>, cb: StreamCallback<R, E>) => void
+//   (source: StreamSource<P, E>): (abort: ValveAbort<E>, cb: ValveCallback<R, E>) => void
 //   abort?: StreamSinkAbort<P, E>
 // }
 
-function abortable<P, E>(): IStreamThrough<P, P, E> {
-  let _read: IStreamSource<P, E>
-  let aborted: StreamAbort<E>
+function abortable<P, E>(): ValveThrough<P, P, E> {
+  let _read: ValveSource<P, E>
+  let aborted: ValveAbort<E>
 
-  const reader: IStreamThrough<P, P, E> = {
-    type: StreamType.Through,
+  const reader: ValveThrough<P, P, E> = {
+    type: ValveType.Through,
     sink (read) {
       _read = read
 
       return {
-        type: StreamType.Source,
-        source (abort: StreamAbort<E>, cb: StreamCallback<P, E>) {
+        type: ValveType.Source,
+        source (abort: ValveAbort<E>, cb: ValveCallback<P, E>) {
           if (abort) aborted = abort
           read.source(abort, cb)
         }
@@ -98,10 +98,10 @@ function abortable<P, E>(): IStreamThrough<P, P, E> {
   return reader
 }
 
-function test <E>(trx: IStreamThrough<number, number, E>, done: (err?: any) => void) {
+function test <E>(trx: ValveThrough<number, number, E>, done: (err?: any) => void) {
     const a = abortable()
 
-    const s = (): IStreamSource<number, E> => hang([1, 2, 3], () => {
+    const s = (): ValveSource<number, E> => hang([1, 2, 3], () => {
       done()
     })
 

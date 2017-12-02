@@ -1,13 +1,14 @@
 import {
-  StreamAbort,
-  StreamCallback,
-  StreamSource
+  ValveAbort,
+  ValveCallback,
+  ValveError,
+  ValveSourceFunction
 } from '../types'
 
 export function abortCb <P, E = Error>(
-  cb: StreamCallback<P, E>,
-  abort: StreamAbort<E>,
-  onAbort?: (abort: StreamAbort<E>) => void
+  cb: ValveCallback<P, E>,
+  abort: ValveAbort<E>,
+  onAbort?: (abort: ValveError<E>) => void
 ) {
   cb(abort)
 

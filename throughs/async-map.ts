@@ -1,24 +1,23 @@
 /* tslint:disable no-shadowed-variable */
 
 import {
-  IStreamThrough,
-  StreamAbort,
-  StreamCallback,
-  StreamType
+  ValveThrough,
+  ValveAbort,
+  ValveCallback,
+  ValveType
 } from '../types'
 
-export function asyncMap <P, R, E = Error>(map: ((data: P, cb: StreamCallback<R, E>) => void)): IStreamThrough<P, R, E> {
+export function asyncMap <P, R, E = Error>(map: ((data: P, cb: ValveCallback<R, E>) => void)): ValveThrough<P, R, E> {
   let busy: boolean = false
-  let aborted: StreamAbort<E>
-  let abortCb: StreamCallback<R, E>
-
+  let aborted: ValveAbort<E>
+  let abortCb: ValveCallback<R, E>
 
   return {
-    type: StreamType.Through,
+    type: ValveType.Through,
     sink (source) {
       // tslint:disable-next-line no-function-expression
 
-      function next (abort: StreamAbort<E>, cb: StreamCallback<R, E>) {
+      function next (abort: ValveAbort<E>, cb: ValveCallback<R, E>) {
         if (aborted) {
           return cb(aborted)
         }
@@ -66,7 +65,7 @@ export function asyncMap <P, R, E = Error>(map: ((data: P, cb: StreamCallback<R,
       }
 
       return {
-        type: StreamType.Source,
+        type: ValveType.Source,
         source: next 
       }
     }

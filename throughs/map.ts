@@ -1,15 +1,15 @@
 import {
-  IStreamThrough,
-  StreamType
+  ValveThrough,
+  ValveType
 } from '../types'
 
-export function map <P, R, E = Error>(mapper: ((data: P) => R)): IStreamThrough<P, R, E> {
+export function map <P, R, E = Error>(mapper: ((data: P) => R)): ValveThrough<P, R, E> {
 
   return {
-    type: StreamType.Through,
+    type: ValveType.Through,
     sink(source) {
       return {
-        type: StreamType.Source,
+        type: ValveType.Source,
         source(abort, cb) {
           source.source(abort, (end, data) => {
             let newData: R

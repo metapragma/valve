@@ -9,10 +9,10 @@ import {
 } from '../index'
 
 import {
-  IStreamSource,
-  StreamAbort,
-  StreamCallback,
-  StreamType
+  ValveSource,
+  ValveAbort,
+  ValveCallback,
+  ValveType
 } from '../types'
 
 // tslint:disable-next-line no-import-side-effect
@@ -78,8 +78,8 @@ describe('throughs/async-map', () => {
     const read = pull(
       // tslint:disable-next-line no-shadowed-variable
       {
-        type: StreamType.Source,
-        source (_: StreamAbort<Error>, cb: StreamCallback<string, Error>) {
+        type: ValveType.Source,
+        source (_: ValveAbort<Error>, cb: ValveCallback<string, Error>) {
           immediate(() => {
             if (err) return cb(err)
             cb(null, 'x')

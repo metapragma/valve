@@ -1,218 +1,218 @@
 /* tslint:disable no-any */
 
 import {
-  IStreamSink,
-  IStreamSource,
-  IStreamThrough,
-  StreamType
+  ValveSink,
+  ValveSource,
+  ValveThrough,
+  ValveType
 } from './types'
 
 export function pull <P, E = Error>(
-  A1: IStreamSink<P, E>,
-): IStreamSink<P, E>
+  A1: ValveSink<P, E>,
+): ValveSink<P, E>
 
 // Source -> ...Through -> Sink
 
 export function pull <P, E = Error>(
-  A1: IStreamSource<P, E>
-): IStreamSource<P, E>
+  A1: ValveSource<P, E>
+): ValveSource<P, E>
 
 export function pull <P1, E = Error>(
-  A1: IStreamSource<P1, E>,
-  RR: IStreamSink<P1, E>,
+  A1: ValveSource<P1, E>,
+  RR: ValveSink<P1, E>,
 ): void
 
 export function pull <P1, P2, E = Error>(
-  A1: IStreamSource<P1, E>,
-  A2: IStreamThrough<P1, P2, E>,
-  RR: IStreamSink<P2, E>,
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>,
+  RR: ValveSink<P2, E>,
 ): void
 
 export function pull <P1, P2, P3, E = Error>(
-  A1: IStreamSource<P1, E>,
-  A2: IStreamThrough<P1, P2, E>,
-  A3: IStreamThrough<P2, P3, E>,
-  RR: IStreamSink<P3, E>,
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>,
+  A3: ValveThrough<P2, P3, E>,
+  RR: ValveSink<P3, E>,
 ): void
 
 export function pull <P1, P2, P3, P4, E = Error>(
-  A1: IStreamSource<P1, E>,
-  A2: IStreamThrough<P1, P2, E>,
-  A3: IStreamThrough<P2, P3, E>,
-  A4: IStreamThrough<P3, P4, E>,
-  RR: IStreamSink<P4, E>,
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>,
+  A3: ValveThrough<P2, P3, E>,
+  A4: ValveThrough<P3, P4, E>,
+  RR: ValveSink<P4, E>,
 ): void
 
 export function pull <P1, P2, P3, P4, P5, E = Error>(
-  A1: IStreamSource<P1, E>,
-  A2: IStreamThrough<P1, P2, E>,
-  A3: IStreamThrough<P2, P3, E>,
-  A4: IStreamThrough<P3, P4, E>,
-  A5: IStreamThrough<P4, P5, E>,
-  RR: IStreamSink<P5, E>,
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>,
+  A3: ValveThrough<P2, P3, E>,
+  A4: ValveThrough<P3, P4, E>,
+  A5: ValveThrough<P4, P5, E>,
+  RR: ValveSink<P5, E>,
 ): void
 
 export function pull <P1, P2, P3, P4, P5, P6, E = Error>(
-  A1: IStreamSource<P1, E>,
-  A2: IStreamThrough<P1, P2, E>,
-  A3: IStreamThrough<P2, P3, E>,
-  A4: IStreamThrough<P3, P4, E>,
-  A5: IStreamThrough<P4, P5, E>,
-  A6: IStreamThrough<P5, P6, E>,
-  RR: IStreamSink<P6, E>,
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>,
+  A3: ValveThrough<P2, P3, E>,
+  A4: ValveThrough<P3, P4, E>,
+  A5: ValveThrough<P4, P5, E>,
+  A6: ValveThrough<P5, P6, E>,
+  RR: ValveSink<P6, E>,
 ): void
 
 export function pull <P1, P2, P3, P4, P5, P6, P7, E = Error>(
-  A1: IStreamSource<P1, E>,
-  A2: IStreamThrough<P1, P2, E>,
-  A3: IStreamThrough<P2, P3, E>,
-  A4: IStreamThrough<P3, P4, E>,
-  A5: IStreamThrough<P4, P5, E>,
-  A6: IStreamThrough<P5, P6, E>,
-  A7: IStreamThrough<P6, P7, E>,
-  RR: IStreamSink<P7, E>,
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>,
+  A3: ValveThrough<P2, P3, E>,
+  A4: ValveThrough<P3, P4, E>,
+  A5: ValveThrough<P4, P5, E>,
+  A6: ValveThrough<P5, P6, E>,
+  A7: ValveThrough<P6, P7, E>,
+  RR: ValveSink<P7, E>,
 ): void
 
 export function pull <P1, P2, P3, P4, P5, P6, P7, P8, E = Error>(
-  A1: IStreamSource<P1, E>,
-  A2: IStreamThrough<P1, P2, E>,
-  A3: IStreamThrough<P2, P3, E>,
-  A4: IStreamThrough<P3, P4, E>,
-  A5: IStreamThrough<P4, P5, E>,
-  A6: IStreamThrough<P5, P6, E>,
-  A7: IStreamThrough<P6, P7, E>,
-  A8: IStreamThrough<P6, P8, E>,
-  RR: IStreamSink<P8, E>,
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>,
+  A3: ValveThrough<P2, P3, E>,
+  A4: ValveThrough<P3, P4, E>,
+  A5: ValveThrough<P4, P5, E>,
+  A6: ValveThrough<P5, P6, E>,
+  A7: ValveThrough<P6, P7, E>,
+  A8: ValveThrough<P6, P8, E>,
+  RR: ValveSink<P8, E>,
 ): void
 
 // ...Through -> Sink (TODO: finish this)
 
 export function pull <P1, P2, E = Error>(
-  A1: IStreamThrough<P1, P2, E>,
-  A2: IStreamSink<P2, E>
-): IStreamSink<P2, E>
+  A1: ValveThrough<P1, P2, E>,
+  A2: ValveSink<P2, E>
+): ValveSink<P2, E>
 
 export function pull <P1, P2, P3, E = Error>(
-  A1: IStreamThrough<P1, P2, E>,
-  A2: IStreamThrough<P2, P3, E>,
-  A3: IStreamSink<P3, E>
-): IStreamSink<P3, E>
+  A1: ValveThrough<P1, P2, E>,
+  A2: ValveThrough<P2, P3, E>,
+  A3: ValveSink<P3, E>
+): ValveSink<P3, E>
 
 export function pull <P1, P2, P3, P4, E = Error>(
-  A1: IStreamThrough<P1, P2, E>,
-  A2: IStreamThrough<P2, P3, E>,
-  A3: IStreamThrough<P3, P4, E>,
-  A4: IStreamSink<P4, E>
-): IStreamSink<P4, E>
+  A1: ValveThrough<P1, P2, E>,
+  A2: ValveThrough<P2, P3, E>,
+  A3: ValveThrough<P3, P4, E>,
+  A4: ValveSink<P4, E>
+): ValveSink<P4, E>
 
 // Source -> ...Through (TODO: finish this)
 
 export function pull <P1, P2, E = Error>(
-  A1: IStreamSource<P1, E>,
-  A2: IStreamThrough<P1, P2, E>
-): IStreamSource<P2, E>
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>
+): ValveSource<P2, E>
 
 export function pull <P1, P2, P3, E = Error>(
-  A1: IStreamSource<P1, E>,
-  A2: IStreamThrough<P1, P2, E>,
-  A3: IStreamThrough<P2, P3, E>
-): IStreamSource<P3, E>
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>,
+  A3: ValveThrough<P2, P3, E>
+): ValveSource<P3, E>
 
 export function pull <P1, P2, P3, P4, E = Error>(
-  A1: IStreamSource<P1, E>,
-  A2: IStreamThrough<P1, P2, E>,
-  A3: IStreamThrough<P2, P3, E>,
-  A4: IStreamThrough<P3, P4, E>
-): IStreamSource<P4, E>
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>,
+  A3: ValveThrough<P2, P3, E>,
+  A4: ValveThrough<P3, P4, E>
+): ValveSource<P4, E>
 
 // ...Through
 
 export function pull <P1, P2, E = Error>(
-  A1: IStreamThrough<P1, P2, E>
-): IStreamThrough<P1, P2, E>
+  A1: ValveThrough<P1, P2, E>
+): ValveThrough<P1, P2, E>
 
 export function pull <P1, P2, P3, E = Error>(
-  A1: IStreamThrough<P1, P2, E>,
-  A2: IStreamThrough<P2, P3, E>
-): IStreamThrough<P1, P3, E>
+  A1: ValveThrough<P1, P2, E>,
+  A2: ValveThrough<P2, P3, E>
+): ValveThrough<P1, P3, E>
 
 export function pull <P1, P2, P3, P4, E = Error>(
-  A1: IStreamThrough<P1, P2, E>,
-  A2: IStreamThrough<P2, P3, E>,
-  A3: IStreamThrough<P3, P4, E>
-): IStreamThrough<P1, P4, E>
+  A1: ValveThrough<P1, P2, E>,
+  A2: ValveThrough<P2, P3, E>,
+  A3: ValveThrough<P3, P4, E>
+): ValveThrough<P1, P4, E>
 
 export function pull <P1, P2, P3, P4, P5, E = Error>(
-  A1: IStreamThrough<P1, P2, E>,
-  A2: IStreamThrough<P2, P3, E>,
-  A3: IStreamThrough<P3, P4, E>,
-  A4: IStreamThrough<P4, P5, E>
-): IStreamThrough<P1, P5, E>
+  A1: ValveThrough<P1, P2, E>,
+  A2: ValveThrough<P2, P3, E>,
+  A3: ValveThrough<P3, P4, E>,
+  A4: ValveThrough<P4, P5, E>
+): ValveThrough<P1, P5, E>
 
 export function pull <P1, P2, P3, P4, P5, P6, E = Error>(
-  A1: IStreamThrough<P1, P2, E>,
-  A2: IStreamThrough<P2, P3, E>,
-  A3: IStreamThrough<P3, P4, E>,
-  A4: IStreamThrough<P4, P5, E>,
-  A5: IStreamThrough<P5, P6, E>
-): IStreamThrough<P1, P6, E>
+  A1: ValveThrough<P1, P2, E>,
+  A2: ValveThrough<P2, P3, E>,
+  A3: ValveThrough<P3, P4, E>,
+  A4: ValveThrough<P4, P5, E>,
+  A5: ValveThrough<P5, P6, E>
+): ValveThrough<P1, P6, E>
 
 export function pull <P1, P2, P3, P4, P5, P6, P7, E = Error>(
-  A1: IStreamThrough<P1, P2, E>,
-  A2: IStreamThrough<P2, P3, E>,
-  A3: IStreamThrough<P3, P4, E>,
-  A4: IStreamThrough<P4, P5, E>,
-  A5: IStreamThrough<P5, P6, E>,
-  A6: IStreamThrough<P6, P7, E>
-): IStreamThrough<P1, P7, E>
+  A1: ValveThrough<P1, P2, E>,
+  A2: ValveThrough<P2, P3, E>,
+  A3: ValveThrough<P3, P4, E>,
+  A4: ValveThrough<P4, P5, E>,
+  A5: ValveThrough<P5, P6, E>,
+  A6: ValveThrough<P6, P7, E>
+): ValveThrough<P1, P7, E>
 
 export function pull <P1, P2, P3, P4, P5, P6, P7, P8, E = Error>(
-  A1: IStreamThrough<P1, P2, E>,
-  A2: IStreamThrough<P2, P3, E>,
-  A3: IStreamThrough<P3, P4, E>,
-  A4: IStreamThrough<P4, P5, E>,
-  A5: IStreamThrough<P5, P6, E>,
-  A6: IStreamThrough<P6, P7, E>,
-  A7: IStreamThrough<P7, P8, E>
-): IStreamThrough<P1, P8, E>
+  A1: ValveThrough<P1, P2, E>,
+  A2: ValveThrough<P2, P3, E>,
+  A3: ValveThrough<P3, P4, E>,
+  A4: ValveThrough<P4, P5, E>,
+  A5: ValveThrough<P5, P6, E>,
+  A6: ValveThrough<P6, P7, E>,
+  A7: ValveThrough<P7, P8, E>
+): ValveThrough<P1, P8, E>
 
 export function pull <E = Error>(
   ...props: Array<
-    IStreamThrough<any, any, E>
+    ValveThrough<any, any, E>
   >
-): IStreamThrough<any, any, E>
+): ValveThrough<any, any, E>
 
 export function pull <E = Error>(
-  A1: IStreamSource<any, E>, 
+  A1: ValveSource<any, E>, 
   ...props: Array<
-    IStreamThrough<any, any, E>
+    ValveThrough<any, any, E>
   >
-): IStreamSource<any, E>
+): ValveSource<any, E>
 
 export function pull <E = Error>(
-  A1: IStreamSource<any, E>,
-  A2: IStreamSink<any, E>
+  A1: ValveSource<any, E>,
+  A2: ValveSink<any, E>
 ): void 
 
 export function pull <E = Error>(
   ...props: Array<
-    IStreamSink<any, E> |
-    IStreamSource<any, E> |
-    IStreamThrough<any, any, E>
+    ValveSink<any, E> |
+    ValveSource<any, E> |
+    ValveThrough<any, any, E>
   >
 ): void |
-  IStreamSource<any, E> |
-  IStreamSink<any, E> |
-  IStreamThrough<any, any, E>
+  ValveSource<any, E> |
+  ValveSink<any, E> |
+  ValveThrough<any, any, E>
 {
   const length = props.length
-  const a: IStreamSource<any, E> | IStreamSink<any, E> | IStreamThrough<any, any, E> = props[0]
+  const a: ValveSource<any, E> | ValveSink<any, E> | ValveThrough<any, any, E> = props[0]
 
-  if (a.type === StreamType.Sink) {
+  if (a.type === ValveType.Sink) {
     // tslint:disable-next-line no-shadowed-variable
     return {
-      type: StreamType.Sink,
-      sink (source: IStreamSource<any, E>) {
+      type: ValveType.Sink,
+      sink (source: ValveSource<any, E>) {
         if (props == null) {
           throw new TypeError('partial sink should only be called once!')
         }
@@ -229,11 +229,11 @@ export function pull <E = Error>(
     }
   }
 
-  if (a.type === StreamType.Through) {
+  if (a.type === ValveType.Through) {
     // tslint:disable-next-line no-shadowed-variable
     return {
-      type: StreamType.Through,
-      sink (source: IStreamSource<any, E>) {
+      type: ValveType.Through,
+      sink (source: ValveSource<any, E>) {
         if (props == null) {
           throw new TypeError('partial sink should only be called once!')
         }
@@ -271,12 +271,12 @@ export function pull <E = Error>(
     //   return pull.apply(null, ref)
     // }
 
-  let read: void | IStreamSource<any, E> = a
+  let read: void | ValveSource<any, E> = a
 
   // tslint:disable-next-line no-increment-decrement
   for (let i = 1; i < length; i++) {
     const s = props[i]
-    if ((s.type === StreamType.Sink || s.type === StreamType.Through) && read) {
+    if ((s.type === ValveType.Sink || s.type === ValveType.Through) && read) {
       read = s.sink(read)
     }
   }

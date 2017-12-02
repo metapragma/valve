@@ -13,8 +13,8 @@ import {
 } from 'lodash'
 
 import {
-  StreamSink,
-  StreamSource
+  ValveSinkFunction,
+  ValveSourceFunction
 } from './types'
 
 // tslint:disable-next-line no-import-side-effect

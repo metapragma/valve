@@ -1,19 +1,19 @@
 import { abortCb } from '../util/abort-cb'
 
 import {
-  IStreamSource,
-  StreamAbort,
-  StreamType,
+  ValveSource,
+  ValveError,
+  ValveType,
 } from '../types'
 
 export function once <P, E = Error>(
   value: P,
-  onAbort?: (abort: StreamAbort<E>) => void
-): IStreamSource<P, E> {
+  onAbort?: (abort: ValveError<E>) => void
+): ValveSource<P, E> {
   let localValue = value
 
   return {
-    type: StreamType.Source,
+    type: ValveType.Source,
     source (abort, cb) {
       if (abort) return abortCb(cb, abort, onAbort)
 

@@ -1,11 +1,12 @@
 import {
-  IStreamSink,
-  IStreamSource,
-  StreamAbort,
-  StreamSink,
-  StreamSinkAbort,
-  StreamSource,
-  StreamType
+  ValveSink,
+  ValveSource,
+  ValveAbort,
+  ValveError,
+  ValveSinkFunction,
+  ValveAbortFunction,
+  ValveSourceFunction,
+  ValveType
 } from '../types'
 
 import {
@@ -17,16 +18,16 @@ import {
   once
 } from '../util/once'
 
-export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end: StreamAbort<E>) => void): IStreamSink<P, E> {
-  let read: StreamSource<P, E>
-  let abort: StreamAbort<E>
+export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end: ValveError<E>) => void): ValveSink<P, E> {
+  let read: ValveSourceFunction<P, E>
+  let abort: ValveAbort<E>
   let aborted = false
   const d = once(done)
 
   // tslint:disable-next-line no-unnecessary-local-variable
-  const sink: StreamSink<P, E> = assign<
-    (source: IStreamSource<P, E>) => void,
-    { abort: StreamSinkAbort<P, E> }
+  const sink: ValveSinkFunction<P, E> = assign<
+    (source: ValveSource<P, E>) => void,
+    { abort: ValveAbortFunction<P, E> }
   >(
     _read => {
       read = _read.source
@@ -88,7 +89,7 @@ export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end
   )
 
   return {
-    type: StreamType.Sink,
+    type: ValveType.Sink,
     sink
   }
 }

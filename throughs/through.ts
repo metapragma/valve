@@ -3,25 +3,26 @@
 // a pass through stream that doesn't change the value.
 
 import {
-  IStreamThrough,
-  StreamAbort,
-  StreamType
+  ValveThrough,
+  ValveAbort,
+  ValveError,
+  ValveType
 } from '../types'
 
-export function through <P, E = Error>(op: (data: P) => void, onEnd?: (abort: StreamAbort<E>) => void): IStreamThrough<P, P, E> {
+export function through <P, E = Error>(op: (data: P) => void, onEnd?: (abort: ValveError<E>) => void): ValveThrough<P, P, E> {
   let a = false
 
-  const once = (abort: StreamAbort<E>) => {
+  const once = (abort: ValveAbort<E>) => {
     if (a || !onEnd) return
     a = true
     onEnd(abort === true ? null : abort)
   }
 
   return {
-    type: StreamType.Through,
+    type: ValveType.Through,
     sink(source) {
       return {
-        type: StreamType.Source,
+        type: ValveType.Source,
         source(end, cb) {
           if (end) once(end)
 

@@ -11,9 +11,9 @@ import {
 } from '../index'
 
 import {
-  IStreamSource,
-  StreamAbort,
-  StreamType
+  ValveSource,
+  ValveAbort,
+  ValveType
 } from '../types'
 
 // tslint:disable-next-line no-import-side-effect
@@ -30,13 +30,13 @@ function delay () {
 }
 
 function inf <E = Error>(
-  onAbort?: (abort: StreamAbort<E>) => void
-): IStreamSource<number, E> {
+  onAbort?: (abort: ValveAbort<E>) => void
+): ValveSource<number, E> {
   // tslint:disable-next-line insecure-random
   const f = Math.random
 
   return {
-    type: StreamType.Source,
+    type: ValveType.Source,
     source(abort, cb) {
       if (abort) return abortCb(cb, abort, onAbort)
 

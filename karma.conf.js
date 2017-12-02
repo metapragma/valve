@@ -4,6 +4,9 @@ process.env.CHROME_BIN = require('puppeteer').executablePath()
 
 module.exports = function(config) {
   config.set({
+    client: {
+      captureConsole: false
+    },
     frameworks: ['mocha', 'karma-typescript'],
     files: [
       'index.ts',
@@ -20,7 +23,7 @@ module.exports = function(config) {
       '**/*.ts': 'karma-typescript',
       '*.ts': 'karma-typescript',
     },
-    reporters: ['progress', 'karma-typescript'],
+    reporters: ['dots', 'karma-typescript'],
     browsers: ['puppeteer'],
     customLaunchers: {
       puppeteer: {
@@ -78,9 +81,6 @@ module.exports = function(config) {
     }
 
     config.set({
-      client: {
-        captureConsole: false
-      },
       retryLimit: 3,
       concurrency: 2,
       captureTimeout: 85 * 1000,
@@ -95,7 +95,7 @@ module.exports = function(config) {
       },
       customLaunchers: customLaunchers,
       browsers: Object.keys(customLaunchers),
-      reporters: ['progress', 'karma-typescript', 'saucelabs'],
+      reporters: ['dots', 'karma-typescript', 'saucelabs'],
       singleRun: true
     })
   }

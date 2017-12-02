@@ -9,7 +9,7 @@ import {
 } from '../index'
 
 import {
-  StreamAbort
+  ValveAbort
 } from '../types'
 
 import {
@@ -139,7 +139,7 @@ describe('throughs/flatten', () => {
 
   it('broken stream', done => {
     const _err = new Error('I am broken')
-    let sosEnded: StreamAbort<Error>
+    let sosEnded: ValveAbort<Error>
 
     pull(
       values(
@@ -162,9 +162,9 @@ describe('throughs/flatten', () => {
   })
 
   it('abort', done => {
-    let sosEnded: StreamAbort<Error>
-    let s1Ended: StreamAbort<Error>
-    let s2Ended: StreamAbort<Error>
+    let sosEnded: ValveAbort<Error>
+    let s1Ended: ValveAbort<Error>
+    let s2Ended: ValveAbort<Error>
 
     const stream = pull(
       values(
@@ -197,8 +197,8 @@ describe('throughs/flatten', () => {
   })
 
   it('abort before first read', done => {
-    let sosEnded: StreamAbort<Error>
-    let s1Ended: StreamAbort<Error>
+    let sosEnded: ValveAbort<Error>
+    let s1Ended: ValveAbort<Error>
 
     const stream = pull(
       values(

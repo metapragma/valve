@@ -1,41 +1,42 @@
-export type StreamAbort<E = Error> = boolean | void | E
+export type ValveError<E = Error> = null | E
+export type ValveAbort<E = Error> = true | ValveError<E>
 
-export type StreamCallback<P, E = Error> =
-  (abort: StreamAbort<E>, data?: P) => void
+export type ValveCallback<P, E = Error> =
+  (abort: ValveAbort<E>, data?: P) => void
 
-export type StreamSource<P, E = Error> =
-  (abort: StreamAbort<E>, cb: StreamCallback<P, E>) => void
-
-export type StreamSinkAbort<P, E> =
-  (err?: StreamAbort<E>, cb?: StreamCallback<P, E>) => void
-
-export interface StreamSink<P, E = Error> {
-  (source: IStreamSource<P, E>): void
-  abort?: StreamSinkAbort<P, E>
-}
-
-export interface StreamThrough<P, R, E = Error> {
-  (source: IStreamSource<P, E>): IStreamSource<R, E> 
-  abort?: StreamSinkAbort<P, E>
-}
-
-export enum StreamType {
+export enum ValveType {
   Source,
   Sink,
   Through
 }
 
-export interface IStreamSink<P, E = Error> {
-  type: StreamType.Sink
-  sink: StreamSink<P, E>
+export type ValveSourceFunction<P, E = Error> =
+  (abort: ValveAbort<E>, cb: ValveCallback<P, E>) => void
+
+export type ValveAbortFunction<P, E> =
+  (err?: ValveAbort<E>, cb?: ValveCallback<P, E>) => void
+
+export interface ValveSinkFunction<P, E = Error> {
+  (source: ValveSource<P, E>): void
+  abort?: ValveAbortFunction<P, E>
 }
 
-export interface IStreamSource<P, E = Error> {
-  type: StreamType.Source
-  source: StreamSource<P, E>
+export interface ValveThroughFunction<P, R, E = Error> {
+  (source: ValveSource<P, E>): ValveSource<R, E> 
+  abort?: ValveAbortFunction<P, E>
 }
 
-export interface IStreamThrough<P, R, E = Error> {
-  type: StreamType.Through
-  sink: StreamThrough<P, R, E>
+export interface ValveSink<P, E = Error> {
+  type: ValveType.Sink
+  sink: ValveSinkFunction<P, E>
+}
+
+export interface ValveSource<P, E = Error> {
+  type: ValveType.Source
+  source: ValveSourceFunction<P, E>
+}
+
+export interface ValveThrough<P, R, E = Error> {
+  type: ValveType.Through
+  sink: ValveThroughFunction<P, R, E>
 }

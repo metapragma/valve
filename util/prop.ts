@@ -5,7 +5,7 @@ import {
 // type PropReturn<F, P, K extends keyof P> =
 
 import {
-  StreamCallback
+  ValveCallback
 } from '../types'
 
 export function prop <P, K, F>(key?: any): (data: any) => any
