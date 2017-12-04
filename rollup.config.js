@@ -15,5 +15,8 @@ export default {
       module: "es2015",
       target: "es5"
     })
-  ]
+  ],
+  treeshake: {
+    pureExternalModules: true
+  }
 }
