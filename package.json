@@ -10,7 +10,7 @@
   "types": "./types/index.d.ts",
   "main": "lib/cjs/index.js",
   "module": "lib/es/index.js",
-  "side-effects": false,
+  "sideEffects": false,
   "files": [
     "lib",
     "types"
