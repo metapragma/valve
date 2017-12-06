@@ -85,7 +85,7 @@ export function pull <P1, P2, P3, P4, P5, P6, P7, P8, E = Error>(
   RR: ValveSink<P8, E>,
 ): void
 
-// ...Through -> Sink (TODO: finish this)
+// ...Through -> Sink
 
 export function pull <P1, P2, E = Error>(
   A1: ValveThrough<P1, P2, E>,
@@ -104,6 +104,44 @@ export function pull <P1, P2, P3, P4, E = Error>(
   A3: ValveThrough<P3, P4, E>,
   A4: ValveSink<P4, E>
 ): ValveSink<P4, E>
+
+export function pull <P1, P2, P3, P4, P5, E = Error>(
+  A1: ValveThrough<P1, P2, E>,
+  A2: ValveThrough<P2, P3, E>,
+  A3: ValveThrough<P3, P4, E>,
+  A4: ValveThrough<P4, P5, E>,
+  A5: ValveSink<P5, E>
+): ValveSink<P5, E>
+
+export function pull <P1, P2, P3, P4, P5, P6, E = Error>(
+  A1: ValveThrough<P1, P2, E>,
+  A2: ValveThrough<P2, P3, E>,
+  A3: ValveThrough<P3, P4, E>,
+  A4: ValveThrough<P4, P5, E>,
+  A5: ValveThrough<P5, P6, E>,
+  A6: ValveSink<P6, E>
+): ValveSink<P6, E>
+
+export function pull <P1, P2, P3, P4, P5, P6, P7, E = Error>(
+  A1: ValveThrough<P1, P2, E>,
+  A2: ValveThrough<P2, P3, E>,
+  A3: ValveThrough<P3, P4, E>,
+  A4: ValveThrough<P4, P5, E>,
+  A5: ValveThrough<P5, P6, E>,
+  A6: ValveThrough<P6, P7, E>,
+  A7: ValveSink<P7, E>
+): ValveSink<P7, E>
+
+export function pull <P1, P2, P3, P4, P5, P6, P7, P8, E = Error>(
+  A1: ValveThrough<P1, P2, E>,
+  A2: ValveThrough<P2, P3, E>,
+  A3: ValveThrough<P3, P4, E>,
+  A4: ValveThrough<P4, P5, E>,
+  A5: ValveThrough<P5, P6, E>,
+  A6: ValveThrough<P6, P7, E>,
+  A7: ValveThrough<P7, P8, E>,
+  A8: ValveSink<P8, E>
+): ValveSink<P8, E>
 
 // Source -> ...Through (TODO: finish this)
 
@@ -124,6 +162,44 @@ export function pull <P1, P2, P3, P4, E = Error>(
   A3: ValveThrough<P2, P3, E>,
   A4: ValveThrough<P3, P4, E>
 ): ValveSource<P4, E>
+
+export function pull <P1, P2, P3, P4, P5, E = Error>(
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>,
+  A3: ValveThrough<P2, P3, E>,
+  A4: ValveThrough<P3, P4, E>,
+  A5: ValveThrough<P4, P5, E>
+): ValveSource<P5, E>
+
+export function pull <P1, P2, P3, P4, P5, P6, E = Error>(
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>,
+  A3: ValveThrough<P2, P3, E>,
+  A4: ValveThrough<P3, P4, E>,
+  A5: ValveThrough<P4, P5, E>,
+  A6: ValveThrough<P5, P6, E>
+): ValveSource<P6, E>
+
+export function pull <P1, P2, P3, P4, P5, P6, P7, E = Error>(
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>,
+  A3: ValveThrough<P2, P3, E>,
+  A4: ValveThrough<P3, P4, E>,
+  A5: ValveThrough<P4, P5, E>,
+  A6: ValveThrough<P5, P6, E>,
+  A7: ValveThrough<P6, P7, E>
+): ValveSource<P7, E>
+
+export function pull <P1, P2, P3, P4, P5, P6, P7, P8, E = Error>(
+  A1: ValveSource<P1, E>,
+  A2: ValveThrough<P1, P2, E>,
+  A3: ValveThrough<P2, P3, E>,
+  A4: ValveThrough<P3, P4, E>,
+  A5: ValveThrough<P4, P5, E>,
+  A6: ValveThrough<P5, P6, E>,
+  A7: ValveThrough<P6, P7, E>,
+  A8: ValveThrough<P7, P8, E>
+): ValveSource<P8, E>
 
 // ...Through
 
@@ -183,7 +259,7 @@ export function pull <E = Error>(
 ): ValveThrough<any, any, E>
 
 export function pull <E = Error>(
-  A1: ValveSource<any, E>, 
+  A1: ValveSource<any, E>,
   ...props: Array<
     ValveThrough<any, any, E>
   >
@@ -192,7 +268,7 @@ export function pull <E = Error>(
 export function pull <E = Error>(
   A1: ValveSource<any, E>,
   A2: ValveSink<any, E>
-): void 
+): void
 
 export function pull <E = Error>(
   ...props: Array<
@@ -208,10 +284,10 @@ export function pull <E = Error>(
   const length = props.length
   const a: ValveSource<any, E> | ValveSink<any, E> | ValveThrough<any, any, E> = props[0]
 
-  if (a.type === ValveType.Sink) {
-    // tslint:disable-next-line no-shadowed-variable
+  if (a.type === ValveType.Sink || a.type === ValveType.Through) {
+    // tslint:disable-next-line no-object-literal-type-assertion
     return {
-      type: ValveType.Sink,
+      type: a.type,
       sink (source: ValveSource<any, E>) {
         if (props == null) {
           throw new TypeError('partial sink should only be called once!')
@@ -220,56 +296,15 @@ export function pull <E = Error>(
         // Grab the reference after the check, because it's always an array now
         // (engines like that kind of consistency).
         const ref = props
+        // tslint:disable-next-line no-parameter-reassignment
         props = null
 
         ref.unshift(source)
 
         return pull.apply(null, ref)
       }
-    }
+    } as ValveSink<any, E> | ValveThrough<any, any, E>
   }
-
-  if (a.type === ValveType.Through) {
-    // tslint:disable-next-line no-shadowed-variable
-    return {
-      type: ValveType.Through,
-      sink (source: ValveSource<any, E>) {
-        if (props == null) {
-          throw new TypeError('partial sink should only be called once!')
-        }
-
-        // Grab the reference after the check, because it's always an array now
-        // (engines like that kind of consistency).
-        const ref = props
-        props = null
-
-        ref.unshift(source)
-
-        return pull.apply(null, ref)
-      }
-    }
-  }
-    
-    // (read: StreamSource<any, E>) => {
-    //   // Prioritize common case of small number of pulls.
-    //   // switch (length) {
-    //   //   case 1:
-    //   //     return pull(read, ref[0])
-    //   //   case 2:
-    //   //     return pull(read, ref[0], ref[1])
-    //   //   case 3:
-    //   //     return pull(read, ref[0], ref[1], ref[2])
-    //   //   case 4:
-    //   //     return pull(read, ref[0], ref[1], ref[2], ref[3])
-    //   //   default:
-    //   //     ref.unshift(read)
-    //   //
-    //   //     return pull.apply(null, ref)
-    //   // }
-    //   ref.unshift(read)
-
-    //   return pull.apply(null, ref)
-    // }
 
   let read: void | ValveSource<any, E> = a
 
