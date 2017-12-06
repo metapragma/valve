@@ -1,23 +1,27 @@
 // tslint:disable no-conditional-assignment no-shadowed-variable
 
 import {
-  ValveThrough,
   ValveAbort,
   ValveCallback,
+  ValveThrough,
   ValveType
 } from '../types'
 
-export type TakeTest<P> = (data: P) => void | boolean | number
+import {
+  defaults
+} from 'lodash'
 
 // read a number of items and then stop.
 export function take<P, E = Error>(
-  test: number | TakeTest<P>,
-  opts?: { last?: boolean }
+  test: number | ((data: P) => void | boolean | number),
+  options?: { last?: boolean }
 ): ValveThrough<P, P, E> {
-  opts = opts || {}
-  let last = opts.last || false // whether the first item for which !test(item) should still pass
+  const opts = defaults({}, options, { last: false })
+  defaults(opts)
+
+  let last = opts.last // whether the first item for which !test(item) should still pass
   let ended: ValveAbort<E> | false = false
-  let tester: TakeTest<P>
+  let tester: (data: P) => void | boolean | number
 
   if (typeof test === 'number') {
     last = true

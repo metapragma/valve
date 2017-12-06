@@ -1,4 +1,3 @@
-import { prop } from '../util/prop'
 import { filter } from './filter'
 
 import {
@@ -7,25 +6,28 @@ import {
 } from '../types'
 
 import {
-  identity
+  identity,
+  includes
 } from 'lodash'
 
 // drop items you have already seen
 
-export function unique <P, K extends keyof P, E = Error>(
-  field?: K | RegExp | ((data: P) => boolean), invert?: boolean
+export function unique <P, K, E = Error>(
+  iteratee?: ((data: P) => K), invert?: boolean
 ): ValveThrough<P, P, E> {
-  const test = prop(field) || identity
+  const test = (typeof iteratee === 'undefined')
+    ? identity
+    : iteratee
 
-  const seen: { [key: string]: boolean } = {}
+  const seen: K[] = []
 
   return filter((data: P) => {
     const key = test(data)
 
-    if (seen[key]) {
+    if (includes(seen, key)) {
       return !!invert // false, by default
     } else {
-      seen[key] = true
+      seen.push(key)
     }
 
     return !invert // true by default

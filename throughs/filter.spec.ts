@@ -39,7 +39,7 @@ describe('throughs/filter', () => {
       map(d => {
         return Math.round(d * 1000).toString(16)
       }),
-      filter(/^[^e]+$/i), // no E
+      filter(n => /^[^e]+$/i.test(n)), // no E
       take(37),
       collect((_, array) => {
         expect(array.length).to.equal(37)

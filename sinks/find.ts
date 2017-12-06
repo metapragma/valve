@@ -1,4 +1,3 @@
-import { prop } from '../util/prop'
 import { drain } from './drain'
 
 import {
@@ -6,16 +5,16 @@ import {
 } from 'lodash'
 
 import {
-  ValveSink,
-  ValveCallback
+  ValveCallback,
+  ValveSink
 } from '../types'
 
 export function find <P, K extends keyof P, E = Error>(
-  cb: ValveCallback<P, E>, test?: K | RegExp | ((data: P) => boolean)
+  cb: ValveCallback<P, E>, test?: ((data: P) => boolean)
 ): ValveSink<P, E> {
   let ended = false
 
-  const tester = prop(test) || identity
+  const tester = test || identity
 
   return drain(
     data => {

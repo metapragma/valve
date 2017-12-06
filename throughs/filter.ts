@@ -1,19 +1,11 @@
-import { tester } from '../util/tester'
-
 import {
-  ValveThrough,
   ValveAbort,
   ValveCallback,
+  ValveThrough,
   ValveType,
 } from '../types'
 
-export function filter <P, K extends keyof P, E = Error>(test: K): ValveThrough<P, P, E>
-export function filter <P, E = Error>(test: RegExp): ValveThrough<P, P, E>
-// tslint:disable-next-line unified-signatures
-export function filter <P, E = Error>(test: ((data: P) => boolean)): ValveThrough<P, P, E>
-export function filter <P, K extends keyof P, E = Error>(test: RegExp | K | ((data: P) => boolean)): ValveThrough<P, P, E> {
-  const t = tester(test)
-
+export function filter <P, K extends keyof P, E = Error>(test: ((data: P) => boolean)): ValveThrough<P, P, E> {
   return {
     type: ValveType.Through,
     sink (source) {
@@ -30,7 +22,7 @@ export function filter <P, K extends keyof P, E = Error>(test: RegExp | K | ((da
 
           // tslint:disable-next-line no-shadowed-variable
           source.source(end, (end, data) => {
-            if (!end && !t(data)) {
+            if (!end && !test(data)) {
               return sync
                 ? (loop = true)
                 : next(end, cb)

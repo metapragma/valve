@@ -4,8 +4,8 @@ import {
   ValveThrough
 } from '../types'
 
-export function nonUnique <P, K extends keyof P, E = Error>(
-  field?: K | RegExp | ((data: P) => boolean)
+export function nonUnique <P, K, E = Error>(
+  iteratee?: ((data: P) => K)
 ): ValveThrough<P, P, E> {
-  return unique(field, true)
+  return unique(iteratee, true)
 }
