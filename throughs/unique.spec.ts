@@ -23,4 +23,18 @@ describe('throughs/unique', () => {
       })
     )
   })
+
+  it('iteratee', done => {
+    const numbers = [0.1, 0.6, 1.1, 1.6]
+
+    pull(
+      values(numbers),
+      unique(Math.floor),
+      collect((err, ary) => {
+        expect(err).to.equal(null)
+        expect(ary.sort()).to.deep.equal([0.1, 1.1])
+        done()
+      })
+    )
+  })
 })
