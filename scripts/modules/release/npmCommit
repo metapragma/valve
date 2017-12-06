@@ -84,6 +84,8 @@ function npmCommit () {
 
             git push --quiet --follow-tags
         ) || ((code++))
+    else
+        git checkout -q "${MANAGE_REPOSITORY}/package.json"
     fi
 
     {
