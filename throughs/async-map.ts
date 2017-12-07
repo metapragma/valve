@@ -1,9 +1,9 @@
 /* tslint:disable no-shadowed-variable */
 
 import {
-  ValveThrough,
   ValveAbort,
   ValveCallback,
+  ValveThrough,
   ValveType
 } from '../types'
 
@@ -66,7 +66,7 @@ export function asyncMap <P, R, E = Error>(map: ((data: P, cb: ValveCallback<R, 
 
       return {
         type: ValveType.Source,
-        source: next 
+        source: next
       }
     }
   }

@@ -15,6 +15,7 @@ export { infinite } from './sources/infinite'
 export { keys } from './sources/keys'
 export { once } from './sources/once'
 export { values } from './sources/values'
+export { pushable } from './sources/pushable'
 
 export { asyncMap } from './throughs/async-map'
 export { filter } from './throughs/filter'
@@ -25,3 +26,4 @@ export { nonUnique } from './throughs/non-unique'
 export { take } from './throughs/take'
 export { through } from './throughs/through'
 export { unique } from './throughs/unique'
+
