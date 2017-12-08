@@ -73,7 +73,7 @@ function npmCommit () {
                 git diff --cached --exit-code
             } > /dev/null ||  {
                 git add "${MANAGE_REPOSITORY}/package.json"
-                git commit -q --gpg-sign="${GIT_USER_SIGNINGKEY}" -m "${message}"
+                git commit -n -q --gpg-sign="${GIT_USER_SIGNINGKEY}" -m "${message}"
             }
 
 
