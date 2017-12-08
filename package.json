@@ -1,7 +1,7 @@
 {
   "name": "valve",
   "description": "minimal pull stream",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "homepage": "https://github.com/escapace/ts-pull-stream",
   "repository": {
     "type": "git",
