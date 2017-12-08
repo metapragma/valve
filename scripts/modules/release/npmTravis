@@ -14,7 +14,7 @@ npmTravis ()
 
     local code=0
     local version
-    local versionRegex='v([0-9]+)\.([0-9]+)\.([0-9]+)([\.0-9A-Za-z-]*)?'
+    local versionRegex='([0-9]+)\.([0-9]+)\.([0-9]+)([\.0-9A-Za-z-]*)?'
 
     version="$(jq -r '.version // empty' < "${MANAGE_REPOSITORY}/package.json")"
 
@@ -22,7 +22,7 @@ npmTravis ()
        [[ "${TRAVIS_TAG}" =~ ^${versionRegex}$  ]] &&
        [[ "${TRAVIS_SECURE_ENV_VARS}" == "true" ]] &&
        [[ -n "${NPM_TOKEN}"                     ]] &&
-       [[ "v${version}" == "${TRAVIS_TAG}"      ]]
+       [[ "${version}" == "${TRAVIS_TAG}"      ]]
     then
         npm run test:travis || {
             error "Failed on 'npm run test:travis'"

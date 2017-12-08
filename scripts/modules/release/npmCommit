@@ -28,7 +28,7 @@ function npmCommit () {
 
     required "${message}" || message="${tag}"
 
-    local versionRegex="v([0-9]+)\.([0-9]+)\.([0-9]+)([\.0-9A-Za-z-]*)?"
+    local versionRegex="([0-9]+)\.([0-9]+)\.([0-9]+)([\.0-9A-Za-z-]*)?"
 
     if [[ "${tag}" =~ ^${versionRegex}$ ]]
     then
@@ -48,12 +48,12 @@ function npmCommit () {
 
     version="$(jq -r '.version // empty' < "${MANAGE_REPOSITORY}/package.json")"
 
-    if [[ "${tag}" == v"${version}" ]] &&
+    if [[ "${tag}" == "${version}" ]] &&
        (( code == 0 ))
     then
         true
     else
-        local version="${tag:1}"
+        local version="${tag}"
         local tmp
 
         tmp="$(jq -r ".version = \"${version}\" // empty" < "${MANAGE_REPOSITORY}/package.json")"
