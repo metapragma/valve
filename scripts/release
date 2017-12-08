@@ -3,7 +3,7 @@
 # vim: set ft=sh:
 #
 # @description release valve
-# @import release/npmCommit
+# @import github.com/escapace/stack-tools/release/npmCommit
 
 main ()
 {
