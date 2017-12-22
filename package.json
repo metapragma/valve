@@ -46,7 +46,7 @@
     "mocha": "4.0.1",
     "nyc": "^11.3.0",
     "puppeteer": "^0.13.0",
-    "rollup": "^0.52.1",
+    "rollup": "^0.53.0",
     "rollup-plugin-typescript": "^0.8.1",
     "sinon": "^4.1.2",
     "source-map-support": "^0.5.0",
