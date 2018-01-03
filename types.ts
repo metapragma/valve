@@ -22,7 +22,7 @@ export interface ValveSinkFunction<P, E = Error> {
 }
 
 export interface ValveThroughFunction<P, R, E = Error> {
-  (source: ValveSource<P, E>): ValveSource<R, E> 
+  (source: ValveSource<P, E>): ValveSource<R, E>
   abort?: ValveAbortFunction<P, E>
 }
 

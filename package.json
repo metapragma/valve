@@ -23,8 +23,8 @@
     "test:karma": "karma start --single-run",
     "test": "npm run test:node && npm run test:karma",
     "test:travis": "npm run test:node && npm run test:karma",
-    "test:node": "TS_NODE_COMPILER_OPTIONS='{ \"declaration\": false, \"module\": \"CommonJS\" }' mocha --require ts-node/register **/*.spec.ts *.spec.ts",
-    "test:coverage": "TS_NODE_COMPILER_OPTIONS='{ \"declaration\": false, \"module\": \"CommonJS\" }' nyc mocha --require ts-node/register --require source-map-support/register --full-trace --bail **/*.spec.ts *.spec.ts",
+    "test:node": "cross-env TS_NODE_COMPILER_OPTIONS='{ \"declaration\": false, \"module\": \"CommonJS\" }' mocha --require ts-node/register **/*.spec.ts *.spec.ts",
+    "test:coverage": "cross-env TS_NODE_COMPILER_OPTIONS='{ \"declaration\": false, \"module\": \"CommonJS\" }' nyc mocha --require ts-node/register --require source-map-support/register --full-trace --bail **/*.spec.ts *.spec.ts",
     "test:codecov": "npm run test:coverage && nyc report --reporter=text-lcov > coverage.lcov && codecov"
   },
   "devDependencies": {
