@@ -13,8 +13,13 @@
     "outDir": "lib",
     "suppressImplicitAnyIndexErrors": true,
     "target": "es5",
-    "baseUrl": "external_types",
-    "typeRoots" : ["external_types", "node_modules/@types"],
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "node_modules/*",
+        "external_types/*"
+      ]
+    },
     "lib": [
       "dom",
       "es2015",
