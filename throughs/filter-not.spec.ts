@@ -1,12 +1,4 @@
-import {
-  collect,
-  filter,
-  filterNot,
-  infinite,
-  map,
-  pull,
-  take
-} from '../index'
+import { collect, filterNot, infinite, map, pull, take } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -21,14 +13,16 @@ describe('throughs/filter-not', () => {
       }),
       take(100),
       collect((_, array) => {
-        expect(array.length).to.equal(100)
+        if (array) {
+          expect(array.length).to.equal(100)
 
-        array.forEach(d => {
-          expect(d < 0.5).to.equal(true)
-          expect(d <= 1).to.equal(true)
-        })
+          array.forEach(d => {
+            expect(d < 0.5).to.equal(true)
+            expect(d <= 1).to.equal(true)
+          })
 
-        done()
+          done()
+        }
       })
     )
   })
@@ -42,12 +36,14 @@ describe('throughs/filter-not', () => {
       filterNot(n => /^[^e]+$/i.test(n)), // no E
       take(37),
       collect((_, array) => {
-        expect(array.length).to.equal(37)
-        array.forEach(d => {
-          expect(d).to.contain('e')
-          // expect(d.indexOf('e')).to.not.equal(-1)
-        })
-        done()
+        if (array) {
+          expect(array.length).to.equal(37)
+          array.forEach(d => {
+            expect(d).to.contain('e')
+            // expect(d.indexOf('e')).to.not.equal(-1)
+          })
+          done()
+        }
       })
     )
   })

@@ -6,13 +6,13 @@ import { expect } from 'chai'
 
 describe('throughs/map', () => {
   it('...', done => {
-    const p = pull(
+    pull(
       values([1, 2, 3, 4, 5, 6]),
       map(n => {
         return n + 1
       }),
       collect((_, ary) => {
-        expect(_).to.equal(null)
+        expect(_).to.equal(false)
         expect(ary).to.deep.equal([2, 3, 4, 5, 6, 7])
         done()
       })
@@ -22,7 +22,7 @@ describe('throughs/map', () => {
   it('error', done => {
     const err = new Error('unwholesome number')
 
-    const p = pull(
+    pull(
       values([1, 2, 3, 3.4, 4]),
       map(e => {
         // tslint:disable-next-line no-bitwise
@@ -30,11 +30,10 @@ describe('throughs/map', () => {
 
         // return e
       }),
-      drain(null,
-        _err => {
-          expect(_err).to.equal(err)
-          done()
-        })
+      drain(undefined, _err => {
+        expect(_err).to.equal(err)
+        done()
+      })
     )
   })
 })

@@ -1,14 +1,8 @@
-import {
-  empty,
-  error,
-  pull,
-  reduce,
-  values
-} from '../index'
+import { empty, error, pull, reduce, values } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai';
+import { expect } from 'chai'
 
 describe('sinks/reduce', () => {
   it('with initial value', done => {
@@ -19,7 +13,7 @@ describe('sinks/reduce', () => {
           return a + b
         },
         (err, val) => {
-          expect(err).to.equal(null)
+          expect(err).to.equal(false)
           expect(val).to.equal(16)
           done()
         },
@@ -36,7 +30,7 @@ describe('sinks/reduce', () => {
           return a + b
         },
         (err, val) => {
-          expect(err).to.equal(null)
+          expect(err).to.equal(false)
           expect(val).to.equal(6)
           done()
         }
@@ -70,7 +64,7 @@ describe('sinks/reduce', () => {
           return a + b
         },
         (err, val) => {
-          expect(err).to.equal(null)
+          expect(err).to.equal(false)
           expect(val).to.equal(undefined)
           done()
         }

@@ -1,23 +1,22 @@
 /* tslint:disable no-shadowed-variable */
 
-import {
-  ValveAbort,
-  ValveCallback,
-  ValveThrough,
-  ValveType
-} from '../types'
+import { ValveAbort, ValveCallback, ValveThrough, ValveType } from '../types'
 
-export function asyncMap <P, R, E = Error>(map: ((data: P, cb: ValveCallback<R, E>) => void)): ValveThrough<P, R, E> {
+import { isDataAvailable } from '../util/isDataAvailable'
+
+export function asyncMap<P, R, E = Error>(
+  map: ((data: P, cb: ValveCallback<R, E>) => void)
+): ValveThrough<P, R, E> {
   let busy: boolean = false
   let aborted: ValveAbort<E>
   let abortCb: ValveCallback<R, E>
 
   return {
     type: ValveType.Through,
-    sink (source) {
+    sink(source) {
       // tslint:disable-next-line no-function-expression
 
-      function next (abort: ValveAbort<E>, cb: ValveCallback<R, E>) {
+      function next(abort: ValveAbort<E>, cb: ValveCallback<R, E>) {
         if (aborted) {
           return cb(aborted)
         }
@@ -32,15 +31,14 @@ export function asyncMap <P, R, E = Error>(map: ((data: P, cb: ValveCallback<R, 
               // if we are still busy, wait for the mapper to complete.
               if (busy) {
                 abortCb = cb
-              }
-              else {
+              } else {
                 cb(abort)
               }
             })
           }
         } else {
-          source.source(null, (end, data) => {
-            if (end) {
+          source.source(false, (end, data) => {
+            if (!isDataAvailable(end, data)) {
               cb(end)
             } else if (aborted) {
               cb(aborted)
@@ -56,7 +54,7 @@ export function asyncMap <P, R, E = Error>(map: ((data: P, cb: ValveCallback<R, 
                 } else if (err) {
                   next(err, cb)
                 } else {
-                  cb(null, result)
+                  cb(false, result)
                 }
               })
             }

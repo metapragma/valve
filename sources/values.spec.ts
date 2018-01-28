@@ -1,9 +1,4 @@
-import {
-  collect,
-  drain,
-  pull,
-  values
-} from '../index'
+import { collect, pull, values } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -14,7 +9,7 @@ describe('sources/values', () => {
     pull(
       values([1, 2, 3]),
       collect((err, ary) => {
-        expect(err).to.equal(null)
+        expect(err).to.equal(false)
         expect(ary).to.deep.equal([1, 2, 3])
         done()
       })
@@ -25,7 +20,7 @@ describe('sources/values', () => {
     pull(
       values({ a: 1, b: 2, c: 3 }),
       collect((err, ary) => {
-        expect(err).to.equal(null)
+        expect(err).to.equal(false)
         expect(ary).to.deep.equal([1, 2, 3])
         done()
       })
@@ -39,8 +34,8 @@ describe('sources/values', () => {
       done()
     })
 
-    read.source(null, (n, one) => {
-      expect(n).to.equal(null)
+    read.source(false, (n, one) => {
+      expect(n).to.equal(false)
       expect(one).to.equal(1)
 
       read.source(err, _err => {

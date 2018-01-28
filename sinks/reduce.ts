@@ -1,34 +1,42 @@
+// import { ValveError, ValveSink, ValveType } from '../types'
+
 import {
-  ValveSink,
-  ValveError,
-  ValveSinkFunction,
   ValveAbortFunction,
-  ValveSourceFunction,
+  ValveError,
+  ValveSink,
+  ValveSource,
   ValveType
 } from '../types'
 
-import {
-  assign
-} from 'lodash'
-
 import { drain } from './drain'
 
-export function reduce <P, E = Error>(
-  reducer: (acc: P, data: P) => P,
-  cb: (end?: ValveError<E>, acc?: P) => void
+import { assign, isUndefined } from 'lodash'
+
+import { isDataAvailable } from '../util/isDataAvailable'
+
+export function reduce<P, E = Error>(
+  reducer: (accumulator: P, data: P) => P,
+  cb: (end: ValveError<E>, accumulator?: P) => void,
+  accumulator?: P
 ): ValveSink<P, E>
 
-export function reduce <P, R, E = Error>(
-  reducer: (acc: R, data: P) => R,
-  cb: (end?: ValveError<E>, acc?: R) => void,
-  acc?: R
+export function reduce<P, R, E = Error>(
+  reducer: (accumulator: R, data: P) => R,
+  cb: (end: ValveError<E>, accumulator?: R) => void,
+  accumulator?: R
 ): ValveSink<P, E>
 
-export function reduce <P, R, E = Error>(
-  reducer: (acc: P | R, data: P) => P | R,
-  cb: (end?: ValveError<E>, acc?: P | R) => void,
-  acc?: P | R
+export function reduce<P, R, E = Error>(
+  reducer: (accumulator: P | R, data: P) => P | R,
+  cb: (end: ValveError<E>, accumulator?: P | R) => void,
+  accumulator?: P | R
 ): ValveSink<P, E> {
+  let acc: P | R
+
+  if (!isUndefined(accumulator)) {
+    acc = accumulator
+  }
+
   const sink = drain<P, E>(
     data => {
       acc = reducer(acc, data)
@@ -38,24 +46,33 @@ export function reduce <P, R, E = Error>(
     }
   )
 
-  if (typeof acc === 'undefined') {
+  if (isUndefined(accumulator)) {
     return {
       type: ValveType.Sink,
-      sink(source) {
-        source.source(null, (end, data) => {
-          // if ended immediately, and no initial...
-          if (end) {
-            return cb(end === true ? null : end)
-          }
+      sink: assign<
+        (source: ValveSource<P, E>) => void,
+        { abort: ValveAbortFunction<P, E> }
+      >(
+        source => {
+          source.source(false, (end, data) => {
+            // if ended immediately, and no initial...
+            if (!isDataAvailable(end, data)) {
+              return cb(end === true ? false : end)
+            } else {
+              acc = data
 
-          acc = data
-          sink.sink(source)
-        })
-
-      }
+              sink.sink(source)
+            }
+          })
+        },
+        {
+          abort: sink.sink.abort
+        }
+      )
     }
-  }
-  else {
+  } else {
+    acc = accumulator
+
     return sink
   }
 }

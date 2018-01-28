@@ -1,24 +1,24 @@
+/* tslint:disable no-unsafe-any */
+
 import {
-  ValveSink,
-  ValveSource,
   ValveAbort,
-  ValveError,
-  ValveSinkFunction,
   ValveAbortFunction,
+  ValveError,
+  ValveSink,
+  ValveSinkFunction,
+  ValveSource,
   ValveSourceFunction,
   ValveType
 } from '../types'
 
-import {
-  assign,
-  noop,
-} from 'lodash'
+import { assign, isBoolean, isFunction } from 'lodash'
 
-import {
-  once
-} from '../util/once'
+import { once } from '../util/once'
 
-export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end: ValveError<E>) => void): ValveSink<P, E> {
+export function drain<P, E = Error>(
+  op?: (data: P) => false | void,
+  done?: (end: ValveError<E>) => void
+): ValveSink<P, E> {
   let read: ValveSourceFunction<P, E>
   let abort: ValveAbort<E>
   let aborted = false
@@ -32,7 +32,7 @@ export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end
     _read => {
       read = _read.source
 
-      if (abort) {
+      if (isFunction(sink.abort) && abort) {
         return sink.abort(abort)
       }
 
@@ -47,17 +47,23 @@ export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end
 
         while (loop) {
           cbed = false
-          read(null, (end, data) => {
+          read(false, (end, data) => {
             cbed = true
             // tslint:disable-next-line no-conditional-assignment no-parameter-reassignment
             if ((end = end || abort)) {
               loop = false
-              if (done) d(end === true ? null : end)
-              else if (end && end !== true) throw end
-            } else if ((op && false === op(data)) || abort) {
+
+              if (isFunction(done)) {
+                d(end === true ? false : end)
+              } else if (!isBoolean(end)) {
+                throw end
+              }
+            } else if ((isFunction(op) && op(data) === false) || abort) {
               loop = false
 
-              sink.abort(abort)
+              if (isFunction(sink.abort)) {
+                sink.abort(abort)
+              }
             } else if (!loop) {
               next()
             }
@@ -71,13 +77,13 @@ export function drain <P, E = Error>(op?: (data: P) => false | void, done?: (end
       })()
     },
     {
-      abort: (err, cb) => {
+      abort: (err = false, cb) => {
         abort = err || true
-        if (read && aborted === false) {
+        if (isFunction(read) && aborted === false) {
           aborted = true
 
-          return read(abort, (end, data) => {
-            if (cb) {
+          return read(abort, (end: ValveError<E>, data: P | undefined) => {
+            if (isFunction(cb)) {
               cb(end, data)
             }
 

@@ -1,17 +1,10 @@
 /* tslint:disable variable-name */
 
-import {
-  collect,
-  drain,
-  pull,
-  pushable,
-  take,
-  through
-} from '../index'
+import { collect, drain, pull, pushable, take, through } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai';
+import { expect } from 'chai'
 import { spy } from 'sinon'
 
 describe('sources/pushable', () => {
@@ -21,7 +14,25 @@ describe('sources/pushable', () => {
     pull(
       source,
       collect((err, ary) => {
-        expect(err).to.equal(null)
+        expect(err).to.equal(false)
+        expect(ary).to.deep.equal([1, 2, 3])
+        done()
+      })
+    )
+
+    push(1)
+    push(2)
+    push(3)
+    end()
+  })
+
+  it('...', done => {
+    const { push, end, source } = pushable()
+
+    pull(
+      source,
+      collect((err, ary) => {
+        expect(err).to.equal(false)
         expect(ary).to.deep.equal([1, 2, 3, 4, 5])
         done()
       })
@@ -65,7 +76,7 @@ describe('sources/pushable', () => {
   it('close callback', done => {
     let i = 0
 
-    const { push, end, source } = pushable(err => {
+    const { push, source } = pushable(err => {
       if (err) {
         throw err
       }
@@ -93,11 +104,11 @@ describe('sources/pushable', () => {
   it('abort after a read', done => {
     const _err = new Error('test error')
 
-    const { push, end, source } = pushable(err => {
+    const { source } = pushable(err => {
       expect(err).to.equal(_err)
     })
 
-    source.source(null, (err, _) => {
+    source.source(false, (err, _) => {
       expect(err).to.equal(_err)
     })
 
@@ -110,7 +121,7 @@ describe('sources/pushable', () => {
   it('abort without a read', done => {
     const _err = new Error('test error')
 
-    const { push, end, source } = pushable(err => {
+    const { source } = pushable(err => {
       expect(err).to.equal(_err)
     })
 
@@ -123,7 +134,7 @@ describe('sources/pushable', () => {
   it('abort without a read, with data', done => {
     const _err = new Error('test error')
 
-    const { push, end, source } = pushable(err => {
+    const { push, source } = pushable(err => {
       expect(err).to.equal(_err)
     })
 
@@ -143,16 +154,16 @@ describe('sources/pushable', () => {
     push(3)
     end()
 
-    source.source(null, (_end, _data) => {
+    source.source(false, (_end, _data) => {
       expect(_data).to.equal(1)
-      expect(_end).to.equal(null)
-      source.source(null, (__end, __data) => {
+      expect(_end).to.equal(false)
+      source.source(false, (__end, __data) => {
         expect(__data).to.equal(2)
-        expect(__end).to.equal(null)
-        source.source(null, (___end, ___data) => {
+        expect(__end).to.equal(false)
+        source.source(false, (___end, ___data) => {
           expect(___data).to.equal(3)
-          expect(___end).to.equal(null)
-          source.source(null, (____end, ____data) => {
+          expect(___end).to.equal(false)
+          source.source(false, (____end, ____data) => {
             expect(____data).to.equal(undefined)
             expect(____end).to.equal(true)
             done()

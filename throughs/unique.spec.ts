@@ -1,9 +1,4 @@
-import {
-  collect,
-  pull,
-  unique,
-  values
-} from '../index'
+import { collect, pull, unique, values } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -17,9 +12,11 @@ describe('throughs/unique', () => {
       values(numbers),
       unique(),
       collect((err, ary) => {
-        expect(err).to.equal(null)
-        expect(ary.sort()).to.deep.equal([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        done()
+        expect(err).to.equal(false)
+        if (ary) {
+          expect(ary.sort()).to.deep.equal([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+          done()
+        }
       })
     )
   })
@@ -31,9 +28,11 @@ describe('throughs/unique', () => {
       values(numbers),
       unique(Math.floor),
       collect((err, ary) => {
-        expect(err).to.equal(null)
-        expect(ary.sort()).to.deep.equal([0.1, 1.1])
-        done()
+        expect(err).to.equal(false)
+        if (ary) {
+          expect(ary.sort()).to.deep.equal([0.1, 1.1])
+          done()
+        }
       })
     )
   })

@@ -1,12 +1,6 @@
 import { collect, pull, take, through, values } from '../index'
 
-import {
-  ValveThrough,
-  ValveAbort,
-  ValveCallback,
-  ValveSourceFunction,
-  ValveType
-} from '../types'
+import { ValveAbort, ValveCallback, ValveThrough, ValveType } from '../types'
 
 // tslint:disable-next-line
 import immediate = require('immediate')
@@ -17,12 +11,25 @@ import { expect } from 'chai'
 
 describe('throughs/take', () => {
   it('...', done => {
+    const data = [1, 2, undefined, 4, 5, 6, 7, 8, 9, 10]
+
+    pull(
+      values(data),
+      take(5),
+      collect((_, ary) => {
+        expect(ary).to.deep.equal([1, 2, undefined, 4, 5])
+        done()
+      })
+    )
+  })
+
+  it('...', done => {
     const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
     pull(
       values(data),
       take(5),
-      through(null, _ => {
+      through(undefined, _ => {
         immediate(() => {
           done()
         })
@@ -65,21 +72,19 @@ describe('throughs/take', () => {
   it('upstream', done => {
     let reads = 0
 
-    const thr = <P, E = Error>(): ValveThrough<P, P, E> => (
-      {
-        type: ValveType.Through,
-        sink (read) {
-          return {
-            type: ValveType.Source,
-            source (end, cb) {
-              // tslint:disable-next-line no-increment-decrement
-              if (end !== true) reads++
-              read.source(end, cb)
-            }
+    const thr = <P, E = Error>(): ValveThrough<P, P, E> => ({
+      type: ValveType.Through,
+      sink(read) {
+        return {
+          type: ValveType.Source,
+          source(end, cb) {
+            // tslint:disable-next-line no-increment-decrement
+            if (end !== true) reads++
+            read.source(end, cb)
           }
         }
       }
-    )
+    })
 
     pull(
       values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
@@ -103,11 +108,13 @@ describe('throughs/take', () => {
     const read = pull(
       {
         type: ValveType.Source,
-        source (abort: ValveAbort<Error>, cb: ValveCallback<number, Error>) {
+        source(abort: ValveAbort, cb: ValveCallback<number, boolean>) {
           if (abort) cb((aborted = true))
           else if (i > ary.length) cb(true)
-          // tslint:disable-next-line no-increment-decrement
-          else cb(null, ary[i++])
+          else {
+            // tslint:disable-next-line no-increment-decrement
+            cb(false, ary[i++])
+               }
         }
       },
       take(
@@ -118,13 +125,13 @@ describe('throughs/take', () => {
       )
     )
 
-    read.source(null, () => {
+    read.source(false, () => {
       expect(aborted).to.equal(false)
-      read.source(null, () => {
+      read.source(false, () => {
         expect(aborted).to.equal(false)
-        read.source(null, () => {
+        read.source(false, () => {
           expect(aborted).to.equal(false)
-          read.source(null, (end, d) => {
+          read.source(false, (end, d) => {
             expect(end).to.equal(true)
             // t.ok(end, 'stream ended')
             expect(d).to.equal(undefined)

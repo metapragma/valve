@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+#
+# vim: set ft=sh:
+#
+# @description tslint
+
+main ()
+{
+    verbose true
+    strict true
+
+    local files
+
+    while read -d '' -r file
+    do
+        files+=("${file}")
+    done < <(find . -type f \
+        -not -path './node_modules/*' \
+        -not -path './lib/*' \
+        -not -name '*.d.ts' \
+        -name '*.ts' \
+        -print0 2> /dev/null)
+
+        # -not -name '*.spec.ts' \
+
+    ./node_modules/prettier/bin-prettier.js --parser typescript --trailing-comma none --no-semi --single-quote --write "${files[@]}"
+    ./node_modules/tslint/bin/tslint --project './tsconfig.json' --config './tslint.json' --fix "${files[@]}"
+}

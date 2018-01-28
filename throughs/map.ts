@@ -1,10 +1,12 @@
-import {
-  ValveThrough,
-  ValveType
-} from '../types'
+/* tslint:disable no-unsafe-any */
 
-export function map <P, R, E = Error>(mapper: ((data: P) => R)): ValveThrough<P, R, E> {
+import { ValveThrough, ValveType } from '../types'
 
+import { isDataAvailable } from '../util/isDataAvailable'
+
+export function map<P, R, E = Error>(
+  mapper: ((data: P) => R)
+): ValveThrough<P, R, E> {
   return {
     type: ValveType.Through,
     sink(source) {
@@ -12,10 +14,10 @@ export function map <P, R, E = Error>(mapper: ((data: P) => R)): ValveThrough<P,
         type: ValveType.Source,
         source(abort, cb) {
           source.source(abort, (end, data) => {
-            let newData: R
+            let newData: R | undefined
 
             try {
-              newData = !end ? mapper(data) : null
+              newData = isDataAvailable(end, data) ? mapper(data) : undefined
             } catch (err) {
               return source.source(err, () => {
                 return cb(err)

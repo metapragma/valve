@@ -1,9 +1,4 @@
-import {
-  collect,
-  nonUnique,
-  pull,
-  values
-} from '../index'
+import { collect, nonUnique, pull, values } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -17,9 +12,11 @@ describe('throughs/non-unique', () => {
       values(numbers),
       nonUnique(),
       collect((err, ary) => {
-        expect(err).to.equal(null)
-        expect(ary.sort()).to.deep.equal([0, 1, 2, 2, 3, 4, 6])
-        done()
+        expect(err).to.equal(false)
+        if (ary) {
+          expect(ary.sort()).to.deep.equal([0, 1, 2, 2, 3, 4, 6])
+          done()
+        }
       })
     )
   })

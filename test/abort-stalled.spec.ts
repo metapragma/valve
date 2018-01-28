@@ -3,35 +3,19 @@
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
 import { expect } from 'chai'
-import { spy } from 'sinon'
 
 // tslint:disable-next-line
 import immediate = require('immediate')
 
-import {
-  drain,
-  map,
-  pull,
-  take,
-  through
-} from '../index'
+import { drain, map, pull, take, through } from '../index'
 
 import {
-  ValveSource,
-  ValveThrough,
-  ValveSinkFunction,
-  ValveAbortFunction,
-  ValveSourceFunction,
-  ValveThroughFunction,
   ValveAbort,
   ValveCallback,
+  ValveSource,
+  ValveThrough,
   ValveType
 } from '../types'
-
-import {
-  assign,
-  noop
-} from 'lodash'
 
 function hang<P, E>(values: P[], onAbort?: () => void): ValveSource<P, E> {
   let i = 0
@@ -39,9 +23,9 @@ function hang<P, E>(values: P[], onAbort?: () => void): ValveSource<P, E> {
 
   return {
     type: ValveType.Source,
-    source (abort, cb) {
+    source(abort, cb) {
       if (i < values.length) {
-        cb(null, values[i++])
+        cb(false, values[i++])
       } else if (!abort) {
         _cb = cb
       } else {
@@ -65,12 +49,12 @@ function abortable<P, E>(): ValveThrough<P, P, E> {
 
   const reader: ValveThrough<P, P, E> = {
     type: ValveType.Through,
-    sink (read) {
+    sink(read) {
       _read = read
 
       return {
         type: ValveType.Source,
-        source (abort: ValveAbort<E>, cb: ValveCallback<P, E>) {
+        source(abort: ValveAbort<E>, cb: ValveCallback<P, E>) {
           if (abort) aborted = abort
           read.source(abort, cb)
         }
@@ -98,29 +82,36 @@ function abortable<P, E>(): ValveThrough<P, P, E> {
   return reader
 }
 
-function test <E>(trx: ValveThrough<number, number, E>, done: (err?: any) => void) {
-    const a = abortable()
+function test<E>(
+  trx: ValveThrough<number, number, E>,
+  done: (err?: any) => void
+) {
+  const a = abortable<number, E>()
 
-    const s = (): ValveSource<number, E> => hang([1, 2, 3], () => {
+  const s = (): ValveSource<number, E> =>
+    hang([1, 2, 3], () => {
       done()
     })
 
-    pull(
-      s(),
-      trx,
-      a,
-      drain(e => {
+  pull(
+    s(),
+    trx,
+    a,
+    drain(
+      e => {
         if (e === 3) {
           immediate(() => {
-            a.sink.abort()
+            if (a.sink.abort) {
+              a.sink.abort()
+            }
           })
         }
       },
-        err => {
-          expect(err).to.equal(null)
-        }
-      )
+      err => {
+        expect(err).to.equal(false)
+      }
     )
+  )
 }
 
 describe('test/abort-stalled', () => {
@@ -133,6 +124,6 @@ describe('test/abort-stalled', () => {
   })
 
   it('take', done => {
-    test(take(e => e), done)
+    test(take(() => true), done)
   })
 })

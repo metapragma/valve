@@ -1,25 +1,11 @@
 /* tslint:disable no-increment-decrement ban-comma-operator */
-import {
-  log,
-  map,
-  pull,
-  reduce,
-  through,
-  values
-} from './index'
+import { map, pull, reduce, through, values } from './index'
 
-import {
-  noop
-} from 'lodash'
-
-import {
-  ValveSinkFunction,
-  ValveSourceFunction
-} from './types'
+import { noop } from 'lodash'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai';
+import { expect } from 'chai'
 
 // function curry <P, E>(fun) {
 //   // tslint:disable-next-line no-function-expression
@@ -81,15 +67,13 @@ describe('pull', () => {
       map(e => {
         return e * e
       }),
-      through(
-        noop
-      ),
+      through(noop),
       reduce(
         (acc, data) => {
           return acc + data
         },
         (err, value) => {
-          expect(err).to.equal(null)
+          expect(err).to.equal(false)
           expect(value).to.equal(385)
           done()
         }
@@ -104,16 +88,14 @@ describe('pull', () => {
         map((e: number) => {
           return e * e
         }),
-        through(
-          noop
-        )
+        through(noop)
       ),
       reduce(
         (acc: number, data: number) => {
           return acc + data
         },
         (err, value) => {
-          expect(err).to.equal(null)
+          expect(err).to.equal(false)
           expect(value).to.equal(385)
           done()
         }
@@ -138,7 +120,7 @@ describe('pull', () => {
 
     stream.sink(values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
 
-    expect(() =>{
+    expect(() => {
       stream.sink(values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
     }).to.throw(TypeError)
   })

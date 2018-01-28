@@ -1,13 +1,8 @@
-import {
-  collect,
-  drain,
-  once,
-  pull
-} from '../index'
+import { collect, drain, once, pull } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai';
+import { expect } from 'chai'
 import { spy } from 'sinon'
 
 describe('sources/once', () => {
@@ -15,7 +10,7 @@ describe('sources/once', () => {
     pull(
       once({ a: 1, b: 2, c: 3 }),
       collect((err, ary) => {
-        expect(err).to.equal(null)
+        expect(err).to.equal(false)
         expect(ary).to.deep.equal([{ a: 1, b: 2, c: 3 }])
         done()
       })
@@ -32,7 +27,9 @@ describe('sources/once', () => {
         expect(data).to.deep.equal({ a: 1, b: 2, c: 3 })
         s()
 
-        d.sink.abort(e)
+        if (d.sink.abort) {
+          d.sink.abort(e)
+        }
       },
       abort => {
         expect(abort).to.equal(e)

@@ -1,11 +1,6 @@
-import {
-  ValveAbort,
-  ValveCallback,
-  ValveError,
-  ValveSourceFunction
-} from '../types'
+import { ValveAbort, ValveCallback, ValveError } from '../types'
 
-export function abortCb <P, E = Error>(
+export function abortCb<P, E = Error>(
   cb: ValveCallback<P, E>,
   abort: ValveAbort<E>,
   onAbort?: (abort: ValveError<E>) => void
@@ -13,6 +8,6 @@ export function abortCb <P, E = Error>(
   cb(abort)
 
   if (typeof onAbort !== 'undefined') {
-    onAbort(abort === true ? null : abort)
+    onAbort(abort === true ? false : abort)
   }
 }

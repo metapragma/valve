@@ -1,11 +1,4 @@
-import {
-  collect,
-  count,
-  infinite,
-  pull,
-  take,
-  through
-} from '../index'
+import { collect, count, infinite, pull, take, through } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -26,7 +19,7 @@ describe('throughs/through', () => {
       }),
       collect((err, ary) => {
         expect(s.callCount).to.equal(5)
-        expect(err).to.equal(null)
+        expect(err).to.equal(false)
         expect(ary).to.deep.equal([1, 2, 3, 4, 5])
         done()
       })
@@ -36,16 +29,16 @@ describe('throughs/through', () => {
   it('onEnd', done => {
     pull(
       infinite(),
-      through(null, err => {
-        expect(err).to.equal(null)
+      through(undefined, err => {
+        expect(err).to.equal(false)
 
-        immediate(() =>{
+        immediate(() => {
           done()
         })
       }),
       take(10),
       collect((err, _) => {
-        expect(err).to.equal(null)
+        expect(err).to.equal(false)
       })
     )
   })

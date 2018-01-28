@@ -10,26 +10,22 @@ import {
   values
 } from '../index'
 
-import {
-  ValveSource,
-  ValveAbort,
-  ValveType
-} from '../types'
+import { ValveAbort, ValveSource, ValveType } from '../types'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai';
+import { expect } from 'chai'
 import { spy } from 'sinon'
 
-function delay () {
+function delay() {
   return asyncMap((e, cb) => {
     setTimeout(() => {
-      cb(null, e)
+      cb(false, e)
     }, 1)
   })
 }
 
-function inf <E = Error>(
+function inf<E = Error>(
   onAbort?: (abort: ValveAbort<E>) => void
 ): ValveSource<number, E> {
   // tslint:disable-next-line insecure-random
@@ -40,7 +36,7 @@ function inf <E = Error>(
     source(abort, cb) {
       if (abort) return abortCb(cb, abort, onAbort)
 
-      cb(null, f())
+      cb(false, f())
     }
   }
 }
@@ -76,7 +72,7 @@ describe('sinks/drain', () => {
         s()
         if (c < 0) throw new Error('stream should have aborted')
         // tslint:disable-next-line no-increment-decrement
-        if (!--c) drain.sink.abort(e)
+        if (!--c && drain.sink.abort) drain.sink.abort(e)
       },
       err => {
         expect(err).to.equal(e)
@@ -118,7 +114,7 @@ describe('sinks/drain', () => {
         s()
         if (c < 0) throw new Error('stream should have aborted')
         // tslint:disable-next-line no-increment-decrement
-        if (!--c) drain.sink.abort(e)
+        if (!--c && drain.sink.abort) drain.sink.abort(e)
       },
       err => {
         expect(err).to.equal(e)
@@ -149,7 +145,9 @@ describe('sinks/drain', () => {
     pull(infinite(), delay(), drain)
 
     setTimeout(() => {
-      drain.sink.abort(ERR)
+      if (drain.sink.abort) {
+        drain.sink.abort(ERR)
+      }
     }, 100)
   })
 
@@ -164,7 +162,7 @@ describe('sinks/drain', () => {
         s1()
         if (c < 0) throw new Error('stream should have aborted')
         // tslint:disable-next-line no-increment-decrement
-        if (!--c) drain.sink.abort(e)
+        if (!--c && drain.sink.abort) drain.sink.abort(e)
       },
       err => {
         s2()
@@ -173,13 +171,11 @@ describe('sinks/drain', () => {
     )
 
     pull(
-      inf(
-        () => {
-          expect(s1.callCount).to.equal(100)
-          expect(s2.callCount).to.equal(1)
-          done()
-        }
-      ),
+      inf(() => {
+        expect(s1.callCount).to.equal(100)
+        expect(s2.callCount).to.equal(1)
+        done()
+      }),
       drain
     )
   })
@@ -219,25 +215,19 @@ describe('sinks/drain', () => {
     expect(() =>
       pull(
         error(ERR),
-        pullDrain(
-          data => {
-            expect(data).to.equal(undefined)
-          },
-        )
+        pullDrain(data => {
+          expect(data).to.equal(undefined)
+        })
       )
     ).to.throw(ERR)
   })
 
   it('empty', () => {
-    const ERR = new Error('qwe')
-
     pull(
       empty(),
-      pullDrain(
-        data => {
-          expect(data).to.equal(undefined)
-        },
-      )
+      pullDrain(data => {
+        expect(data).to.equal(undefined)
+      })
     )
   })
 
@@ -259,9 +249,6 @@ describe('sinks/drain', () => {
 
     stream.sink.abort(ERR)
 
-    pull(
-      values([1, 2, 3, 4]),
-      stream
-    )
+    pull(values([1, 2, 3, 4]), stream)
   })
 })

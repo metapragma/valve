@@ -1,20 +1,15 @@
-import {
-  error,
-  onEnd,
-  pull,
-  values
-} from '../index'
+import { error, onEnd, pull, values } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai';
+import { expect } from 'chai'
 
 describe('sinks/on-end', () => {
   it('...', done => {
     pull(
       values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       onEnd(err => {
-        expect(err).to.equal(null)
+        expect(err).to.equal(false)
         done()
       })
     )

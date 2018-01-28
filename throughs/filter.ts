@@ -1,18 +1,16 @@
-import {
-  ValveAbort,
-  ValveCallback,
-  ValveThrough,
-  ValveType,
-} from '../types'
+import { ValveAbort, ValveCallback, ValveThrough, ValveType } from '../types'
 
-export function filter <P, K extends keyof P, E = Error>(test: ((data: P) => boolean)): ValveThrough<P, P, E> {
+import { isDataAvailable } from '../util/isDataAvailable'
+
+export function filter<P, E = Error>(
+  test: ((data: P) => boolean)
+): ValveThrough<P, P, E> {
   return {
     type: ValveType.Through,
-    sink (source) {
+    sink(source) {
       // tslint:disable-next-line no-function-expression
 
-      function next (end: ValveAbort<E>, cb: ValveCallback<P, E>) {
-
+      function next(end: ValveAbort<E>, cb: ValveCallback<P, E>) {
         let sync: boolean
         let loop = true
 
@@ -22,10 +20,8 @@ export function filter <P, K extends keyof P, E = Error>(test: ((data: P) => boo
 
           // tslint:disable-next-line no-shadowed-variable
           source.source(end, (end, data) => {
-            if (!end && !test(data)) {
-              return sync
-                ? (loop = true)
-                : next(end, cb)
+            if (isDataAvailable(end, data) && !test(data)) {
+              return sync ? (loop = true) : next(end, cb)
             }
             cb(end, data)
           })
@@ -36,7 +32,7 @@ export function filter <P, K extends keyof P, E = Error>(test: ((data: P) => boo
 
       return {
         type: ValveType.Source,
-        source: next 
+        source: next
       }
     }
   }

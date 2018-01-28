@@ -27,3 +27,4 @@ export { take } from './throughs/take'
 export { through } from './throughs/through'
 export { unique } from './throughs/unique'
 
+export { isDataAvailable } from './util/isDataAvailable'

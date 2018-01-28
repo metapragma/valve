@@ -3,12 +3,13 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "downlevelIteration": true,
+    "strict": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
     "preserveConstEnums": true,
     "declaration": true,
     "declarationDir": "types",
-    "noUnusedLocals": false,
+    "noUnusedLocals": true,
     "noUnusedParameters": true,
     "outDir": "lib",
     "suppressImplicitAnyIndexErrors": true,
@@ -37,6 +38,8 @@
     "benchmarks",
     "node_modules",
     "scripts",
-    "vendor"
+    "vendor",
+    "*/*.spec.ts",
+    "*.spec.ts"
   ]
 }

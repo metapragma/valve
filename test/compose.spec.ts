@@ -1,21 +1,11 @@
-import {
-  collect,
-  map,
-  pull,
-  values
-} from '../index'
-
-import {
-  ValveThrough
-} from '../types'
+import { collect, map, pull, values } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai';
+import { expect } from 'chai'
 
 describe('test/compose', () => {
   it('test through streams compose on pipe', done => {
-
     const pipeline = pull(
       map((d: string) => {
         // make exciting!
@@ -41,10 +31,7 @@ describe('test/compose', () => {
     // if we pipe a read function to the pipeline,
     // the pipeline will become readable!
 
-    const read = pull(
-      values(['billy', 'joe', 'zeke']),
-      pipeline
-    )
+    const read = pull(values(['billy', 'joe', 'zeke']), pipeline)
 
     // t.equal('function', typeof read)
     // we will know it's a read function,
@@ -54,9 +41,11 @@ describe('test/compose', () => {
     pull(
       read,
       collect((_, array) => {
-        expect(array).to.deep.equal(
-          [ '*** BILLY! ***', '*** JOE! ***', '*** ZEKE! ***' ]
-        )
+        expect(array).to.deep.equal([
+          '*** BILLY! ***',
+          '*** JOE! ***',
+          '*** ZEKE! ***'
+        ])
 
         done()
       })

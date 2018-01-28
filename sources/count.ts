@@ -1,18 +1,19 @@
-import {
-  ValveSource,
-  ValveType
-} from '../types'
+import { ValveSource, ValveType } from '../types'
 
-export function count (max?: number): ValveSource<number> {
+export function count(max = Infinity): ValveSource<number> {
   let i = 0
-  max = max || Infinity
 
   return {
     type: ValveType.Source,
-    source (end, cb) {
-      if (end) return cb && cb(end)
-      if (i >= max) return cb(true)
-      cb(null, i+=1)
+    source(end, cb) {
+      if (end) {
+        return cb(end)
+      }
+      if (i >= max) {
+        return cb(true)
+      }
+
+      cb(false, (i += 1))
     }
   }
 }

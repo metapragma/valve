@@ -8,12 +8,7 @@ import {
   values
 } from '../index'
 
-import {
-  ValveSource,
-  ValveAbort,
-  ValveCallback,
-  ValveType
-} from '../types'
+import { ValveAbort, ValveCallback, ValveType } from '../types'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -29,11 +24,14 @@ describe('throughs/async-map', () => {
       count(),
       take(21),
       asyncMap((data, cb) => {
-        return cb(null, data + 1)
+        return cb(false, data + 1)
       }),
-      collect((_, ary) => {
-        expect(ary.length).to.equal(21)
-        done()
+      collect((err, ary) => {
+        expect(err).to.equal(false)
+        if (ary) {
+          expect(ary.length).to.equal(21)
+          done()
+        }
       })
     )
   })
@@ -46,12 +44,12 @@ describe('throughs/async-map', () => {
       infinite(),
       asyncMap((data, cb) => {
         immediate(() => {
-          cb(null, data)
+          cb(false, data)
         })
       })
     )
 
-    read.source(null, end => {
+    read.source(false, end => {
       if (!end) {
         done(new Error('expected read to end'))
       }
@@ -79,28 +77,28 @@ describe('throughs/async-map', () => {
       // tslint:disable-next-line no-shadowed-variable
       {
         type: ValveType.Source,
-        source (_: ValveAbort<Error>, cb: ValveCallback<string, Error>) {
+        source(_: ValveAbort, cb: ValveCallback<string>) {
           immediate(() => {
             if (err) return cb(err)
-            cb(null, 'x')
+            cb(false, 'x')
           })
         }
       },
       asyncMap((data, cb) => {
         immediate(() => {
-          cb(null, data)
+          cb(false, data)
         })
       })
     )
 
-    read.source(null, end => {
+    read.source(false, end => {
       s()
-      if(!end) done(new Error('expected read to end'))
+      if (!end) done(new Error('expected read to end'))
       expect(end).to.equal(err)
     })
 
     read.source(err, end => {
-      if(!end) done(new Error('expected abort to end'))
+      if (!end) done(new Error('expected abort to end'))
       expect(end).to.equal(err)
       expect(s.callCount).to.equal(1)
       done()
@@ -111,7 +109,7 @@ describe('throughs/async-map', () => {
     const ERR = new Error('abort')
 
     pull(
-      values([1,2,3], err => {
+      values([1, 2, 3], err => {
         // console.log('on abort')
         expect(err).to.equal(ERR)
         done()

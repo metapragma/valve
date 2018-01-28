@@ -1,5 +1,9 @@
 {
   "extends": [
     "tslint-config-escapace"
-  ]
+  ],
+  "rules": {
+    "type-literal-delimiter": false,
+    "no-void-expression": false
+  }
 }

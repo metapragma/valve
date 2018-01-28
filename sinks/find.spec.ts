@@ -1,15 +1,8 @@
-import {
-  asyncMap,
-  empty,
-  error,
-  find,
-  pull,
-  values
-} from '../index'
+import { asyncMap, empty, error, find, pull, values } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai';
+import { expect } from 'chai'
 
 // tslint:disable-next-line
 import immediate = require('immediate')
@@ -21,7 +14,7 @@ describe('sinks/find', () => {
       find(
         (err, seven) => {
           expect(seven).to.equal(7)
-          expect(err).to.equal(null)
+          expect(err).to.equal(false)
           done()
         },
         d => {
@@ -44,7 +37,7 @@ describe('sinks/find', () => {
       find(
         (err, found) => {
           expect(found).to.equal(target)
-          expect(err).to.equal(null)
+          expect(err).to.equal(false)
           done()
         },
         d => {
@@ -63,8 +56,8 @@ describe('sinks/find', () => {
       values(f.sort()),
       find(
         (err, found) => {
-          expect(found).to.equal(null)
-          expect(err).to.equal(null)
+          expect(found).to.equal(undefined)
+          expect(err).to.equal(false)
           done()
         },
         d => {
@@ -79,13 +72,13 @@ describe('sinks/find', () => {
       values([1, 2, 3, 4, 5, 6, 7, 7, 8, 9, 10]),
       asyncMap((e, cb) => {
         immediate(() => {
-          cb(null, e)
+          cb(false, e)
         })
       }),
       find(
         (err, seven) => {
           expect(seven).to.equal(7)
-          expect(err).to.equal(null)
+          expect(err).to.equal(false)
           done()
         },
         d => {
@@ -100,9 +93,9 @@ describe('sinks/find', () => {
       values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       find((err, first) => {
         expect(first).to.equal(1)
-        expect(err).to.equal(null)
+        expect(err).to.equal(false)
         done()
-      }, null)
+      })
     )
   })
 
@@ -121,7 +114,7 @@ describe('sinks/find', () => {
     pull(
       empty(),
       find((err, _) => {
-        expect(err).to.equal(null)
+        expect(err).to.equal(false)
         done()
       }, () => true)
     )

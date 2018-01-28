@@ -1,13 +1,8 @@
-import {
-  concat,
-  pull,
-  through,
-  values
-} from '../index'
+import { concat, pull, through, values } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai';
+import { expect } from 'chai'
 
 describe('sinks/concat', () => {
   it('...', done => {

@@ -1,8 +1,10 @@
-export type ValveError<E = Error> = null | E
-export type ValveAbort<E = Error> = true | ValveError<E>
+export type ValveError<E = Error> = boolean | E
+export type ValveAbort<E = Error> = boolean | ValveError<E>
 
-export type ValveCallback<P, E = Error> =
-  (abort: ValveAbort<E>, data?: P) => void
+export type ValveCallback<P, E = Error> = (
+  abort: ValveAbort<E>,
+  data?: P
+) => void
 
 export enum ValveType {
   Source,
@@ -10,15 +12,19 @@ export enum ValveType {
   Through
 }
 
-export type ValveSourceFunction<P, E = Error> =
-  (abort: ValveAbort<E>, cb: ValveCallback<P, E>) => void
+export type ValveSourceFunction<P, E = Error> = (
+  abort: ValveAbort<E>,
+  cb: ValveCallback<P, E>
+) => void
 
-export type ValveAbortFunction<P, E> =
-  (err?: ValveAbort<E>, cb?: ValveCallback<P, E>) => void
+export type ValveAbortFunction<P, E> = (
+  err?: ValveAbort<E>,
+  cb?: ValveCallback<P, E>
+) => void
 
 export interface ValveSinkFunction<P, E = Error> {
   (source: ValveSource<P, E>): void
-  abort?: ValveAbortFunction<P, E>
+  abort: ValveAbortFunction<P, E>
 }
 
 export interface ValveThroughFunction<P, R, E = Error> {
