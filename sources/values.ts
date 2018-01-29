@@ -18,16 +18,6 @@ export function values<P, K extends keyof P, E = Error>(
   input: P,
   onAbort?: (abort: ValveError<E>) => void
 ): ValveSource<P[K], E> {
-  // if (typeof input === 'undefined') {
-  //   return {
-  //     type: StreamType.Source,
-  //     source(abort, cb) {
-  //       if (abort) return abortCb(cb, abort, onAbort)
-  //
-  //       return cb(true)
-  //     }
-  //   }
-  // }
 
   const array: P[K][] = _values(input)
 

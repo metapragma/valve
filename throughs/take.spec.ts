@@ -11,6 +11,19 @@ import { expect } from 'chai'
 
 describe('throughs/take', () => {
   it('...', done => {
+    const data = [1]
+
+    pull(
+      values(data),
+      take(0),
+      collect((_, ary) => {
+        expect(ary).to.deep.equal([])
+        done()
+      })
+    )
+  })
+
+  it('...', done => {
     const data = [1, 2, undefined, 4, 5, 6, 7, 8, 9, 10]
 
     pull(

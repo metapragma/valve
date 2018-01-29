@@ -1,7 +1,6 @@
 /* tslint:disable no-unsafe-any */
 
 import {
-  ValveAbort,
   ValveAbortFunction,
   ValveError,
   ValveSink,
@@ -15,12 +14,16 @@ import { assign, isBoolean, isFunction } from 'lodash'
 
 import { once } from '../util/once'
 
+import {
+  hasEnded
+} from '../util/hasEnded'
+
 export function drain<P, E = Error>(
   op?: (data: P) => false | void,
   done?: (end: ValveError<E>) => void
 ): ValveSink<P, E> {
   let read: ValveSourceFunction<P, E>
-  let abort: ValveAbort<E>
+  let abort: true | E
   let aborted = false
   const d = once(done)
 
@@ -32,7 +35,7 @@ export function drain<P, E = Error>(
     _read => {
       read = _read.source
 
-      if (isFunction(sink.abort) && abort) {
+      if (hasEnded(abort)) {
         return sink.abort(abort)
       }
 
@@ -50,7 +53,7 @@ export function drain<P, E = Error>(
           read(false, (end, data) => {
             cbed = true
             // tslint:disable-next-line no-conditional-assignment no-parameter-reassignment
-            if ((end = end || abort)) {
+            if ((end = end || hasEnded(abort))) {
               loop = false
 
               if (isFunction(done)) {
@@ -58,12 +61,10 @@ export function drain<P, E = Error>(
               } else if (!isBoolean(end)) {
                 throw end
               }
-            } else if ((isFunction(op) && op(data) === false) || abort) {
+            } else if ((isFunction(op) && op(data) === false) || hasEnded(abort)) {
               loop = false
 
-              if (isFunction(sink.abort)) {
-                sink.abort(abort)
-              }
+              sink.abort(abort)
             } else if (!loop) {
               next()
             }
@@ -77,17 +78,18 @@ export function drain<P, E = Error>(
       })()
     },
     {
-      abort: (err = false, cb) => {
+      abort: (err, cb) => {
+        // tslint:disable-next-line strict-boolean-expressions
         abort = err || true
         if (isFunction(read) && aborted === false) {
           aborted = true
 
           return read(abort, (end: ValveError<E>, data: P | undefined) => {
             if (isFunction(cb)) {
-              cb(end, data)
+              cb(end === true ? false : end, data)
             }
 
-            return d(end)
+            return d(end === true ? false : end)
           })
         }
       }

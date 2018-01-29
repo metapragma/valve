@@ -15,29 +15,24 @@ export function pushable<P, E = Error>(
   end: (e?: ValveError<E>) => void
   push: (data: P) => void
 } {
-  // create a buffer for data
-  // that have been pushed
-  // but not yet pulled.
+  // create a buffer for data that have been pushed but not yet pulled.
   const buffer: P[] = []
 
-  // a pushable is a source stream
-  // (abort, cb) => cb(end, data)
+  // a pushable is a source stream (abort, cb) => cb(end, data)
   //
-  // when pushable is pulled,
-  // keep references to abort and cb
-  // so we can call back after
-  // .end(end) or .push(data)
+  // when pushable is pulled, keep references to abort and cb so we can call
+  // back after
+  // end(end) or push(data)
 
   let abort: ValveAbort<E> = false
   let cb: ValveCallback<P, E> | false
   let ended: ValveAbort<E> = false
 
-  // `callback` calls back to waiting sink,
-  // and removes references to sink cb.
+  // `callback` calls back to waiting sink, and removes references to sink cb.
   const callback = (err: ValveAbort<E>, val?: P): void => {
     const _cb = cb
-    // if error and pushable passed onDone, call it
-    // the first time this stream ends or errors.
+    // if error and pushable passed onDone, call it the first time this stream
+    // ends or errors.
     if (err && isFunction(onDone)) {
       const c = onDone
       // tslint:disable-next-line no-parameter-reassignment
@@ -51,8 +46,7 @@ export function pushable<P, E = Error>(
     }
   }
 
-  // `drain` calls back to (if any) waiting
-  // sink with abort, end, or next data.
+  // `drain` calls back to (if any) waiting sink with abort, end, or next data.
   const drain = (): void => {
     if (!cb) return
 
@@ -82,17 +76,14 @@ export function pushable<P, E = Error>(
 
   const push = (data: P): void => {
     if (ended) return
-    // if sink already waiting,
-    // we can call back directly.
+    // if sink already waiting, we can call back directly.
     if (cb) {
       callback(abort, data)
 
       return
     }
-    // otherwise push data and
-    // attempt to drain
+    // otherwise push data and attempt to drain
     buffer.push(data)
-    drain()
   }
 
   return { push, end, source }

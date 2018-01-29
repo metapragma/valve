@@ -23,15 +23,21 @@ export function take<P, E = Error>(
   let tester: (data: P) => boolean
 
   if (isNumber(test)) {
-    last = true
-
     let n = test
-    tester = () => {
-      if (n !== 0) {
-        n -= 1
-      }
 
-      return n !== 0
+    if (n <= 0) {
+      last = false
+      n = 0
+    } else {
+      last = true
+    }
+
+    tester = () => {
+      if (n === 0) return false
+
+      n -= 1
+
+      return n > 0
     }
   } else {
     tester = test

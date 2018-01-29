@@ -53,7 +53,7 @@ describe('sinks/drain', () => {
         if (!--c) return false
       },
       abort => {
-        expect(abort).to.equal(true)
+        expect(abort).to.equal(false)
         expect(s.callCount).to.equal(100)
         done()
       }
@@ -96,7 +96,7 @@ describe('sinks/drain', () => {
         if (!--c) return false
       },
       abort => {
-        expect(abort).to.equal(true)
+        expect(abort).to.equal(false)
         expect(s.callCount).to.equal(100)
         done()
       }
@@ -250,5 +250,84 @@ describe('sinks/drain', () => {
     stream.sink.abort(ERR)
 
     pull(values([1, 2, 3, 4]), stream)
+  })
+
+  it('abort on drain - async', done => {
+    let c = 100
+    const s = spy()
+    const drain = pullDrain(
+      () => {
+        s()
+        if (c < 0) throw new Error('stream should have aborted')
+        // tslint:disable-next-line no-increment-decrement
+        if (!--c) return false
+      },
+      abort => {
+        expect(abort).to.equal(false)
+        expect(s.callCount).to.equal(100)
+        done()
+      }
+    )
+
+    pull(infinite(), drain)
+  })
+
+  it('no abort', done => {
+    const s = spy()
+    const drain = pullDrain(
+      () => {
+        s()
+      },
+      abort => {
+        expect(abort).to.equal(false)
+        expect(s.callCount).to.equal(4)
+        done()
+      }
+    )
+
+    pull(values([1, 2, 3, 4]), drain)
+  })
+
+  it('abort while inside op', done => {
+    const s = spy()
+    // let n = 0
+    const drain = pullDrain(
+      n => {
+        s()
+        expect(n).to.equal(1)
+        drain.sink.abort(true, err => {
+          expect(err).to.equal(false)
+        })
+      },
+      abort => {
+        expect(abort).to.equal(false)
+        expect(s.callCount).to.equal(1)
+        done()
+      }
+    )
+
+    pull(values([1, 2, 3, 4, 5]), drain)
+  })
+
+  it('abort while inside op and return false', done => {
+    const s = spy()
+    const drain = pullDrain(
+      n => {
+        s()
+        expect(n).to.equal(1)
+        drain.sink.abort(true, err => {
+          expect(err).to.equal(false)
+        })
+
+        return false
+      },
+      abort => {
+        expect(abort).to.equal(false)
+        expect(s.callCount).to.equal(1)
+        done()
+      }
+    )
+
+    pull(values([1, 2, 3, 4, 5]), drain)
   })
 })

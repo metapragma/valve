@@ -18,7 +18,7 @@ export type ValveSourceFunction<P, E = Error> = (
 ) => void
 
 export type ValveAbortFunction<P, E> = (
-  err?: ValveAbort<E>,
+  err?: true | E,
   cb?: ValveCallback<P, E>
 ) => void
 
