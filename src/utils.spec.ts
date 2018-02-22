@@ -1,16 +1,10 @@
-import { collect, map, pull, values } from '../index'
-
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
 import { expect } from 'chai'
 
-import {
-  hasEnded
-} from '../util/hasEnded'
+import { hasEnded } from './util/hasEnded'
 
-import {
-  isDataAvailable
-} from '../util/isDataAvailable'
+import { isDataAvailable } from './util/isDataAvailable'
 
 describe('utilities', () => {
   it('hasEnded', () => {

@@ -5,11 +5,9 @@ import { identity, includes } from 'lodash'
 // drop items you have already seen
 
 export function unique<P, K, E = Error>(
-  iteratee?: ((data: P) => K),
-  invert?: boolean
+  test: ((data: P) => K) = identity,
+  invert: boolean = false
 ): ValveThrough<P, P, E> {
-  const test = typeof iteratee === 'undefined' ? identity : iteratee
-
   const seen: K[] = []
 
   return filter((data: P) => {

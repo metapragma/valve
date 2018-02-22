@@ -127,7 +127,7 @@ describe('throughs/take', () => {
           else {
             // tslint:disable-next-line no-increment-decrement
             cb(false, ary[i++])
-               }
+          }
         }
       },
       take(

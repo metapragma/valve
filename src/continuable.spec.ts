@@ -1,4 +1,4 @@
-import { collect, count, error, map, pull, through } from '../index'
+import { collect, count, error, map, pull, through } from './index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -8,7 +8,7 @@ import { noop } from 'lodash'
 
 import { spy } from 'sinon'
 
-describe('test/continuable', () => {
+describe('continuable', () => {
   it('continuable stream', done => {
     // With values:
     const sA = spy()

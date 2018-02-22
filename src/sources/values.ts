@@ -18,7 +18,6 @@ export function values<P, K extends keyof P, E = Error>(
   input: P,
   onAbort?: (abort: ValveError<E>) => void
 ): ValveSource<P[K], E> {
-
   const array: P[K][] = _values(input)
 
   let i = -1

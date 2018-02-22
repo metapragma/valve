@@ -9,15 +9,7 @@ module.exports = function(config) {
     },
     frameworks: ['mocha', 'karma-typescript'],
     files: [
-      'index.ts',
-      'pull.ts',
-      'pull.spec.ts',
-      'types.ts',
-      'util/**/*.ts',
-      'sinks/**/*.ts',
-      'sources/**/*.ts',
-      'test/**/*.ts',
-      'throughs/**/*.ts'
+      'src/**/*.ts'
     ],
     preprocessors: {
       '**/*.ts': 'karma-typescript',

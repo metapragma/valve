@@ -15,10 +15,7 @@ main ()
     do
         files+=("${file}")
     done < <(find . -type f \
-        -not -path './node_modules/*' \
-        -not -path './lib/*' \
-        -not -name '*.spec.ts' \
-        -not -name '*.d.ts' \
+        -path './src/*' \
         -name '*.ts' \
         -print0 2> /dev/null)
 

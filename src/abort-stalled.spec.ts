@@ -7,7 +7,7 @@ import { expect } from 'chai'
 // tslint:disable-next-line
 import immediate = require('immediate')
 
-import { drain, map, pull, take, through } from '../index'
+import { drain, map, pull, take, through } from './index'
 
 import {
   ValveAbort,
@@ -15,7 +15,7 @@ import {
   ValveSource,
   ValveThrough,
   ValveType
-} from '../types'
+} from './types'
 
 function hang<P, E>(values: P[], onAbort?: () => void): ValveSource<P, E> {
   let i = 0
@@ -114,7 +114,7 @@ function test<E>(
   )
 }
 
-describe('test/abort-stalled', () => {
+describe('abort-stalled', () => {
   it('through', done => {
     test(through(e => e), done)
   })

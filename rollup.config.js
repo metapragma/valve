@@ -5,7 +5,7 @@ export default {
   output: {
     format: process.env.NODE_ROLLUP_TARGET
   },
-  input: 'index.ts',
+  input: 'src/index.ts',
   external: [
     'lodash'
   ],

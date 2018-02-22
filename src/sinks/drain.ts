@@ -14,9 +14,7 @@ import { assign, isBoolean, isFunction } from 'lodash'
 
 import { once } from '../util/once'
 
-import {
-  hasEnded
-} from '../util/hasEnded'
+import { hasEnded } from '../util/hasEnded'
 
 export function drain<P, E = Error>(
   op?: (data: P) => false | void,
@@ -61,7 +59,10 @@ export function drain<P, E = Error>(
               } else if (!isBoolean(end)) {
                 throw end
               }
-            } else if ((isFunction(op) && op(data) === false) || hasEnded(abort)) {
+            } else if (
+              (isFunction(op) && op(data) === false) ||
+              hasEnded(abort)
+            ) {
               loop = false
 
               sink.abort(abort)

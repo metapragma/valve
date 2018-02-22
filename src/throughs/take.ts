@@ -6,9 +6,7 @@ import { defaults, isNumber } from 'lodash'
 
 import { isDataAvailable } from '../util/isDataAvailable'
 
-import {
-  hasEnded
-} from '../util/hasEnded'
+import { hasEnded } from '../util/hasEnded'
 
 // read a number of items and then stop.
 export function take<P, E = Error>(

@@ -1,10 +1,10 @@
-import { collect, map, pull, values } from '../index'
+import { collect, map, pull, values } from './index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
 import { expect } from 'chai'
 
-describe('test/compose', () => {
+describe('compose', () => {
   it('test through streams compose on pipe', done => {
     const pipeline = pull(
       map((d: string) => {

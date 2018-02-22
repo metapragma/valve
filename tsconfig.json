@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
     "module": "CommonJS",
     "moduleResolution": "node",
     "downlevelIteration": true,
@@ -17,8 +18,7 @@
     "baseUrl": ".",
     "paths": {
       "*": [
-        "node_modules/*",
-        "external_types/*"
+        "src/types/*"
       ]
     },
     "lib": [
@@ -34,12 +34,7 @@
       "scripthost"
     ]
   },
-  "exclude": [
-    "benchmarks",
-    "node_modules",
-    "scripts",
-    "vendor",
-    "*/*.spec.ts",
-    "*.spec.ts"
+  "include": [
+    "src"
   ]
 }
