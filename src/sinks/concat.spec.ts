@@ -2,7 +2,7 @@ import { concat, pull, through, values } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai'
+import { assert } from 'chai'
 
 describe('sinks/concat', () => {
   it('...', done => {
@@ -10,14 +10,18 @@ describe('sinks/concat', () => {
 
     pull(
       values('hello there this is a test'.split(/([aeiou])/)),
-      through(() => {
-        // tslint:disable-next-line no-increment-decrement
-        n++
+      through({
+        onData() {
+          // tslint:disable-next-line no-increment-decrement
+          n++
+        }
       }),
-      concat((_, mess) => {
-        expect(mess).to.equal('hello there this is a test')
-        expect(n).to.equal(17)
-        done()
+      concat({
+        onData(action) {
+          assert.deepEqual(action.payload, 'hello there this is a test')
+          assert.equal(n, 17)
+          done()
+        }
       })
     )
   })

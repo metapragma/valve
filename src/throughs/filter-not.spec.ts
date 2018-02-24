@@ -2,7 +2,7 @@ import { collect, filterNot, infinite, map, pull, take } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai'
+import { assert } from 'chai'
 
 describe('throughs/filter-not', () => {
   it('random', done => {
@@ -12,13 +12,13 @@ describe('throughs/filter-not', () => {
         return d > 0.5
       }),
       take(100),
-      collect((_, array) => {
-        if (array) {
-          expect(array.length).to.equal(100)
+      collect({
+        onData(action) {
+          assert.equal(action.payload.length, 100)
 
-          array.forEach(d => {
-            expect(d < 0.5).to.equal(true)
-            expect(d <= 1).to.equal(true)
+          action.payload.forEach(d => {
+            assert.equal(d < 0.5, true)
+            assert.equal(d <= 1, true)
           })
 
           done()
@@ -35,13 +35,13 @@ describe('throughs/filter-not', () => {
       }),
       filterNot(n => /^[^e]+$/i.test(n)), // no E
       take(37),
-      collect((_, array) => {
-        if (array) {
-          expect(array.length).to.equal(37)
-          array.forEach(d => {
-            expect(d).to.contain('e')
-            // expect(d.indexOf('e')).to.not.equal(-1)
+      collect({
+        onData(action) {
+          assert.equal(action.payload.length, 37)
+          action.payload.forEach(d => {
+            assert.include(d, 'e')
           })
+
           done()
         }
       })

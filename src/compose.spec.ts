@@ -2,7 +2,7 @@ import { collect, map, pull, values } from './index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai'
+import { assert } from 'chai'
 
 describe('compose', () => {
   it('test through streams compose on pipe', done => {
@@ -40,14 +40,16 @@ describe('compose', () => {
 
     pull(
       read,
-      collect((_, array) => {
-        expect(array).to.deep.equal([
-          '*** BILLY! ***',
-          '*** JOE! ***',
-          '*** ZEKE! ***'
-        ])
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, [
+            '*** BILLY! ***',
+            '*** JOE! ***',
+            '*** ZEKE! ***'
+          ])
 
-        done()
+          done()
+        }
       })
     )
   })

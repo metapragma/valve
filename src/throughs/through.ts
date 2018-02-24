@@ -1,38 +1,33 @@
-/* tslint:disable no-shadowed-variable no-unused-expression */
-
 // a pass through stream that doesn't change the value.
 
-import { ValveAbort, ValveError, ValveThrough, ValveType } from '../types'
+import {
+  ValveActionAbort,
+  ValveActionData,
+  ValveActionError,
+  ValveError,
+  ValveThrough
+} from '../types'
+
+import { createThrough } from '../utilities'
 
 import { isFunction } from 'lodash'
 
-export function through<P, E = Error>(
-  op?: (data: P) => void,
-  onEnd?: (abort: ValveError<E>) => void
+export function through<P, E = ValveError>(
+  options: {
+    onAbort?(action: ValveActionAbort): void
+    onError?(action: ValveActionError<E>): void
+    onData?(action: ValveActionData<P>): void
+  } = {}
 ): ValveThrough<P, P, E> {
-  let a = false
-
-  const once = (abort: ValveAbort<E>) => {
-    if (a || !isFunction(onEnd)) return
-    a = true
-    onEnd(abort === true ? false : abort)
-  }
-
-  return {
-    type: ValveType.Through,
-    sink(source) {
-      return {
-        type: ValveType.Source,
-        source(end, cb) {
-          if (end) once(end)
-
-          return source.source(end, (end, data) => {
-            if (!end) isFunction(op) && op(data)
-            else once(end)
-            cb(end, data)
-          })
-        }
+  return createThrough<P, P, E>({
+    onAbort: options.onAbort,
+    onError: options.onError,
+    onData(action, cb) {
+      if (isFunction(options.onData)) {
+        options.onData(action)
       }
+
+      cb(action)
     }
-  }
+  })
 }

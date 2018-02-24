@@ -1,12 +1,13 @@
-import { ValveSource, ValveType } from '../types'
+import { ValveActionType, ValveError, ValveSource } from '../types'
+
+import { createSource } from '../utilities'
 
 // a stream that errors immediately.
 
-export function error<E = Error>(err: E): ValveSource<void, E> {
-  return {
-    type: ValveType.Source,
-    source(_, cb) {
-      cb(err)
+export function error<P, E = ValveError>(err: E): ValveSource<P, E> {
+  return createSource<P, E>({
+    onPull(_, cb) {
+      cb({ type: ValveActionType.Error, payload: err })
     }
-  }
+  })
 }

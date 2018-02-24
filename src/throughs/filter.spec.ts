@@ -1,8 +1,17 @@
-import { collect, filter, infinite, map, pull, take } from '../index'
+import {
+  collect,
+  empty,
+  error,
+  filter,
+  infinite,
+  map,
+  pull,
+  take
+} from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai'
+import { assert } from 'chai'
 
 describe('throughs/filter', () => {
   it('random', done => {
@@ -12,15 +21,13 @@ describe('throughs/filter', () => {
         return d > 0.5
       }),
       take(100),
-      collect((err, array) => {
-        expect(err).to.equal(false)
+      collect({
+        onData(action) {
+          assert.equal(action.payload.length, 100)
 
-        if (array) {
-          expect(array.length).to.equal(100)
-
-          array.forEach(d => {
-            expect(d > 0.5).to.equal(true)
-            expect(d <= 1).to.equal(true)
+          action.payload.forEach(d => {
+            assert.isOk(d > 0.5)
+            assert.isOk(d <= 1)
           })
 
           done()
@@ -37,15 +44,44 @@ describe('throughs/filter', () => {
       }),
       filter(n => /^[^e]+$/i.test(n)), // no E
       take(37),
-      collect((err, array) => {
-        expect(err).to.equal(false)
-
-        if (array) {
-          expect(array.length).to.equal(37)
-          array.forEach(d => {
-            expect(d).to.not.contain('e')
+      collect({
+        onData(action) {
+          assert.equal(action.payload.length, 37)
+          action.payload.forEach(d => {
+            assert.notInclude(d, 'e')
           })
 
+          done()
+        }
+      })
+    )
+  })
+
+  it('empty', done => {
+    pull(
+      empty(),
+      filter(() => {
+        return false
+      }),
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, [])
+          done()
+        }
+      })
+    )
+  })
+
+  it('error', done => {
+    const err = new Error('qwe')
+    pull(
+      error(err),
+      filter(() => {
+        return false
+      }),
+      collect({
+        onError(action) {
+          assert.equal(action.payload, err)
           done()
         }
       })

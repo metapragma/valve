@@ -5,31 +5,69 @@ import {
   infinite,
   pull,
   take,
+  through,
   values
 } from '../index'
 
-import { ValveAbort, ValveCallback, ValveType } from '../types'
+import { ValveActionType, ValveSource, ValveType } from '../types'
+
+import { hasEnded } from '../utilities'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai'
+import { assert } from 'chai'
 import { spy } from 'sinon'
 
 // tslint:disable-next-line
 import immediate = require('immediate')
+
+function delay(ms: number) {
+  return asyncMap<number, number>(
+    (e: number) =>
+      new Promise(resolve => {
+        setTimeout(() => {
+          resolve(e + 1)
+        }, ms)
+      })
+  )
+}
 
 describe('throughs/async-map', () => {
   it('...', done => {
     pull(
       count(),
       take(21),
-      asyncMap((data, cb) => {
-        return cb(false, data + 1)
-      }),
-      collect((err, ary) => {
-        expect(err).to.equal(false)
-        if (ary) {
-          expect(ary.length).to.equal(21)
+      delay(50),
+      collect({
+        onData(action) {
+          assert.equal(action.payload.length, 21)
+          done()
+        }
+      })
+    )
+  })
+
+  it('...', done => {
+    pull(
+      count(),
+      take(21),
+      asyncMap(data => Promise.resolve(data + 1)),
+      collect({
+        onData(action) {
+          assert.equal(action.payload.length, 21)
+          done()
+        }
+      })
+    )
+  })
+
+  it('...', done => {
+    pull(
+      values([1, 2, 3]),
+      asyncMap(data => Promise.resolve(data + 1)),
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, [2, 3, 4])
           done()
         }
       })
@@ -37,35 +75,29 @@ describe('throughs/async-map', () => {
   })
 
   it('abort', done => {
-    const err = new Error('abort')
+    const err = new Error('err')
     const s = spy()
 
-    const read = pull(
-      infinite(),
-      asyncMap((data, cb) => {
-        immediate(() => {
-          cb(false, data)
-        })
-      })
-    )
+    const read = pull(infinite(), asyncMap(data => Promise.resolve(data)))
 
-    read.source(false, end => {
-      if (!end) {
+    read.source({ type: ValveActionType.Pull }, action => {
+      s()
+
+      if (action.type === ValveActionType.Error) {
+        assert.equal(action.payload, err)
+      } else {
         done(new Error('expected read to end'))
       }
-
-      s()
-      expect(end).to.equal(err)
     })
 
-    read.source(err, end => {
-      if (!end) {
-        done(new Error('expected abort to end'))
+    read.source({ type: ValveActionType.Error, payload: err }, action => {
+      if (action.type === ValveActionType.Error) {
+        assert.equal(action.payload, err)
+        assert.equal(s.callCount, 1)
+        done()
+      } else {
+        done(new Error('expected read to end'))
       }
-
-      expect(end).to.equal(err)
-      expect(s.callCount).to.equal(1)
-      done()
     })
   })
 
@@ -73,35 +105,51 @@ describe('throughs/async-map', () => {
     const err = new Error('abort')
     const s = spy()
 
-    const read = pull(
-      // tslint:disable-next-line no-shadowed-variable
-      {
-        type: ValveType.Source,
-        source(_: ValveAbort, cb: ValveCallback<string>) {
-          immediate(() => {
-            if (err) return cb(err)
-            cb(false, 'x')
-          })
-        }
-      },
-      asyncMap((data, cb) => {
+    const source: ValveSource<string> = {
+      type: ValveType.Source,
+      source(action, cb) {
         immediate(() => {
-          cb(false, data)
+          if (hasEnded(action)) {
+            cb({ type: ValveActionType.Error, payload: err })
+          } else {
+            cb({
+              type: ValveActionType.Data,
+              payload: 'x'
+            })
+          }
         })
-      })
+      }
+    }
+
+    const read = pull(
+      source,
+      asyncMap(
+        data =>
+          new Promise(resolve => {
+            immediate(() => {
+              resolve(data)
+            })
+          })
+      )
     )
 
-    read.source(false, end => {
+    read.source({ type: ValveActionType.Pull }, action => {
       s()
-      if (!end) done(new Error('expected read to end'))
-      expect(end).to.equal(err)
+      if (action.type === ValveActionType.Error) {
+        assert.equal(action.payload, err)
+      } else {
+        done(new Error('expected read to end'))
+      }
     })
 
-    read.source(err, end => {
-      if (!end) done(new Error('expected abort to end'))
-      expect(end).to.equal(err)
-      expect(s.callCount).to.equal(1)
-      done()
+    read.source({ type: ValveActionType.Error, payload: err }, action => {
+      if (action.type === ValveActionType.Error) {
+        assert.equal(action.payload, err)
+        assert.equal(s.callCount, 1)
+        done()
+      } else {
+        done(new Error('expected read to end'))
+      }
     })
   })
 
@@ -109,16 +157,20 @@ describe('throughs/async-map', () => {
     const ERR = new Error('abort')
 
     pull(
-      values([1, 2, 3], err => {
-        // console.log('on abort')
-        expect(err).to.equal(ERR)
-        done()
-      }),
-      asyncMap((_, cb) => {
-        cb(ERR)
-      }),
-      collect(err => {
-        expect(err).to.equal(ERR)
+      pull(
+        values([1, 2, 3]),
+        through({
+          onError(action) {
+            assert.equal(action.payload, ERR)
+            done()
+          }
+        })
+      ),
+      asyncMap(() => Promise.reject(ERR)),
+      collect({
+        onError(action) {
+          assert.equal(action.payload, ERR)
+        }
       })
     )
   })

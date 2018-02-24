@@ -3,6 +3,7 @@
     "tslint-config-escapace"
   ],
   "rules": {
+    "promise-function-async": false,
     "type-literal-delimiter": false,
     "no-void-expression": false
   }

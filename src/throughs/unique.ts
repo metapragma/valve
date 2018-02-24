@@ -1,10 +1,10 @@
 import { filter } from './filter'
-import { ValveThrough } from '../types'
+import { ValveError, ValveThrough } from '../types'
 import { identity, includes } from 'lodash'
 
 // drop items you have already seen
 
-export function unique<P, K, E = Error>(
+export function unique<P, K, E = ValveError>(
   test: ((data: P) => K) = identity,
   invert: boolean = false
 ): ValveThrough<P, P, E> {

@@ -1,19 +1,20 @@
-import { ValveSource, ValveType } from '../types'
+import { ValveActionType, ValveError, ValveSource } from '../types'
 
-export function count(max = Infinity): ValveSource<number> {
+import { createSource } from '../utilities'
+
+export function count<E = ValveError>(max = Infinity): ValveSource<number, E> {
   let i = 0
 
-  return {
-    type: ValveType.Source,
-    source(end, cb) {
-      if (end) {
-        return cb(end)
-      }
+  return createSource<number, E>({
+    onPull(_, cb) {
       if (i >= max) {
-        return cb(true)
+        cb({ type: ValveActionType.Abort })
+      } else {
+        cb({
+          type: ValveActionType.Data,
+          payload: (i += 1)
+        })
       }
-
-      cb(false, (i += 1))
     }
-  }
+  })
 }

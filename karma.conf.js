@@ -12,8 +12,7 @@ module.exports = function(config) {
       'src/**/*.ts'
     ],
     preprocessors: {
-      '**/*.ts': 'karma-typescript',
-      '*.ts': 'karma-typescript',
+      'src/**/*.ts': 'karma-typescript',
     },
     reporters: ['dots', 'karma-typescript'],
     browsers: ['puppeteer'],
@@ -25,10 +24,9 @@ module.exports = function(config) {
     },
     karmaTypescriptConfig: {
       compilerOptions: {
-        module: "CommonJS",
-        sourceMap: true,
-        target: "ES5"
-      }
+        sourceMap: true
+      },
+      tsconfig: './tsconfig.json'
     }
   })
 

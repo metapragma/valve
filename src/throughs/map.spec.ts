@@ -1,8 +1,10 @@
-import { collect, drain, map, pull, values } from '../index'
+import { collect, map, pull, values } from '../index'
+
+import { createSink } from '../utilities'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai'
+import { assert } from 'chai'
 
 describe('throughs/map', () => {
   it('...', done => {
@@ -11,29 +13,40 @@ describe('throughs/map', () => {
       map(n => {
         return n + 1
       }),
-      collect((_, ary) => {
-        expect(_).to.equal(false)
-        expect(ary).to.deep.equal([2, 3, 4, 5, 6, 7])
-        done()
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, [2, 3, 4, 5, 6, 7])
+          done()
+        }
       })
     )
   })
 
-  it('error', done => {
+  it('error', () => {
     const err = new Error('unwholesome number')
 
-    pull(
-      values([1, 2, 3, 3.4, 4]),
-      map(e => {
-        // tslint:disable-next-line no-bitwise
-        if (e !== ~~e) throw err
+    const sink = createSink({
+      // onError (action) {
+      //   assert.deepEqual(action.payload, err)
+      //   // done()
+      // }
+    })
 
-        // return e
-      }),
-      drain(undefined, _err => {
-        expect(_err).to.equal(err)
-        done()
-      })
+    // TODO: try/catch?
+
+    assert.throws(
+      () =>
+        pull(
+          values([1, 2, 3, 3.4, 4]),
+          map(e => {
+            // tslint:disable-next-line no-bitwise
+            if (e !== ~~e) throw err
+
+            return e
+          }),
+          sink
+        ),
+      /unwholesome number/
     )
   })
 })

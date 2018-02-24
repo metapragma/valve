@@ -18,11 +18,10 @@
     "baseUrl": ".",
     "paths": {
       "*": [
-        "src/types/*"
+        "./src/types/*"
       ]
     },
     "lib": [
-      "dom",
       "es2015",
       "es2015.promise",
       "es2016",
@@ -30,11 +29,10 @@
       "es5",
       "es6",
       "es7",
-      "esnext",
-      "scripthost"
+      "esnext"
     ]
   },
   "include": [
-    "src"
+    "./src"
   ]
 }

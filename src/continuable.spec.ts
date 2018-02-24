@@ -1,10 +1,10 @@
-import { collect, count, error, map, pull, through } from './index'
+import { collect, count, map, pull, through } from './index'
+
+import { ValveActionType } from './types'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai'
-
-import { noop } from 'lodash'
+import { assert } from 'chai'
 
 import { spy } from 'sinon'
 
@@ -22,50 +22,57 @@ describe('continuable', () => {
 
         return item * 2
       }),
-      through(noop)
+      through()
     )
 
-    stream.source(false, (err, data) => {
+    stream.source({ type: ValveActionType.Pull }, action => {
       sB()
 
-      expect(err).to.equal(false)
-      expect(data).to.equal(2)
+      if (action.type === ValveActionType.Data) {
+        assert.equal(action.payload, 2)
+      } else {
+        done(new Error('Action type mismatch'))
+      }
     })
 
-    stream.source(false, (err, data) => {
+    stream.source({ type: ValveActionType.Pull }, action => {
       sC()
 
-      expect(err).to.equal(false)
-      expect(data).to.equal(4)
+      if (action.type === ValveActionType.Data) {
+        assert.equal(action.payload, 4)
+      } else {
+        done(new Error('Action type mismatch'))
+      }
     })
 
     pull(
       stream,
-      collect((err, ary) => {
-        expect(sA.callCount).to.equal(5)
-        expect(sB.callCount).to.equal(1)
-        expect(sC.callCount).to.equal(1)
-        expect(err).to.equal(false)
-        expect(ary).to.deep.equal([6, 8, 10])
-        done()
+      collect({
+        onData(action) {
+          assert.equal(sA.callCount, 5)
+          assert.equal(sB.callCount, 1)
+          assert.equal(sC.callCount, 1)
+          assert.deepEqual(action.payload, [6, 8, 10])
+          done()
+        }
       })
     )
   })
 
-  it('continuable stream (error)', done => {
-    const ERR = new Error('test')
-
-    const stream = pull(error(ERR), through(noop))
-
-    stream.source(false, (err, data) => {
-      expect(err).to.equal(ERR)
-      expect(data).to.equal(undefined)
-    })
-
-    stream.source(false, (err, data) => {
-      expect(err).to.equal(ERR)
-      expect(data).to.equal(undefined)
-      done()
-    })
-  })
+  // it('continuable stream (error)', done => {
+  //   const ERR = new Error('test')
+  //
+  //   const stream = pull(error(ERR), through(noop))
+  //
+  //   stream.source(false, (err, data) => {
+  //     expect(err).to.equal(ERR)
+  //     expect(data).to.equal(undefined)
+  //   })
+  //
+  //   stream.source(false, (err, data) => {
+  //     expect(err).to.equal(ERR)
+  //     expect(data).to.equal(undefined)
+  //     done()
+  //   })
+  // })
 })

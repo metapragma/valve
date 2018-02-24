@@ -1,39 +1,34 @@
-import { ValveAbort, ValveCallback, ValveThrough, ValveType } from '../types'
+import {
+  ValveActionType,
+  ValveError,
+  ValveSourceAction,
+  ValveThrough
+} from '../types'
 
-import { isDataAvailable } from '../util/isDataAvailable'
+import { createThrough } from '../utilities'
 
-export function filter<P, E = Error>(
-  test: ((data: P) => boolean)
+export function filter<P, E = ValveError>(
+  predicate: ((data: P) => boolean)
 ): ValveThrough<P, P, E> {
-  return {
-    type: ValveType.Through,
-    sink(source) {
-      // tslint:disable-next-line no-function-expression
+  return createThrough<P, P, E>({
+    onData(action, cb, source) {
+      let loop: boolean = true
+      let reference: ValveSourceAction<P, E> = action
 
-      function next(end: ValveAbort<E>, cb: ValveCallback<P, E>) {
-        let sync: boolean
-        let loop = true
-
-        while (loop) {
-          loop = false
-          sync = true
-
-          // tslint:disable-next-line no-shadowed-variable
-          source.source(end, (end, data) => {
-            if (isDataAvailable(end, data) && !test(data)) {
-              return sync ? (loop = true) : next(end, cb)
-            }
-            cb(end, data)
+      while (loop) {
+        if (
+          reference.type === ValveActionType.Data &&
+          !predicate(reference.payload)
+        ) {
+          // tslint:disable-next-line no-parameter-reassignment
+          source.source({ type: ValveActionType.Pull }, a => {
+            reference = a
           })
-
-          sync = false
+        } else {
+          loop = false
+          cb(reference)
         }
       }
-
-      return {
-        type: ValveType.Source,
-        source: next
-      }
     }
-  }
+  })
 }

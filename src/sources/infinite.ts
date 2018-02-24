@@ -1,22 +1,26 @@
-import { ValveSource, ValveType } from '../types'
+import { ValveActionType, ValveError, ValveSource } from '../types'
 
-export function infinite(): ValveSource<number>
-export function infinite<P>(generate?: () => P): ValveSource<P>
-export function infinite<P = number>(
+import { createSource } from '../utilities'
+
+export function infinite<P, E = ValveError>(): ValveSource<number, E>
+export function infinite<P, E = ValveError>(
   generate?: () => P
-): ValveSource<P | number> {
+): ValveSource<P, E>
+export function infinite<P = number, E = ValveError>(
+  generate?: () => P
+): ValveSource<P | number, E> {
   const f =
     typeof generate === 'undefined'
       ? // tslint:disable-next-line insecure-random
         Math.random
       : generate
 
-  return {
-    type: ValveType.Source,
-    source(end, cb) {
-      if (end) return cb(end)
-
-      return cb(false, f())
+  return createSource<P | number, E>({
+    onPull(_, cb) {
+      cb({
+        type: ValveActionType.Data,
+        payload: f()
+      })
     }
-  }
+  })
 }

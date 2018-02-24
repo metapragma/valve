@@ -2,7 +2,7 @@ import { asyncMap, empty, error, find, pull, values } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai'
+import { assert } from 'chai'
 
 // tslint:disable-next-line
 import immediate = require('immediate')
@@ -11,16 +11,15 @@ describe('sinks/find', () => {
   it('...', done => {
     pull(
       values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-      find(
-        (err, seven) => {
-          expect(seven).to.equal(7)
-          expect(err).to.equal(false)
+      find({
+        onData(action) {
+          assert.equal(action.payload, 7)
           done()
         },
-        d => {
-          return d === 7
+        predicate(data) {
+          return data === 7
         }
-      )
+      })
     )
   })
 
@@ -34,16 +33,15 @@ describe('sinks/find', () => {
 
     pull(
       values(f.sort()),
-      find(
-        (err, found) => {
-          expect(found).to.equal(target)
-          expect(err).to.equal(false)
+      find({
+        onData(action) {
+          assert.equal(action.payload, target)
           done()
         },
-        d => {
-          return d === target
+        predicate(data) {
+          return data === target
         }
-      )
+      })
     )
   })
 
@@ -54,69 +52,74 @@ describe('sinks/find', () => {
 
     pull(
       values(f.sort()),
-      find(
-        (err, found) => {
-          expect(found).to.equal(undefined)
-          expect(err).to.equal(false)
+      find({
+        onAbort() {
           done()
         },
-        d => {
-          return d === target
+        predicate(data) {
+          return data === target
         }
-      )
+      })
     )
   })
 
   it('there can only be one', done => {
     pull(
       values([1, 2, 3, 4, 5, 6, 7, 7, 8, 9, 10]),
-      asyncMap((e, cb) => {
-        immediate(() => {
-          cb(false, e)
-        })
-      }),
-      find(
-        (err, seven) => {
-          expect(seven).to.equal(7)
-          expect(err).to.equal(false)
+      asyncMap(
+        e =>
+          new Promise(resolve => {
+            immediate(() => {
+              resolve(e)
+            })
+          })
+      ),
+      find({
+        onData(action) {
+          assert.equal(action.payload, 7)
           done()
         },
-        d => {
-          return d >= 7
+        predicate(data) {
+          return data >= 7
         }
-      )
+      })
     )
   })
 
-  it('null', done => {
+  it('identity', done => {
     pull(
       values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-      find((err, first) => {
-        expect(first).to.equal(1)
-        expect(err).to.equal(false)
-        done()
+      find({
+        onData(action) {
+          assert.equal(action.payload, 1)
+          done()
+        }
       })
     )
   })
 
   it('error', done => {
     const ERR = new Error('test')
+
     pull(
       error(ERR),
-      find((err, _) => {
-        expect(err).to.equal(ERR)
-        done()
-      }, () => true)
+      find({
+        onError(action) {
+          assert.equal(action.payload, ERR)
+          done()
+        }
+      })
     )
   })
 
   it('empty', done => {
     pull(
       empty(),
-      find((err, _) => {
-        expect(err).to.equal(false)
-        done()
-      }, () => true)
+      find({
+        onAbort() {
+          done()
+        }
+      })
     )
   })
 })

@@ -1,10 +1,49 @@
-export type ValveError<E = Error> = boolean | E
-export type ValveAbort<E = Error> = boolean | ValveError<E>
+// tslint:disable-next-line no-any
+export type ValveError<E = any> = E
 
-export type ValveCallback<P, E = Error> = (
-  abort: ValveAbort<E>,
-  data?: P
-) => void
+export enum ValveActionType {
+  Pull,
+  Data,
+  Abort,
+  Error
+}
+
+export interface ValveActionGeneric {
+  type: ValveActionType
+}
+
+export interface ValveActionPull extends ValveActionGeneric {
+  type: ValveActionType.Pull
+}
+
+export interface ValveActionData<P> extends ValveActionGeneric {
+  type: ValveActionType.Data
+  payload: P
+}
+
+export interface ValveActionError<E> extends ValveActionGeneric {
+  type: ValveActionType.Error
+  payload: E
+}
+
+export interface ValveActionAbort extends ValveActionGeneric {
+  type: ValveActionType.Abort
+}
+
+export type ValveAction<P, E> =
+  | ValveActionData<P>
+  | ValveActionError<E>
+  | ValveActionAbort
+  | ValveActionPull
+
+export type ValveSourceAction<P, E> =
+  | ValveActionData<P>
+  | ValveActionError<E>
+  | ValveActionAbort
+export type ValveSinkAction<E> =
+  | ValveActionPull
+  | ValveActionError<E>
+  | ValveActionAbort
 
 export enum ValveType {
   Source,
@@ -12,37 +51,75 @@ export enum ValveType {
   Through
 }
 
-export type ValveSourceFunction<P, E = Error> = (
-  abort: ValveAbort<E>,
-  cb: ValveCallback<P, E>
+export type ValveSourceCallback<P, E = ValveError> = (
+  action: ValveSourceAction<P, E>
 ) => void
 
-export type ValveAbortFunction<P, E> = (
-  err?: true | E,
-  cb?: ValveCallback<P, E>
+export type ValveSourceFunction<P, E = ValveError> = (
+  action: ValveSinkAction<E>,
+  cb: ValveSourceCallback<P, E>
 ) => void
 
-export interface ValveSinkFunction<P, E = Error> {
-  (source: ValveSource<P, E>): void
-  abort: ValveAbortFunction<P, E>
-}
+export type ValveSinkFunction<P, E = ValveError> = (
+  source: ValveSource<P, E>
+) => void
 
-export interface ValveThroughFunction<P, R, E = Error> {
-  (source: ValveSource<P, E>): ValveSource<R, E>
-  abort?: ValveAbortFunction<P, E>
-}
+export type ValveThroughFunction<P, R, E = ValveError> = (
+  source: ValveSource<P, E>
+) => ValveSource<R, E>
 
-export interface ValveSink<P, E = Error> {
+export interface ValveSink<P, E = ValveError> {
   type: ValveType.Sink
   sink: ValveSinkFunction<P, E>
+  abort: (action: ValveActionAbort | ValveActionError<E>) => void
 }
 
-export interface ValveSource<P, E = Error> {
+export interface ValveSource<P, E = ValveError> {
   type: ValveType.Source
   source: ValveSourceFunction<P, E>
 }
 
-export interface ValveThrough<P, R, E = Error> {
+export interface ValveThrough<P, R, E = ValveError> {
   type: ValveType.Through
   sink: ValveThroughFunction<P, R, E>
+  terminate: (action?: ValveActionAbort | ValveActionError<E>) => void
 }
+
+// Utilities
+
+export interface ValveCreateSourceOptions<T, E = ValveError> {
+  onAbort(action: ValveActionAbort, cb: ValveSourceCallback<T, E>): void
+  onError(action: ValveActionError<E>, cb: ValveSourceCallback<T, E>): void
+  onPull(action: ValveActionPull, cb: ValveSourceCallback<T, E>): void
+}
+
+export interface ValveCreateSinkOptions<T, E = ValveError> {
+  onAbort(action: ValveActionAbort): void
+  onError(action: ValveActionError<E>): void
+  onData(action: ValveActionData<T>): void
+}
+
+export interface ValveCreateThroughOptions<T, R = T, E = ValveError> {
+  onAbort(action: ValveActionAbort): void
+  onError(action: ValveActionError<E>): void
+  onData(
+    action: ValveActionData<T>,
+    cb: ValveSourceCallback<R, E>,
+    source: ValveSource<T, E>
+  ): void
+}
+
+// Sinks
+
+export interface ValveReduceOptions<P, R> {
+  accumulator?: R
+  iteratee(accumulator: R, data: P): R
+}
+
+export interface ValveFindOptions<P> {
+  predicate?(data: P): boolean
+}
+
+export type ValveDone<P, E> = (
+  action: ValveActionData<P> | ValveActionError<E> | ValveActionAbort
+) => void

@@ -1,62 +1,84 @@
-/* tslint:disable no-shadowed-variable */
+import {
+  ValveActionAbort,
+  ValveActionError,
+  ValveActionType,
+  ValveSourceCallback,
+  ValveSourceFunction,
+  ValveThrough,
+  ValveType
+} from '../types'
 
-import { ValveAbort, ValveCallback, ValveThrough, ValveType } from '../types'
+import { noop } from 'lodash'
 
-import { isDataAvailable } from '../util/isDataAvailable'
+import { hasEnded } from '../utilities'
+
+// TODO: use helpers
 
 export function asyncMap<P, R, E = Error>(
-  map: ((data: P, cb: ValveCallback<R, E>) => void)
+  iteratee: (data: P) => Promise<R>
 ): ValveThrough<P, R, E> {
   let busy: boolean = false
-  let aborted: ValveAbort<E>
-  let abortCb: ValveCallback<R, E>
+  let ended: ValveActionAbort | ValveActionError<E>
+  let abortCb: ValveSourceCallback<R, E>
 
   return {
     type: ValveType.Through,
+    terminate: noop,
     sink(source) {
-      // tslint:disable-next-line no-function-expression
-
-      function next(abort: ValveAbort<E>, cb: ValveCallback<R, E>) {
-        if (aborted) {
-          return cb(aborted)
+      const next: ValveSourceFunction<R, E> = (action, cb) => {
+        if (hasEnded(ended)) {
+          return cb(ended)
         }
 
-        if (abort) {
-          aborted = abort
+        if (hasEnded(action)) {
+          ended = action
 
           if (!busy) {
-            source.source(abort, () => cb(abort))
+            source.source(action, cb as ValveSourceCallback<{}, E>)
           } else {
-            source.source(abort, () => {
+            source.source(action, () => {
               // if we are still busy, wait for the mapper to complete.
               if (busy) {
                 abortCb = cb
               } else {
-                cb(abort)
+                cb(action)
               }
             })
           }
         } else {
-          source.source(false, (end, data) => {
-            if (!isDataAvailable(end, data)) {
-              cb(end)
-            } else if (aborted) {
-              cb(aborted)
+          source.source({ type: ValveActionType.Pull }, _action => {
+            if (hasEnded(_action)) {
+              cb(_action)
+            } else if (hasEnded(ended)) {
+              cb(ended)
             } else {
               busy = true
 
-              map(data, (err, result) => {
-                busy = false
+              iteratee(_action.payload)
+                .then(payload => {
+                  busy = false
 
-                if (aborted) {
-                  cb(aborted)
-                  abortCb(aborted)
-                } else if (err) {
-                  next(err, cb)
-                } else {
-                  cb(false, result)
-                }
-              })
+                  if (hasEnded(ended)) {
+                    cb(ended)
+                    abortCb(ended)
+                  } else {
+                    cb({
+                      type: ValveActionType.Data,
+                      payload
+                    })
+                  }
+                })
+                .catch(payload => {
+                  if (hasEnded(ended)) {
+                    cb(ended)
+                    abortCb(ended)
+                  } else {
+                    next(
+                      { type: ValveActionType.Error, payload: payload as E },
+                      cb
+                    )
+                  }
+                })
             }
           })
         }

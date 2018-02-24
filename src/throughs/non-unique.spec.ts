@@ -2,7 +2,7 @@ import { collect, nonUnique, pull, values } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai'
+import { assert } from 'chai'
 
 describe('throughs/non-unique', () => {
   it('...', done => {
@@ -11,10 +11,9 @@ describe('throughs/non-unique', () => {
     pull(
       values(numbers),
       nonUnique(),
-      collect((err, ary) => {
-        expect(err).to.equal(false)
-        if (ary) {
-          expect(ary.sort()).to.deep.equal([0, 1, 2, 2, 3, 4, 6])
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload.sort(), [0, 1, 2, 2, 3, 4, 6])
           done()
         }
       })

@@ -1,70 +1,19 @@
-import { collect, drain, once, pull } from '../index'
+import { collect, once, pull } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai'
-import { spy } from 'sinon'
+import { assert } from 'chai'
 
 describe('sources/once', () => {
   it('...', done => {
     pull(
       once({ a: 1, b: 2, c: 3 }),
-      collect((err, ary) => {
-        expect(err).to.equal(false)
-        expect(ary).to.deep.equal([{ a: 1, b: 2, c: 3 }])
-        done()
-      })
-    )
-  })
-
-  it('abort', done => {
-    const e = new Error('test')
-
-    const s = spy()
-
-    const d = drain(
-      data => {
-        expect(data).to.deep.equal({ a: 1, b: 2, c: 3 })
-        s()
-
-        if (d.sink.abort) {
-          d.sink.abort(e)
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, [{ a: 1, b: 2, c: 3 }])
+          done()
         }
-      },
-      abort => {
-        expect(abort).to.equal(e)
-        expect(s.calledOnce).to.equal(true)
-        done()
-      }
-    )
-
-    pull(
-      once({ a: 1, b: 2, c: 3 }, abort => {
-        expect(abort).to.equal(e)
-      }),
-      d
-    )
-  })
-
-  it('called once', done => {
-    const s = spy()
-
-    const d = drain(
-      data => {
-        expect(data).to.deep.equal({ a: 1, b: 2, c: 3 })
-        s()
-      },
-      () => {
-        expect(s.calledOnce).to.equal(true)
-        done()
-      }
-    )
-
-    pull(
-      once({ a: 1, b: 2, c: 3 }, () => {
-        done()
-      }),
-      d
+      })
     )
   })
 })

@@ -1,35 +1,45 @@
-import { ValveError, ValveSource, ValveType } from '../types'
+import {
+  ValveActionAbort,
+  ValveActionData,
+  ValveActionError,
+  ValveActionType,
+  ValveError,
+  ValveSource
+} from '../types'
 
-import { values as _values } from 'lodash'
+import { createSource } from '../utilities'
 
-import { abortCb } from '../util/abort-cb'
+export function values<P, E = ValveError>(
+  iterable: Iterable<P>
+): ValveSource<P, E> {
+  const iterator = iterable[Symbol.iterator]()
 
-export function values<P, E = Error>(
-  input: P[],
-  onAbort?: (abort: ValveError<E>) => void
-): ValveSource<P, E>
+  const next = ():
+    | ValveActionError<E>
+    | ValveActionData<P>
+    | ValveActionAbort => {
+    try {
+      const { value, done } = iterator.next()
 
-export function values<P, K extends keyof P, E = Error>(
-  input: P,
-  onAbort?: (abort: ValveError<E>) => void
-): ValveSource<P[K], E>
-
-export function values<P, K extends keyof P, E = Error>(
-  input: P,
-  onAbort?: (abort: ValveError<E>) => void
-): ValveSource<P[K], E> {
-  const array: P[K][] = _values(input)
-
-  let i = -1
-
-  return {
-    type: ValveType.Source,
-    source(abort, cb) {
-      if (abort) return abortCb(cb, abort, onAbort)
-      if (i >= array.length - 1) cb(true)
-      else {
-        cb(false, array[(i += 1)])
+      if (done) {
+        return { type: ValveActionType.Abort }
+      } else {
+        return {
+          type: ValveActionType.Data,
+          payload: value
+        }
+      }
+    } catch (error) {
+      return {
+        type: ValveActionType.Error,
+        payload: error as E
       }
     }
   }
+
+  return createSource<P, E>({
+    onPull(_, cb) {
+      cb(next())
+    }
+  })
 }

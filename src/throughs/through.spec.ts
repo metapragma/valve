@@ -2,7 +2,7 @@ import { collect, count, infinite, pull, take, through } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai'
+import { assert } from 'chai'
 import { spy } from 'sinon'
 
 // tslint:disable-next-line
@@ -14,14 +14,17 @@ describe('throughs/through', () => {
 
     pull(
       count(5),
-      through(() => {
-        s()
+      through({
+        onData() {
+          s()
+        }
       }),
-      collect((err, ary) => {
-        expect(s.callCount).to.equal(5)
-        expect(err).to.equal(false)
-        expect(ary).to.deep.equal([1, 2, 3, 4, 5])
-        done()
+      collect({
+        onData(action) {
+          assert.equal(s.callCount, 5)
+          assert.deepEqual(action.payload, [1, 2, 3, 4, 5])
+          done()
+        }
       })
     )
   })
@@ -29,16 +32,18 @@ describe('throughs/through', () => {
   it('onEnd', done => {
     pull(
       infinite(),
-      through(undefined, err => {
-        expect(err).to.equal(false)
-
-        immediate(() => {
-          done()
-        })
+      through({
+        onAbort() {
+          immediate(() => {
+            done()
+          })
+        }
       }),
       take(10),
-      collect((err, _) => {
-        expect(err).to.equal(false)
+      collect({
+        onData(action) {
+          assert.equal(action.payload.length, 10)
+        }
       })
     )
   })

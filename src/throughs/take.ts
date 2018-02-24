@@ -1,33 +1,28 @@
 // tslint:disable no-conditional-assignment no-shadowed-variable
 
-import { ValveAbort, ValveCallback, ValveThrough, ValveType } from '../types'
+import { ValveActionType, ValveError, ValveThrough } from '../types'
 
-import { defaults, isNumber } from 'lodash'
+import { createThrough } from '../utilities'
 
-import { isDataAvailable } from '../util/isDataAvailable'
-
-import { hasEnded } from '../util/hasEnded'
+import { isNumber } from 'lodash'
 
 // read a number of items and then stop.
-export function take<P, E = Error>(
-  test: number | ((data: P) => boolean),
-  options?: { last?: boolean }
+export function take<P, E = ValveError>(
+  predicate: number | ((data: P) => boolean),
+  last: boolean = false
 ): ValveThrough<P, P, E> {
-  const opts = defaults({}, options, { last: false })
-  defaults(opts)
-
-  let last = opts.last // whether the first item for which !test(item) should still pass
-  let ended: ValveAbort<E> | false = false
+  let _last: boolean = last
+  // let ended: ValveAction<P, E>
   let tester: (data: P) => boolean
 
-  if (isNumber(test)) {
-    let n = test
+  if (isNumber(predicate)) {
+    let n = predicate
 
     if (n <= 0) {
-      last = false
+      _last = false
       n = 0
     } else {
-      last = true
+      _last = true
     }
 
     tester = () => {
@@ -38,40 +33,29 @@ export function take<P, E = Error>(
       return n > 0
     }
   } else {
-    tester = test
+    tester = predicate
   }
 
-  return {
-    type: ValveType.Through,
-    sink(source) {
-      function terminate(cb: ValveCallback<P, E>) {
-        source.source(true, err => {
-          last = false
-          cb(err || true)
-        })
-      }
+  let ended: boolean = false
 
-      return {
-        type: ValveType.Source,
-        source(end: ValveAbort<E>, cb: ValveCallback<P, E>) {
-          if (ended) {
-            last ? terminate(cb) : cb(ended)
-          } else if ((ended = end)) {
-            source.source(ended, cb)
-          } else {
-            source.source(false, (end, data) => {
-              if ((ended = ended || hasEnded(end))) {
-                cb(ended)
-              } else if (isDataAvailable(end, data) && !tester(data)) {
-                ended = true
-                last ? cb(false, data) : terminate(cb)
-              } else {
-                cb(false, data)
-              }
-            })
-          }
+  // tslint:disable-next-line no-unnecessary-local-variable
+  const through = createThrough<P, P, E>({
+    onData(action, cb) {
+      ended = ended || !tester(action.payload)
+
+      if (ended) {
+        through.terminate()
+
+        if (_last) {
+          cb(action)
+        } else {
+          cb({ type: ValveActionType.Abort })
         }
+      } else {
+        cb(action)
       }
     }
-  }
+  })
+
+  return through
 }

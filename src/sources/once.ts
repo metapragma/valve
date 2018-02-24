@@ -1,22 +1,21 @@
-import { abortCb } from '../util/abort-cb'
+import { ValveActionType, ValveError, ValveSource } from '../types'
 
-import { ValveError, ValveSource, ValveType } from '../types'
+import { createSource } from '../utilities'
 
-export function once<P, E = Error>(
-  value: P,
-  onAbort?: (abort: ValveError<E>) => void
-): ValveSource<P, E> {
+export function once<P, E = ValveError>(value: P): ValveSource<P, E> {
   let triggered: boolean = false
 
-  return {
-    type: ValveType.Source,
-    source(abort, cb) {
-      if (abort) return abortCb(cb, abort, onAbort)
-
+  return createSource<P, E>({
+    onPull(_, cb) {
       if (triggered === false) {
         triggered = true
-        cb(false, value)
-      } else cb(true)
+        cb({
+          type: ValveActionType.Data,
+          payload: value
+        })
+      } else {
+        cb({ type: ValveActionType.Abort })
+      }
     }
-  }
+  })
 }

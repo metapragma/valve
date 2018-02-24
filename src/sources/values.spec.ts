@@ -2,45 +2,74 @@ import { collect, pull, values } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai'
+import { assert } from 'chai'
 
 describe('sources/values', () => {
+  it('set', done => {
+    pull(
+      values(new Set([1, 2, 3])),
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, [1, 2, 3])
+          done()
+        }
+      })
+    )
+  })
+
+  it('map', done => {
+    pull(
+      values(new Map([['one', 1], ['two', 2]])),
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, [['one', 1], ['two', 2]])
+          done()
+        }
+      })
+    )
+  })
+
   it('array', done => {
     pull(
       values([1, 2, 3]),
-      collect((err, ary) => {
-        expect(err).to.equal(false)
-        expect(ary).to.deep.equal([1, 2, 3])
-        done()
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, [1, 2, 3])
+          done()
+        }
+      })
+    )
+  })
+
+  it('error', done => {
+    const err = new Error('Problem!')
+
+    function* genFunc(): IterableIterator<string> {
+      yield 'qweqwe'
+
+      throw err
+    }
+
+    pull(
+      values(genFunc()),
+      collect({
+        onError(action) {
+          assert.deepEqual(action.payload, err)
+          done()
+        }
       })
     )
   })
 
   it('object', done => {
     pull(
-      values({ a: 1, b: 2, c: 3 }),
-      collect((err, ary) => {
-        expect(err).to.equal(false)
-        expect(ary).to.deep.equal([1, 2, 3])
-        done()
+      values(Object.values({ a: 1, b: 2, c: 3 })),
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, [1, 2, 3])
+          done()
+        }
       })
     )
-  })
-
-  it('abort', done => {
-    const err = new Error('intentional')
-
-    const read = values([1, 2, 3], _ => {
-      done()
-    })
-
-    read.source(false, (n, one) => {
-      expect(n).to.equal(false)
-      expect(one).to.equal(1)
-
-      read.source(err, _err => {
-        expect(_err).to.equal(err)
-      })
-    })
   })
 })

@@ -1,17 +1,32 @@
-import { collect, empty, pull } from '../index'
+import { collect, count, empty, pull } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
-import { expect } from 'chai'
+import { assert } from 'chai'
 
 describe('sinks/collect', () => {
   it('...', done => {
     pull(
       empty(),
-      collect((err, ary) => {
-        expect(err).to.equal(false)
-        expect(ary).to.deep.equal([])
-        done()
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, [])
+
+          done()
+        }
+      })
+    )
+  })
+
+  it('...', done => {
+    pull(
+      count(3),
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, [1, 2, 3])
+
+          done()
+        }
       })
     )
   })
