@@ -1,4 +1,4 @@
-import { collect, error, pull } from '../index'
+import { collect, error, valve } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -8,7 +8,7 @@ describe('sources/error', () => {
   it('...', done => {
     const ee = new Error('Some error')
 
-    pull(
+    valve(
       error(ee),
       collect({
         onError(action) {

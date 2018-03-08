@@ -1,4 +1,4 @@
-import { collect, count, map, pull, through } from './index'
+import { collect, count, map, through, valve } from './index'
 
 import { ValveActionType } from './types'
 
@@ -15,7 +15,7 @@ describe('continuable', () => {
     const sB = spy()
     const sC = spy()
 
-    const stream = pull(
+    const stream = valve(
       count(5),
       map(item => {
         sA()
@@ -45,7 +45,7 @@ describe('continuable', () => {
       }
     })
 
-    pull(
+    valve(
       stream,
       collect({
         onData(action) {

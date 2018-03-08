@@ -1,4 +1,4 @@
-export { pull } from './pull'
+export { valve } from './valve'
 
 export { collect } from './sinks/collect'
 export { concat } from './sinks/concat'

@@ -1,4 +1,4 @@
-import { collect, count, infinite, pull, take, through } from '../index'
+import { collect, count, infinite, take, through, valve } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -12,7 +12,7 @@ describe('throughs/through', () => {
   it('...', done => {
     const s = spy()
 
-    pull(
+    valve(
       count(5),
       through({
         onData() {
@@ -30,7 +30,7 @@ describe('throughs/through', () => {
   })
 
   it('onEnd', done => {
-    pull(
+    valve(
       infinite(),
       through({
         onAbort() {

@@ -1,4 +1,4 @@
-import { fromIterable, map, pull, reduce, through } from './index'
+import { fromIterable, map, reduce, through, valve } from './index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -6,7 +6,7 @@ import { assert } from 'chai'
 
 describe('pull', () => {
   it('wrap pull streams into stream', done => {
-    pull(
+    valve(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       map(e => e * e),
       through(),
@@ -23,9 +23,9 @@ describe('pull', () => {
   })
 
   it('turn pull(through,...) -> Through', done => {
-    pull(
+    valve(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-      pull(
+      valve(
         map<number, number>(e => {
           return e * e
         }),
@@ -44,7 +44,7 @@ describe('pull', () => {
   })
 
   it('writable pull() should throw when called twice', () => {
-    const stream = pull<number, number>(
+    const stream = valve<number, number>(
       map((e: number) => {
         return e * e
       }),

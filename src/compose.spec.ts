@@ -1,4 +1,4 @@
-import { collect, fromIterable, map, pull } from './index'
+import { collect, fromIterable, map, valve } from './index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -6,7 +6,7 @@ import { assert } from 'chai'
 
 describe('compose', () => {
   it('test through streams compose on pipe', done => {
-    const pipeline = pull(
+    const pipeline = valve(
       map((d: string) => {
         // make exciting!
         return `${d}!`
@@ -31,14 +31,14 @@ describe('compose', () => {
     // if we pipe a read function to the pipeline,
     // the pipeline will become readable!
 
-    const read = pull(fromIterable(['billy', 'joe', 'zeke']), pipeline)
+    const read = valve(fromIterable(['billy', 'joe', 'zeke']), pipeline)
 
     // t.equal('function', typeof read)
     // we will know it's a read function,
     // because read takes two args.
     // t.equal(2, read.length)
 
-    pull(
+    valve(
       read,
       collect({
         onData(action) {

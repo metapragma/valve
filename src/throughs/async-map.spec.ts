@@ -4,9 +4,9 @@ import {
   count,
   fromIterable,
   infinite,
-  pull,
   take,
-  through
+  through,
+  valve
 } from '../index'
 
 import { ValveActionType, ValveSource, ValveType } from '../types'
@@ -34,7 +34,7 @@ function delay(ms: number) {
 
 describe('throughs/async-map', () => {
   it('...', done => {
-    pull(
+    valve(
       count(),
       take(21),
       delay(50),
@@ -48,7 +48,7 @@ describe('throughs/async-map', () => {
   })
 
   it('...', done => {
-    pull(
+    valve(
       count(),
       take(21),
       asyncMap(data => Promise.resolve(data + 1)),
@@ -62,7 +62,7 @@ describe('throughs/async-map', () => {
   })
 
   it('...', done => {
-    pull(
+    valve(
       fromIterable([1, 2, 3]),
       asyncMap(data => Promise.resolve(data + 1)),
       collect({
@@ -78,7 +78,7 @@ describe('throughs/async-map', () => {
     const err = new Error('err')
     const s = spy()
 
-    const read = pull(infinite(), asyncMap(data => Promise.resolve(data)))
+    const read = valve(infinite(), asyncMap(data => Promise.resolve(data)))
 
     read.source({ type: ValveActionType.Pull }, action => {
       s()
@@ -121,7 +121,7 @@ describe('throughs/async-map', () => {
       }
     }
 
-    const read = pull(
+    const read = valve(
       source,
       asyncMap(
         data =>
@@ -156,8 +156,8 @@ describe('throughs/async-map', () => {
   it('abort on error', done => {
     const ERR = new Error('abort')
 
-    pull(
-      pull(
+    valve(
+      valve(
         fromIterable([1, 2, 3]),
         through({
           onError(action) {

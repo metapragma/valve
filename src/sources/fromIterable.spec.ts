@@ -1,4 +1,4 @@
-import { collect, fromIterable, pull } from '../index'
+import { collect, fromIterable, valve } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -6,7 +6,7 @@ import { assert } from 'chai'
 
 describe('sources/fromIterable', () => {
   it('set', done => {
-    pull(
+    valve(
       fromIterable(new Set([1, 2, 3])),
       collect({
         onData(action) {
@@ -18,7 +18,7 @@ describe('sources/fromIterable', () => {
   })
 
   it('map', done => {
-    pull(
+    valve(
       fromIterable(new Map([['one', 1], ['two', 2]])),
       collect({
         onData(action) {
@@ -30,7 +30,7 @@ describe('sources/fromIterable', () => {
   })
 
   it('array', done => {
-    pull(
+    valve(
       fromIterable([1, 2, 3]),
       collect({
         onData(action) {
@@ -50,7 +50,7 @@ describe('sources/fromIterable', () => {
       throw err
     }
 
-    pull(
+    valve(
       fromIterable(genFunc()),
       collect({
         onError(action) {
@@ -62,7 +62,7 @@ describe('sources/fromIterable', () => {
   })
 
   it('object', done => {
-    pull(
+    valve(
       fromIterable(Object.values({ a: 1, b: 2, c: 3 })),
       collect({
         onData(action) {

@@ -1,4 +1,4 @@
-import { collect, filterNot, infinite, map, pull, take } from '../index'
+import { collect, filterNot, infinite, map, take, valve } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -6,7 +6,7 @@ import { assert } from 'chai'
 
 describe('throughs/filter-not', () => {
   it('random', done => {
-    pull(
+    valve(
       infinite(),
       filterNot(d => {
         return d > 0.5
@@ -28,7 +28,7 @@ describe('throughs/filter-not', () => {
   })
 
   it('regexp', done => {
-    pull(
+    valve(
       infinite(),
       map(d => {
         return Math.round(d * 1000).toString(16)

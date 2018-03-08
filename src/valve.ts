@@ -12,33 +12,33 @@ import {
 
 import { forEach } from 'lodash'
 
-export function pull<P, E = ValveError>(A1: ValveSink<P, E>): ValveSink<P, E>
+export function valve<P, E = ValveError>(A1: ValveSink<P, E>): ValveSink<P, E>
 
 // Source -> ...Through -> Sink
 
-export function pull<P, E = ValveError>(
+export function valve<P, E = ValveError>(
   A1: ValveSource<P, E>
 ): ValveSource<P, E>
 
-export function pull<P1, E = ValveError>(
+export function valve<P1, E = ValveError>(
   A1: ValveSource<P1, E>,
   RR: ValveSink<P1, E>
 ): void
 
-export function pull<P1, P2, E = ValveError>(
+export function valve<P1, P2, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>,
   RR: ValveSink<P2, E>
 ): void
 
-export function pull<P1, P2, P3, E = ValveError>(
+export function valve<P1, P2, P3, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>,
   A3: ValveThrough<P2, P3, E>,
   RR: ValveSink<P3, E>
 ): void
 
-export function pull<P1, P2, P3, P4, E = ValveError>(
+export function valve<P1, P2, P3, P4, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>,
   A3: ValveThrough<P2, P3, E>,
@@ -46,7 +46,7 @@ export function pull<P1, P2, P3, P4, E = ValveError>(
   RR: ValveSink<P4, E>
 ): void
 
-export function pull<P1, P2, P3, P4, P5, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>,
   A3: ValveThrough<P2, P3, E>,
@@ -55,7 +55,7 @@ export function pull<P1, P2, P3, P4, P5, E = ValveError>(
   RR: ValveSink<P5, E>
 ): void
 
-export function pull<P1, P2, P3, P4, P5, P6, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, P6, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>,
   A3: ValveThrough<P2, P3, E>,
@@ -65,7 +65,7 @@ export function pull<P1, P2, P3, P4, P5, P6, E = ValveError>(
   RR: ValveSink<P6, E>
 ): void
 
-export function pull<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>,
   A3: ValveThrough<P2, P3, E>,
@@ -76,7 +76,7 @@ export function pull<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
   RR: ValveSink<P7, E>
 ): void
 
-export function pull<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>,
   A3: ValveThrough<P2, P3, E>,
@@ -90,25 +90,25 @@ export function pull<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
 
 // ...Through -> Sink
 
-export function pull<P1, P2, E = ValveError>(
+export function valve<P1, P2, E = ValveError>(
   A1: ValveThrough<P1, P2, E>,
   A2: ValveSink<P2, E>
 ): ValveSink<P2, E>
 
-export function pull<P1, P2, P3, E = ValveError>(
+export function valve<P1, P2, P3, E = ValveError>(
   A1: ValveThrough<P1, P2, E>,
   A2: ValveThrough<P2, P3, E>,
   A3: ValveSink<P3, E>
 ): ValveSink<P3, E>
 
-export function pull<P1, P2, P3, P4, E = ValveError>(
+export function valve<P1, P2, P3, P4, E = ValveError>(
   A1: ValveThrough<P1, P2, E>,
   A2: ValveThrough<P2, P3, E>,
   A3: ValveThrough<P3, P4, E>,
   A4: ValveSink<P4, E>
 ): ValveSink<P4, E>
 
-export function pull<P1, P2, P3, P4, P5, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, E = ValveError>(
   A1: ValveThrough<P1, P2, E>,
   A2: ValveThrough<P2, P3, E>,
   A3: ValveThrough<P3, P4, E>,
@@ -116,7 +116,7 @@ export function pull<P1, P2, P3, P4, P5, E = ValveError>(
   A5: ValveSink<P5, E>
 ): ValveSink<P5, E>
 
-export function pull<P1, P2, P3, P4, P5, P6, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, P6, E = ValveError>(
   A1: ValveThrough<P1, P2, E>,
   A2: ValveThrough<P2, P3, E>,
   A3: ValveThrough<P3, P4, E>,
@@ -125,7 +125,7 @@ export function pull<P1, P2, P3, P4, P5, P6, E = ValveError>(
   A6: ValveSink<P6, E>
 ): ValveSink<P6, E>
 
-export function pull<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
   A1: ValveThrough<P1, P2, E>,
   A2: ValveThrough<P2, P3, E>,
   A3: ValveThrough<P3, P4, E>,
@@ -135,7 +135,7 @@ export function pull<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
   A7: ValveSink<P7, E>
 ): ValveSink<P7, E>
 
-export function pull<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
   A1: ValveThrough<P1, P2, E>,
   A2: ValveThrough<P2, P3, E>,
   A3: ValveThrough<P3, P4, E>,
@@ -148,25 +148,25 @@ export function pull<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
 
 // Source -> ...Through (TODO: finish this)
 
-export function pull<P1, P2, E = ValveError>(
+export function valve<P1, P2, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>
 ): ValveSource<P2, E>
 
-export function pull<P1, P2, P3, E = ValveError>(
+export function valve<P1, P2, P3, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>,
   A3: ValveThrough<P2, P3, E>
 ): ValveSource<P3, E>
 
-export function pull<P1, P2, P3, P4, E = ValveError>(
+export function valve<P1, P2, P3, P4, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>,
   A3: ValveThrough<P2, P3, E>,
   A4: ValveThrough<P3, P4, E>
 ): ValveSource<P4, E>
 
-export function pull<P1, P2, P3, P4, P5, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>,
   A3: ValveThrough<P2, P3, E>,
@@ -174,7 +174,7 @@ export function pull<P1, P2, P3, P4, P5, E = ValveError>(
   A5: ValveThrough<P4, P5, E>
 ): ValveSource<P5, E>
 
-export function pull<P1, P2, P3, P4, P5, P6, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, P6, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>,
   A3: ValveThrough<P2, P3, E>,
@@ -183,7 +183,7 @@ export function pull<P1, P2, P3, P4, P5, P6, E = ValveError>(
   A6: ValveThrough<P5, P6, E>
 ): ValveSource<P6, E>
 
-export function pull<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>,
   A3: ValveThrough<P2, P3, E>,
@@ -193,7 +193,7 @@ export function pull<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
   A7: ValveThrough<P6, P7, E>
 ): ValveSource<P7, E>
 
-export function pull<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
   A1: ValveSource<P1, E>,
   A2: ValveThrough<P1, P2, E>,
   A3: ValveThrough<P2, P3, E>,
@@ -206,29 +206,29 @@ export function pull<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
 
 // ...Through
 
-export function pull<P1, P2, E = ValveError>(
+export function valve<P1, P2, E = ValveError>(
   A1: ValveThrough<P1, P2, E>
 ): ValveThrough<P1, P2, E>
 
-export function pull<P1, P2, P3, E = ValveError>(
+export function valve<P1, P2, P3, E = ValveError>(
   A1: ValveThrough<P1, P2, E>,
   A2: ValveThrough<P2, P3, E>
 ): ValveThrough<P1, P3, E>
 
-export function pull<P1, P2, P3, P4, E = ValveError>(
+export function valve<P1, P2, P3, P4, E = ValveError>(
   A1: ValveThrough<P1, P2, E>,
   A2: ValveThrough<P2, P3, E>,
   A3: ValveThrough<P3, P4, E>
 ): ValveThrough<P1, P4, E>
 
-export function pull<P1, P2, P3, P4, P5, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, E = ValveError>(
   A1: ValveThrough<P1, P2, E>,
   A2: ValveThrough<P2, P3, E>,
   A3: ValveThrough<P3, P4, E>,
   A4: ValveThrough<P4, P5, E>
 ): ValveThrough<P1, P5, E>
 
-export function pull<P1, P2, P3, P4, P5, P6, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, P6, E = ValveError>(
   A1: ValveThrough<P1, P2, E>,
   A2: ValveThrough<P2, P3, E>,
   A3: ValveThrough<P3, P4, E>,
@@ -236,7 +236,7 @@ export function pull<P1, P2, P3, P4, P5, P6, E = ValveError>(
   A5: ValveThrough<P5, P6, E>
 ): ValveThrough<P1, P6, E>
 
-export function pull<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
   A1: ValveThrough<P1, P2, E>,
   A2: ValveThrough<P2, P3, E>,
   A3: ValveThrough<P3, P4, E>,
@@ -245,7 +245,7 @@ export function pull<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
   A6: ValveThrough<P6, P7, E>
 ): ValveThrough<P1, P7, E>
 
-export function pull<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
+export function valve<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
   A1: ValveThrough<P1, P2, E>,
   A2: ValveThrough<P2, P3, E>,
   A3: ValveThrough<P3, P4, E>,
@@ -255,21 +255,21 @@ export function pull<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
   A7: ValveThrough<P7, P8, E>
 ): ValveThrough<P1, P8, E>
 
-export function pull<E = ValveError>(
+export function valve<E = ValveError>(
   ...props: Array<ValveThrough<any, any, E>>
 ): ValveThrough<any, any, E>
 
-export function pull<E = ValveError>(
+export function valve<E = ValveError>(
   A1: ValveSource<any, E>,
   ...props: Array<ValveThrough<any, any, E>>
 ): ValveSource<any, E>
 
-export function pull<E = ValveError>(
+export function valve<E = ValveError>(
   A1: ValveSource<any, E>,
   A2: ValveSink<any, E>
 ): void
 
-export function pull<E = ValveError>(
+export function valve<E = ValveError>(
   ...props: Array<
     ValveSink<any, E> | ValveSource<any, E> | ValveThrough<any, any, E>
   >
@@ -290,7 +290,7 @@ export function pull<E = ValveError>(
 
         props.unshift(source)
 
-        return pull.apply(null, props)
+        return valve.apply(null, props)
       }
     } as ValveSink<any, E> | ValveThrough<any, any, E>
   }

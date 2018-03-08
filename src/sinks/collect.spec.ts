@@ -1,4 +1,4 @@
-import { collect, count, empty, pull } from '../index'
+import { collect, count, empty, valve } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -6,7 +6,7 @@ import { assert } from 'chai'
 
 describe('sinks/collect', () => {
   it('...', done => {
-    pull(
+    valve(
       empty(),
       collect({
         onData(action) {
@@ -19,7 +19,7 @@ describe('sinks/collect', () => {
   })
 
   it('...', done => {
-    pull(
+    valve(
       count(3),
       collect({
         onData(action) {

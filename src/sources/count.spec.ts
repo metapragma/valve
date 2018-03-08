@@ -1,4 +1,4 @@
-import { collect, count, pull } from '../index'
+import { collect, count, valve } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -6,7 +6,7 @@ import { assert } from 'chai'
 
 describe('sources/count', () => {
   it('...', done => {
-    pull(
+    valve(
       count(5),
       collect({
         onData(action) {

@@ -3,9 +3,9 @@ import {
   empty,
   error,
   fromIterable,
-  pull,
   take,
-  through
+  through,
+  valve
 } from '../index'
 
 import { ValveActionType, ValveError, ValveThrough, ValveType } from '../types'
@@ -27,7 +27,7 @@ describe('throughs/take', () => {
   it('...', done => {
     const data = [1]
 
-    pull(
+    valve(
       fromIterable(data),
       take(0),
       collect({
@@ -42,7 +42,7 @@ describe('throughs/take', () => {
   it('...', done => {
     const data = [1, 2, undefined, 4, 5, 6, 7, 8, 9, 10]
 
-    pull(
+    valve(
       fromIterable(data),
       take(5),
       collect({
@@ -57,7 +57,7 @@ describe('throughs/take', () => {
   it('...', done => {
     const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-    pull(
+    valve(
       fromIterable(data),
       take(5),
       through({
@@ -78,7 +78,7 @@ describe('throughs/take', () => {
   it('error', done => {
     const err = new Error()
 
-    pull(
+    valve(
       error(err),
       take(0),
       collect({
@@ -91,7 +91,7 @@ describe('throughs/take', () => {
   })
 
   it('empty', done => {
-    pull(
+    valve(
       empty(),
       take(0),
       collect({
@@ -104,7 +104,7 @@ describe('throughs/take', () => {
   })
 
   it('exclude last', done => {
-    pull(
+    valve(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       take(n => {
         return n < 5
@@ -119,7 +119,7 @@ describe('throughs/take', () => {
   })
 
   it('include last', done => {
-    pull(
+    valve(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       take(n => {
         return n < 5
@@ -155,7 +155,7 @@ describe('throughs/take', () => {
       }
     })
 
-    pull(
+    valve(
       fromIterable([1, 2, 3, 4, 5, 5, 7, 5, 9, 10]),
       thr(),
       take(5),
@@ -177,7 +177,7 @@ describe('throughs/take', () => {
     let ended = false
     let i = 0
 
-    const read = pull(
+    const read = valve(
       {
         type: ValveType.Source,
         source(action, cb) {

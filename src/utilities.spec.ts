@@ -11,7 +11,7 @@ import {
   error,
   fromIterable,
   infinite,
-  pull
+  valve
 } from './index'
 
 import { createSink, createSource, createThrough, hasEnded } from './utilities'
@@ -188,7 +188,7 @@ describe('utilities', () => {
     assert(isFunction(drain.abort))
     assert.equal(drain.type, ValveType.Sink)
 
-    pull(fromIterable([1, 2, 3, 4]), drain)
+    valve(fromIterable([1, 2, 3, 4]), drain)
   })
 
   it('createSink abort', done => {
@@ -211,7 +211,7 @@ describe('utilities', () => {
       }
     })
 
-    pull(infinite(), drain)
+    valve(infinite(), drain)
   })
 
   it('createSink error', done => {
@@ -236,7 +236,7 @@ describe('utilities', () => {
       }
     })
 
-    pull(infinite(), drain)
+    valve(infinite(), drain)
   })
 
   it('createSink abort', done => {
@@ -259,7 +259,7 @@ describe('utilities', () => {
       }
     })
 
-    pull(infinite(), delay(), drain)
+    valve(infinite(), delay(), drain)
   })
 
   it('delayed createSink error', done => {
@@ -284,7 +284,7 @@ describe('utilities', () => {
       }
     })
 
-    pull(infinite(), delay(), drain)
+    valve(infinite(), delay(), drain)
   })
 
   it('createSink instant abort', done => {
@@ -303,7 +303,7 @@ describe('utilities', () => {
 
     drain.abort({ type: ValveActionType.Abort })
 
-    pull(infinite(), drain)
+    valve(infinite(), drain)
   })
 
   it('createSink instant error', done => {
@@ -324,7 +324,7 @@ describe('utilities', () => {
 
     drain.abort({ type: ValveActionType.Error, payload: err })
 
-    pull(infinite(), drain)
+    valve(infinite(), drain)
   })
 
   it('createSink empty source', done => {
@@ -341,7 +341,7 @@ describe('utilities', () => {
       }
     })
 
-    pull(empty(), drain)
+    valve(empty(), drain)
   })
 
   it('createSink source error', done => {
@@ -360,19 +360,19 @@ describe('utilities', () => {
       }
     })
 
-    pull(error(err), drain)
+    valve(error(err), drain)
   })
 
   it('createSink deaults', () => {
     const drain = createSink()
 
-    pull(empty(), drain)
+    valve(empty(), drain)
   })
 
   it('createThrough defaults', done => {
     // const spy = sinonSpy()
 
-    pull(
+    valve(
       count(5),
       createThrough(),
       collect({
@@ -387,7 +387,7 @@ describe('utilities', () => {
   it('createThrough onData', done => {
     const spy = sinonSpy()
 
-    pull(
+    valve(
       count(5),
       createThrough({
         onData(action, cb) {
@@ -412,7 +412,7 @@ describe('utilities', () => {
   it('createThrough onAbort', done => {
     const spy = sinonSpy()
 
-    pull(
+    valve(
       count(5),
       createThrough({
         onAbort(action) {
@@ -434,7 +434,7 @@ describe('utilities', () => {
     const spy = sinonSpy()
     const err = new Error('err')
 
-    pull(
+    valve(
       error(err),
       createThrough({
         onError(action) {

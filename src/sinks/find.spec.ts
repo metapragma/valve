@@ -1,4 +1,4 @@
-import { asyncMap, empty, error, find, fromIterable, pull } from '../index'
+import { asyncMap, empty, error, find, fromIterable, valve } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -9,7 +9,7 @@ import immediate = require('immediate')
 
 describe('sinks/find', () => {
   it('...', done => {
-    pull(
+    valve(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       find({
         onData(action) {
@@ -31,7 +31,7 @@ describe('sinks/find', () => {
 
     f.push(target)
 
-    pull(
+    valve(
       fromIterable(f.sort()),
       find({
         onData(action) {
@@ -50,7 +50,7 @@ describe('sinks/find', () => {
     const target = Math.random()
     const f = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-    pull(
+    valve(
       fromIterable(f.sort()),
       find({
         onAbort() {
@@ -64,7 +64,7 @@ describe('sinks/find', () => {
   })
 
   it('there can only be one', done => {
-    pull(
+    valve(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 7, 8, 9, 10]),
       asyncMap(
         e =>
@@ -87,7 +87,7 @@ describe('sinks/find', () => {
   })
 
   it('identity', done => {
-    pull(
+    valve(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       find({
         onData(action) {
@@ -101,7 +101,7 @@ describe('sinks/find', () => {
   it('error', done => {
     const ERR = new Error('test')
 
-    pull(
+    valve(
       error(ERR),
       find({
         onError(action) {
@@ -113,7 +113,7 @@ describe('sinks/find', () => {
   })
 
   it('empty', done => {
-    pull(
+    valve(
       empty(),
       find({
         onAbort() {

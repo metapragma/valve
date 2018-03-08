@@ -1,4 +1,4 @@
-import { collect, error, flatten, fromIterable, pull, through } from '../index'
+import { collect, error, flatten, fromIterable, through, valve } from '../index'
 
 import { ValveActionType } from '../types'
 
@@ -13,7 +13,7 @@ import immediate = require('immediate')
 
 describe('throughs/flatten', () => {
   it('stream of arrays of numbers', done => {
-    pull(
+    valve(
       fromIterable([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),
       flatten(),
       collect({
@@ -27,7 +27,7 @@ describe('throughs/flatten', () => {
   })
 
   it('stream of arrays of string', done => {
-    pull(
+    valve(
       fromIterable([['a', 'b', 'c'], ['d', 'e', 'f']]),
       flatten(),
       collect({
@@ -73,7 +73,7 @@ describe('throughs/flatten', () => {
   // })
 
   it('stream of number streams', done => {
-    pull(
+    valve(
       fromIterable([
         fromIterable([1, 2, 3]),
         fromIterable([4, 5, 6]),
@@ -91,7 +91,7 @@ describe('throughs/flatten', () => {
   })
 
   it('stream of string streams', done => {
-    pull(
+    valve(
       fromIterable([
         fromIterable(['a', 'b', 'c']),
         fromIterable(['d', 'e', 'f'])
@@ -108,7 +108,7 @@ describe('throughs/flatten', () => {
   })
 
   it('through', done => {
-    pull(
+    valve(
       fromIterable([
         fromIterable([1, 2, 3]),
         fromIterable([4, 5, 6]),
@@ -130,7 +130,7 @@ describe('throughs/flatten', () => {
   it('broken stream', done => {
     const err = new Error('I am broken')
 
-    pull(
+    valve(
       fromIterable([error(err)]),
       flatten(),
       createSink({
@@ -150,10 +150,10 @@ describe('throughs/flatten', () => {
     let s2Ended: {}
     let s3Ended: {}
 
-    const stream = pull(
-      pull(
+    const stream = valve(
+      valve(
         fromIterable([
-          pull(
+          valve(
             fromIterable([1, 2]),
             through({
               onAbort(action) {
@@ -161,7 +161,7 @@ describe('throughs/flatten', () => {
               }
             })
           ),
-          pull(
+          valve(
             fromIterable([3, 4]),
             through({
               onAbort(action) {
@@ -213,10 +213,10 @@ describe('throughs/flatten', () => {
     //   flatten()
     // )
 
-    const stream = pull(
-      pull(
+    const stream = valve(
+      valve(
         fromIterable([
-          pull(
+          valve(
             fromIterable([1, 2]),
             through({
               onAbort(action) {
@@ -246,7 +246,7 @@ describe('throughs/flatten', () => {
   })
 
   it('flattern handles stream with normal objects', done => {
-    pull(
+    valve(
       fromIterable([[1, 2, 3], 4, [5, 6, 7], 8, 9, 10]),
       flatten(),
       collect({
@@ -260,7 +260,7 @@ describe('throughs/flatten', () => {
   })
 
   it('flattern handles stream mixed objects', done => {
-    pull(
+    valve(
       fromIterable([[1, 2, 3], 4, fromIterable([5, 6, 7]), 8, 9, 10]),
       flatten(),
       collect({

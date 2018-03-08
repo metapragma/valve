@@ -7,7 +7,7 @@ import { assert } from 'chai'
 // tslint:disable-next-line
 import immediate = require('immediate')
 
-import { map, pull, take, through } from './index'
+import { map, take, through, valve } from './index'
 
 import { isFunction, noop } from 'lodash'
 
@@ -98,7 +98,7 @@ function test<E>(
     }
   })
 
-  pull(source(), trx, abortableThrough, sink)
+  valve(source(), trx, abortableThrough, sink)
 }
 
 describe('abort-stalled', () => {

@@ -5,8 +5,8 @@ import {
   filter,
   infinite,
   map,
-  pull,
-  take
+  take,
+  valve
 } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
@@ -15,7 +15,7 @@ import { assert } from 'chai'
 
 describe('throughs/filter', () => {
   it('random', done => {
-    pull(
+    valve(
       infinite(),
       filter(d => {
         return d > 0.5
@@ -37,7 +37,7 @@ describe('throughs/filter', () => {
   })
 
   it('regexp', done => {
-    pull(
+    valve(
       infinite(),
       map(d => {
         return Math.round(d * 1000).toString(16)
@@ -58,7 +58,7 @@ describe('throughs/filter', () => {
   })
 
   it('empty', done => {
-    pull(
+    valve(
       empty(),
       filter(() => {
         return false
@@ -74,7 +74,7 @@ describe('throughs/filter', () => {
 
   it('error', done => {
     const err = new Error('qwe')
-    pull(
+    valve(
       error(err),
       filter(() => {
         return false

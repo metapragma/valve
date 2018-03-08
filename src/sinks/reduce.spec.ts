@@ -1,4 +1,4 @@
-import { empty, error, fromIterable, pull, reduce } from '../index'
+import { empty, error, fromIterable, reduce, valve } from '../index'
 
 import { noop } from 'lodash'
 
@@ -8,7 +8,7 @@ import { assert } from 'chai'
 
 describe('sinks/reduce', () => {
   it('with initial value', done => {
-    pull(
+    valve(
       fromIterable([1, 2, 3]),
       reduce({
         iteratee(a, b) {
@@ -24,7 +24,7 @@ describe('sinks/reduce', () => {
   })
 
   it('without initial value', done => {
-    pull(
+    valve(
       fromIterable([1, 2, 3]),
       reduce({
         iteratee(a, b) {
@@ -41,7 +41,7 @@ describe('sinks/reduce', () => {
   it('error', done => {
     const ERR = new Error('qweo')
 
-    pull(
+    valve(
       error(ERR),
       reduce({
         iteratee: noop,
@@ -56,7 +56,7 @@ describe('sinks/reduce', () => {
   it('error with accumulator', done => {
     const ERR = new Error('qweo')
 
-    pull(
+    valve(
       error<number>(ERR),
       reduce({
         iteratee: (a, b) => a + b,
@@ -70,7 +70,7 @@ describe('sinks/reduce', () => {
   })
 
   it('empty', done => {
-    pull(
+    valve(
       empty(),
       reduce({
         iteratee: noop,
@@ -82,7 +82,7 @@ describe('sinks/reduce', () => {
   })
 
   it('empty with accumulator', done => {
-    pull(
+    valve(
       empty<number>(),
       reduce({
         iteratee: (a, b) => a + b,

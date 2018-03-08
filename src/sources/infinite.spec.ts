@@ -1,4 +1,4 @@
-import { collect, infinite, pull, take } from '../index'
+import { collect, infinite, take, valve } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -6,7 +6,7 @@ import { assert } from 'chai'
 
 describe('sources/infinite', () => {
   it('default', done => {
-    pull(
+    valve(
       infinite(),
       take(5),
       collect({
@@ -19,7 +19,7 @@ describe('sources/infinite', () => {
   })
 
   it('custom', done => {
-    pull(
+    valve(
       infinite(() => 1),
       take(5),
       collect({
