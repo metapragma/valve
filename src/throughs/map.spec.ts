@@ -1,4 +1,4 @@
-import { collect, map, pull, values } from '../index'
+import { collect, fromIterable, map, pull } from '../index'
 
 import { createSink } from '../utilities'
 
@@ -9,7 +9,7 @@ import { assert } from 'chai'
 describe('throughs/map', () => {
   it('...', done => {
     pull(
-      values([1, 2, 3, 4, 5, 6]),
+      fromIterable([1, 2, 3, 4, 5, 6]),
       map(n => {
         return n + 1
       }),
@@ -37,7 +37,7 @@ describe('throughs/map', () => {
     assert.throws(
       () =>
         pull(
-          values([1, 2, 3, 3.4, 4]),
+          fromIterable([1, 2, 3, 3.4, 4]),
           map(e => {
             // tslint:disable-next-line no-bitwise
             if (e !== ~~e) throw err

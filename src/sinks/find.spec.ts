@@ -1,4 +1,4 @@
-import { asyncMap, empty, error, find, pull, values } from '../index'
+import { asyncMap, empty, error, find, fromIterable, pull } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -10,7 +10,7 @@ import immediate = require('immediate')
 describe('sinks/find', () => {
   it('...', done => {
     pull(
-      values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+      fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       find({
         onData(action) {
           assert.equal(action.payload, 7)
@@ -32,7 +32,7 @@ describe('sinks/find', () => {
     f.push(target)
 
     pull(
-      values(f.sort()),
+      fromIterable(f.sort()),
       find({
         onData(action) {
           assert.equal(action.payload, target)
@@ -51,7 +51,7 @@ describe('sinks/find', () => {
     const f = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
     pull(
-      values(f.sort()),
+      fromIterable(f.sort()),
       find({
         onAbort() {
           done()
@@ -65,7 +65,7 @@ describe('sinks/find', () => {
 
   it('there can only be one', done => {
     pull(
-      values([1, 2, 3, 4, 5, 6, 7, 7, 8, 9, 10]),
+      fromIterable([1, 2, 3, 4, 5, 6, 7, 7, 8, 9, 10]),
       asyncMap(
         e =>
           new Promise(resolve => {
@@ -88,7 +88,7 @@ describe('sinks/find', () => {
 
   it('identity', done => {
     pull(
-      values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+      fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       find({
         onData(action) {
           assert.equal(action.payload, 1)

@@ -1,4 +1,4 @@
-import { empty, error, pull, reduce, values } from '../index'
+import { empty, error, fromIterable, pull, reduce } from '../index'
 
 import { noop } from 'lodash'
 
@@ -9,7 +9,7 @@ import { assert } from 'chai'
 describe('sinks/reduce', () => {
   it('with initial value', done => {
     pull(
-      values([1, 2, 3]),
+      fromIterable([1, 2, 3]),
       reduce({
         iteratee(a, b) {
           return a + b
@@ -25,7 +25,7 @@ describe('sinks/reduce', () => {
 
   it('without initial value', done => {
     pull(
-      values([1, 2, 3]),
+      fromIterable([1, 2, 3]),
       reduce({
         iteratee(a, b) {
           return a + b

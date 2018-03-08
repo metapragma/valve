@@ -1,4 +1,12 @@
-import { collect, empty, error, pull, take, through, values } from '../index'
+import {
+  collect,
+  empty,
+  error,
+  fromIterable,
+  pull,
+  take,
+  through
+} from '../index'
 
 import { ValveActionType, ValveError, ValveThrough, ValveType } from '../types'
 
@@ -20,7 +28,7 @@ describe('throughs/take', () => {
     const data = [1]
 
     pull(
-      values(data),
+      fromIterable(data),
       take(0),
       collect({
         onData(action) {
@@ -35,7 +43,7 @@ describe('throughs/take', () => {
     const data = [1, 2, undefined, 4, 5, 6, 7, 8, 9, 10]
 
     pull(
-      values(data),
+      fromIterable(data),
       take(5),
       collect({
         onData(action) {
@@ -50,7 +58,7 @@ describe('throughs/take', () => {
     const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
     pull(
-      values(data),
+      fromIterable(data),
       take(5),
       through({
         onAbort() {
@@ -97,7 +105,7 @@ describe('throughs/take', () => {
 
   it('exclude last', done => {
     pull(
-      values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+      fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       take(n => {
         return n < 5
       }),
@@ -112,7 +120,7 @@ describe('throughs/take', () => {
 
   it('include last', done => {
     pull(
-      values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+      fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       take(n => {
         return n < 5
       }, true),
@@ -148,7 +156,7 @@ describe('throughs/take', () => {
     })
 
     pull(
-      values([1, 2, 3, 4, 5, 5, 7, 5, 9, 10]),
+      fromIterable([1, 2, 3, 4, 5, 5, 7, 5, 9, 10]),
       thr(),
       take(5),
       collect({

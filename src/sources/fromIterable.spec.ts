@@ -1,13 +1,13 @@
-import { collect, pull, values } from '../index'
+import { collect, fromIterable, pull } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
 import { assert } from 'chai'
 
-describe('sources/values', () => {
+describe('sources/fromIterable', () => {
   it('set', done => {
     pull(
-      values(new Set([1, 2, 3])),
+      fromIterable(new Set([1, 2, 3])),
       collect({
         onData(action) {
           assert.deepEqual(action.payload, [1, 2, 3])
@@ -19,7 +19,7 @@ describe('sources/values', () => {
 
   it('map', done => {
     pull(
-      values(new Map([['one', 1], ['two', 2]])),
+      fromIterable(new Map([['one', 1], ['two', 2]])),
       collect({
         onData(action) {
           assert.deepEqual(action.payload, [['one', 1], ['two', 2]])
@@ -31,7 +31,7 @@ describe('sources/values', () => {
 
   it('array', done => {
     pull(
-      values([1, 2, 3]),
+      fromIterable([1, 2, 3]),
       collect({
         onData(action) {
           assert.deepEqual(action.payload, [1, 2, 3])
@@ -51,7 +51,7 @@ describe('sources/values', () => {
     }
 
     pull(
-      values(genFunc()),
+      fromIterable(genFunc()),
       collect({
         onError(action) {
           assert.deepEqual(action.payload, err)
@@ -63,7 +63,7 @@ describe('sources/values', () => {
 
   it('object', done => {
     pull(
-      values(Object.values({ a: 1, b: 2, c: 3 })),
+      fromIterable(Object.values({ a: 1, b: 2, c: 3 })),
       collect({
         onData(action) {
           assert.deepEqual(action.payload, [1, 2, 3])

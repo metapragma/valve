@@ -1,4 +1,4 @@
-import { concat, pull, through, values } from '../index'
+import { concat, fromIterable, pull, through } from '../index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -9,7 +9,7 @@ describe('sinks/concat', () => {
     let n = 0
 
     pull(
-      values('hello there this is a test'.split(/([aeiou])/)),
+      fromIterable('hello there this is a test'.split(/([aeiou])/)),
       through({
         onData() {
           // tslint:disable-next-line no-increment-decrement

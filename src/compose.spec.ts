@@ -1,4 +1,4 @@
-import { collect, map, pull, values } from './index'
+import { collect, fromIterable, map, pull } from './index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -31,7 +31,7 @@ describe('compose', () => {
     // if we pipe a read function to the pipeline,
     // the pipeline will become readable!
 
-    const read = pull(values(['billy', 'joe', 'zeke']), pipeline)
+    const read = pull(fromIterable(['billy', 'joe', 'zeke']), pipeline)
 
     // t.equal('function', typeof read)
     // we will know it's a read function,

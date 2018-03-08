@@ -1,4 +1,4 @@
-import { collect, error, flatten, pull, through, values } from '../index'
+import { collect, error, flatten, fromIterable, pull, through } from '../index'
 
 import { ValveActionType } from '../types'
 
@@ -14,7 +14,7 @@ import immediate = require('immediate')
 describe('throughs/flatten', () => {
   it('stream of arrays of numbers', done => {
     pull(
-      values([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),
+      fromIterable([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),
       flatten(),
       collect({
         onData(action) {
@@ -28,7 +28,7 @@ describe('throughs/flatten', () => {
 
   it('stream of arrays of string', done => {
     pull(
-      values([['a', 'b', 'c'], ['d', 'e', 'f']]),
+      fromIterable([['a', 'b', 'c'], ['d', 'e', 'f']]),
       flatten(),
       collect({
         onData(action) {
@@ -42,7 +42,7 @@ describe('throughs/flatten', () => {
 
   // it('objects', done => {
   //   pull(
-  //     values([
+  //     fromIterable([
   //       { a: 1, b: 2, c: 3 },
   //       { a: 4, b: 5, c: 6 },
   //       { a: 7, b: 8, c: 9 }
@@ -58,10 +58,10 @@ describe('throughs/flatten', () => {
   //
   // it('stream (objects)', done => {
   //   pull(
-  //     values([
-  //       values({ a: 1, b: 2, c: 3 }),
-  //       values({ a: 4, b: 5, c: 6 }),
-  //       values({ a: 7, b: 8, c: 9 })
+  //     fromIterable([
+  //       fromIterable({ a: 1, b: 2, c: 3 }),
+  //       fromIterable({ a: 4, b: 5, c: 6 }),
+  //       fromIterable({ a: 7, b: 8, c: 9 })
   //     ]),
   //     flatten(),
   //     collect((err, numbers) => {
@@ -74,7 +74,11 @@ describe('throughs/flatten', () => {
 
   it('stream of number streams', done => {
     pull(
-      values([values([1, 2, 3]), values([4, 5, 6]), values([7, 8, 9])]),
+      fromIterable([
+        fromIterable([1, 2, 3]),
+        fromIterable([4, 5, 6]),
+        fromIterable([7, 8, 9])
+      ]),
       flatten(),
       collect({
         onData(action) {
@@ -88,7 +92,10 @@ describe('throughs/flatten', () => {
 
   it('stream of string streams', done => {
     pull(
-      values([values(['a', 'b', 'c']), values(['d', 'e', 'f'])]),
+      fromIterable([
+        fromIterable(['a', 'b', 'c']),
+        fromIterable(['d', 'e', 'f'])
+      ]),
       flatten(),
       collect({
         onData(action) {
@@ -102,7 +109,11 @@ describe('throughs/flatten', () => {
 
   it('through', done => {
     pull(
-      values([values([1, 2, 3]), values([4, 5, 6]), values([7, 8, 9])]),
+      fromIterable([
+        fromIterable([1, 2, 3]),
+        fromIterable([4, 5, 6]),
+        fromIterable([7, 8, 9])
+      ]),
       // tslint:disable-next-line no-empty
       through(),
       flatten(),
@@ -120,7 +131,7 @@ describe('throughs/flatten', () => {
     const err = new Error('I am broken')
 
     pull(
-      values([error(err)]),
+      fromIterable([error(err)]),
       flatten(),
       createSink({
         onError(action) {
@@ -141,9 +152,9 @@ describe('throughs/flatten', () => {
 
     const stream = pull(
       pull(
-        values([
+        fromIterable([
           pull(
-            values([1, 2]),
+            fromIterable([1, 2]),
             through({
               onAbort(action) {
                 s1Ended = action
@@ -151,7 +162,7 @@ describe('throughs/flatten', () => {
             })
           ),
           pull(
-            values([3, 4]),
+            fromIterable([3, 4]),
             through({
               onAbort(action) {
                 s2Ended = action
@@ -194,8 +205,8 @@ describe('throughs/flatten', () => {
 
     // const stream = pull(
     //   pull(
-    //     values([
-    //       pull(values([1, 2]), through())
+    //     fromIterable([
+    //       pull(fromIterable([1, 2]), through())
     //     ]),
     //     through(undefined, act => (sosEnded = act))
     //   ),
@@ -204,9 +215,9 @@ describe('throughs/flatten', () => {
 
     const stream = pull(
       pull(
-        values([
+        fromIterable([
           pull(
-            values([1, 2]),
+            fromIterable([1, 2]),
             through({
               onAbort(action) {
                 s1Ended = action
@@ -236,7 +247,7 @@ describe('throughs/flatten', () => {
 
   it('flattern handles stream with normal objects', done => {
     pull(
-      values([[1, 2, 3], 4, [5, 6, 7], 8, 9, 10]),
+      fromIterable([[1, 2, 3], 4, [5, 6, 7], 8, 9, 10]),
       flatten(),
       collect({
         onData(action) {
@@ -250,7 +261,7 @@ describe('throughs/flatten', () => {
 
   it('flattern handles stream mixed objects', done => {
     pull(
-      values([[1, 2, 3], 4, values([5, 6, 7]), 8, 9, 10]),
+      fromIterable([[1, 2, 3], 4, fromIterable([5, 6, 7]), 8, 9, 10]),
       flatten(),
       collect({
         onData(action) {

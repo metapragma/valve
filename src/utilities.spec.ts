@@ -9,9 +9,9 @@ import {
   count,
   empty,
   error,
+  fromIterable,
   infinite,
-  pull,
-  values
+  pull
 } from './index'
 
 import { createSink, createSource, createThrough, hasEnded } from './utilities'
@@ -188,7 +188,7 @@ describe('utilities', () => {
     assert(isFunction(drain.abort))
     assert.equal(drain.type, ValveType.Sink)
 
-    pull(values([1, 2, 3, 4]), drain)
+    pull(fromIterable([1, 2, 3, 4]), drain)
   })
 
   it('createSink abort', done => {

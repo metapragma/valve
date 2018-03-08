@@ -1,6 +1,6 @@
 'use strict'
 
-import { values } from '../sources/values'
+import { fromIterable } from '../sources/fromIterable'
 import { once } from '../sources/once'
 
 // convert a stream of arrays or streams into just a stream.
@@ -81,11 +81,11 @@ export function flatten<S, E = Error>(): ValveThrough<
               }
 
               if (isArray(_action.payload)) {
-                _source = values(_action.payload)
+                _source = fromIterable(_action.payload)
               } else if (isSource(_action.payload as ValveSource<S, E>)) {
                 _source = _action.payload as ValveSource<S, E>
                 // } else if (isPlainObject(stream)) {
-                //   _source = values(stream as O)
+                //   _source = fromIterable(stream as O)
               } else {
                 // tslint:disable-next-line no-parameter-reassignment
                 _source = once(_action.payload as S)

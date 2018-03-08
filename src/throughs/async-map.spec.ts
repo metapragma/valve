@@ -2,11 +2,11 @@ import {
   asyncMap,
   collect,
   count,
+  fromIterable,
   infinite,
   pull,
   take,
-  through,
-  values
+  through
 } from '../index'
 
 import { ValveActionType, ValveSource, ValveType } from '../types'
@@ -63,7 +63,7 @@ describe('throughs/async-map', () => {
 
   it('...', done => {
     pull(
-      values([1, 2, 3]),
+      fromIterable([1, 2, 3]),
       asyncMap(data => Promise.resolve(data + 1)),
       collect({
         onData(action) {
@@ -158,7 +158,7 @@ describe('throughs/async-map', () => {
 
     pull(
       pull(
-        values([1, 2, 3]),
+        fromIterable([1, 2, 3]),
         through({
           onError(action) {
             assert.equal(action.payload, ERR)
