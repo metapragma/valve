@@ -72,7 +72,7 @@ export function flatten<S, E = Error>(): ValveThrough<
             _source = undefined
 
             source.source({ type: ValveActionType.Pull }, _action => {
-              if (hasEnded(_action)) {
+              if (hasEnded(_action) || _action.type === ValveActionType.Noop) {
                 return cb(_action)
               }
 

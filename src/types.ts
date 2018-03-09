@@ -2,10 +2,11 @@
 export type ValveError<E = any> = E
 
 export enum ValveActionType {
-  Pull,
-  Data,
   Abort,
-  Error
+  Data,
+  Error,
+  Noop,
+  Pull
 }
 
 export interface ValveActionGeneric {
@@ -30,20 +31,27 @@ export interface ValveActionAbort extends ValveActionGeneric {
   type: ValveActionType.Abort
 }
 
+export interface ValveActionNoop extends ValveActionGeneric {
+  type: ValveActionType.Noop
+}
+
 export type ValveAction<P, E> =
+  | ValveActionAbort
   | ValveActionData<P>
   | ValveActionError<E>
-  | ValveActionAbort
+  | ValveActionNoop
   | ValveActionPull
 
 export type ValveSourceAction<P, E> =
+  | ValveActionAbort
   | ValveActionData<P>
   | ValveActionError<E>
-  | ValveActionAbort
+  | ValveActionNoop
+
 export type ValveSinkAction<E> =
-  | ValveActionPull
-  | ValveActionError<E>
   | ValveActionAbort
+  | ValveActionError<E>
+  | ValveActionPull
 
 export enum ValveType {
   Source,

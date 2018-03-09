@@ -32,6 +32,14 @@ export const hasEnded = <E = ValveError>(
     : action.type === ValveActionType.Abort ||
       action.type === ValveActionType.Error
 
+const findEnded = <P, E = ValveError>(
+  ...actions: Array<undefined | ValveAction<P, E>>
+): ValveActionAbort | ValveActionError<E> | undefined =>
+  find<ValveAction<P, E>, ValveActionAbort | ValveActionError<E>>(
+    compact(actions),
+    hasEnded
+  )
+
 export const createSource = <T, E = ValveError>(
   options: Partial<ValveCreateSourceOptions<T, E>> = {}
 ): ValveSource<T, E> => {
@@ -76,7 +84,6 @@ export const createSink = <T, E = ValveError>(
     createSinkDefaultOptions
   )
 
-  let source: ValveSource<T, E>
   let request: ValveSinkAction<E> = { type: ValveActionType.Pull }
 
   return {
@@ -84,9 +91,7 @@ export const createSink = <T, E = ValveError>(
     terminate: (action = { type: ValveActionType.Abort }) => {
       request = action
     },
-    sink: _source => {
-      source = _source
-
+    sink: source => {
       // this function is much simpler to write if you
       // just use recursion, but by using a while loop
       // we do not blow the stack if the stream happens to be sync.
@@ -97,22 +102,34 @@ export const createSink = <T, E = ValveError>(
 
         while (loop) {
           cbed = false
+
           source.source(request, action => {
             cbed = true
 
-            if (action.type === ValveActionType.Abort) {
-              loop = false
+            switch (action.type) {
+              case ValveActionType.Abort: {
+                loop = false
 
-              _options.onAbort(action)
-            } else if (action.type === ValveActionType.Error) {
-              loop = false
+                _options.onAbort(action)
 
-              _options.onError(action)
-            } else {
-              _options.onData(action)
+                break
+              }
+              case ValveActionType.Error: {
+                loop = false
 
-              if (!loop) {
-                next()
+                _options.onError(action)
+
+                break
+              }
+              case ValveActionType.Noop: {
+                break
+              }
+              case ValveActionType.Data: {
+                _options.onData(action)
+
+                if (!loop) {
+                  next()
+                }
               }
             }
           })
@@ -129,14 +146,6 @@ export const createSink = <T, E = ValveError>(
     }
   }
 }
-
-const findEnded = <P, E = ValveError>(
-  ...actions: Array<undefined | ValveAction<P, E>>
-): ValveActionAbort | ValveActionError<E> | undefined =>
-  find<ValveAction<P, E>, ValveActionAbort | ValveActionError<E>>(
-    compact(actions),
-    hasEnded
-  )
 
 export const createThrough = <T, R = T, E = ValveError>(
   options: Partial<ValveCreateThroughOptions<T, R, E>> = {}
@@ -162,10 +171,15 @@ export const createThrough = <T, R = T, E = ValveError>(
   const processEnded = (cb: ValveSourceCallback<R, E>): void => {
     if (!isUndefined(ended)) {
       if (cbed === false) {
-        if (ended.type === ValveActionType.Abort) {
-          _options.onAbort(ended)
-        } else if (ended.type === ValveActionType.Error) {
-          _options.onError(ended)
+        switch (ended.type) {
+          case ValveActionType.Abort: {
+            _options.onAbort(ended)
+            break
+          }
+
+          case ValveActionType.Error: {
+            _options.onError(ended)
+          }
         }
 
         cb(ended)
@@ -191,6 +205,8 @@ export const createThrough = <T, R = T, E = ValveError>(
 
             if (!isUndefined(ended)) {
               processEnded(cb)
+            } else if (_action.type === ValveActionType.Noop) {
+              cb(_action)
             } else {
               _options.onData(
                 _action as ValveActionData<T>,

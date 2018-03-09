@@ -51,6 +51,8 @@ export function asyncMap<P, R, E = Error>(
               cb(_action)
             } else if (hasEnded(ended)) {
               cb(ended)
+            } else if (_action.type === ValveActionType.Noop) {
+              cb(_action)
             } else {
               busy = true
 

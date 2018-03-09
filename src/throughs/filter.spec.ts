@@ -1,5 +1,6 @@
 import {
   collect,
+  count,
   empty,
   error,
   filter,
@@ -14,6 +15,21 @@ import 'mocha'
 import { assert } from 'chai'
 
 describe('throughs/filter', () => {
+  it('count', done => {
+    valve(
+      count(10),
+      filter(d => {
+        return d >= 5
+      }),
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, [5, 6, 7, 8, 9, 10])
+          done()
+        }
+      })
+    )
+  })
+
   it('random', done => {
     valve(
       infinite(),
