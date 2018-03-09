@@ -41,7 +41,7 @@ export function find<P, E = ValveError>(
           payload: action.payload
         })
 
-        sink.abort({ type: ValveActionType.Abort })
+        sink.terminate({ type: ValveActionType.Abort })
       }
     },
     onError: once(_options.onError),

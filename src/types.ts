@@ -71,7 +71,7 @@ export type ValveThroughFunction<P, R, E = ValveError> = (
 export interface ValveSink<P, E = ValveError> {
   type: ValveType.Sink
   sink: ValveSinkFunction<P, E>
-  abort: (action: ValveActionAbort | ValveActionError<E>) => void
+  terminate: (action: ValveActionAbort | ValveActionError<E>) => void
 }
 
 export interface ValveSource<P, E = ValveError> {

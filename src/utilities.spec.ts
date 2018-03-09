@@ -185,7 +185,7 @@ describe('utilities', () => {
 
     assert(isPlainObject(drain))
     assert(isFunction(drain.sink))
-    assert(isFunction(drain.abort))
+    assert(isFunction(drain.terminate))
     assert.equal(drain.type, ValveType.Sink)
 
     valve(fromIterable([1, 2, 3, 4]), drain)
@@ -202,7 +202,7 @@ describe('utilities', () => {
         assert(isNumber(action.payload))
         if (c < 0) throw new Error('stream should have aborted')
         // tslint:disable-next-line no-increment-decrement
-        if (!--c) drain.abort({ type: ValveActionType.Abort })
+        if (!--c) drain.terminate({ type: ValveActionType.Abort })
       },
       onAbort(action) {
         assert.equal(action.type, ValveActionType.Abort)
@@ -226,7 +226,7 @@ describe('utilities', () => {
         assert(isNumber(action.payload))
         if (c < 0) throw new Error('stream should have aborted')
         // tslint:disable-next-line no-increment-decrement
-        if (!--c) drain.abort({ type: ValveActionType.Error, payload: err })
+        if (!--c) drain.terminate({ type: ValveActionType.Error, payload: err })
       },
       onError(action) {
         assert.equal(action.type, ValveActionType.Error)
@@ -250,7 +250,7 @@ describe('utilities', () => {
         assert(isNumber(action.payload))
         if (c < 0) throw new Error('stream should have aborted')
         // tslint:disable-next-line no-increment-decrement
-        if (!--c) drain.abort({ type: ValveActionType.Abort })
+        if (!--c) drain.terminate({ type: ValveActionType.Abort })
       },
       onAbort(action) {
         assert.equal(action.type, ValveActionType.Abort)
@@ -274,7 +274,7 @@ describe('utilities', () => {
         assert(isNumber(action.payload))
         if (c < 0) throw new Error('stream should have aborted')
         // tslint:disable-next-line no-increment-decrement
-        if (!--c) drain.abort({ type: ValveActionType.Error, payload: err })
+        if (!--c) drain.terminate({ type: ValveActionType.Error, payload: err })
       },
       onError(action) {
         assert.equal(action.type, ValveActionType.Error)
@@ -301,7 +301,7 @@ describe('utilities', () => {
       }
     })
 
-    drain.abort({ type: ValveActionType.Abort })
+    drain.terminate({ type: ValveActionType.Abort })
 
     valve(infinite(), drain)
   })
@@ -322,7 +322,7 @@ describe('utilities', () => {
       }
     })
 
-    drain.abort({ type: ValveActionType.Error, payload: err })
+    drain.terminate({ type: ValveActionType.Error, payload: err })
 
     valve(infinite(), drain)
   })

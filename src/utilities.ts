@@ -81,7 +81,7 @@ export const createSink = <T, E = ValveError>(
 
   return {
     type: ValveType.Sink,
-    abort: (action = { type: ValveActionType.Abort }) => {
+    terminate: (action = { type: ValveActionType.Abort }) => {
       request = action
     },
     sink: _source => {
