@@ -6,11 +6,13 @@ export function filter<P, E = ValveError>(
   predicate: ((data: P) => boolean)
 ): ValveThrough<P, P, E> {
   return createThrough<P, P, E>({
-    onData(action, cb) {
-      if (predicate(action.payload)) {
-        cb(action)
-      } else {
-        cb({ type: ValveActionType.Noop })
+    down: {
+      onData(action, cb) {
+        if (predicate(action.payload)) {
+          cb(action)
+        } else {
+          cb({ type: ValveActionType.Noop })
+        }
       }
     }
   })

@@ -8,8 +8,6 @@ import {
   ValveType
 } from '../types'
 
-import { noop } from 'lodash'
-
 import { hasEnded } from '../utilities'
 
 // TODO: use helpers
@@ -23,7 +21,6 @@ export function asyncMap<P, R, E = Error>(
 
   return {
     type: ValveType.Through,
-    terminate: noop,
     sink(source) {
       const next: ValveSourceFunction<R, E> = (action, cb) => {
         if (hasEnded(ended)) {

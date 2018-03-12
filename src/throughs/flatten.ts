@@ -13,7 +13,7 @@ import {
   ValveType
 } from '../types'
 
-import { isArray, isPlainObject, isUndefined, noop } from 'lodash'
+import { isArray, isPlainObject, isUndefined } from 'lodash'
 
 import { hasEnded } from '../utilities'
 
@@ -26,7 +26,6 @@ export function flatten<S, E = Error>(): ValveThrough<
 > {
   return {
     type: ValveType.Through,
-    terminate: noop,
     sink(source) {
       // read
       let _source: ValveSource<S, E> | undefined

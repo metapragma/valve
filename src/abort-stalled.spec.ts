@@ -46,7 +46,7 @@ function hang<P, E>(values: P[], onAbort?: () => void): ValveSource<P, E> {
   }
 }
 
-function abortable<P, E>(): ValveThrough<P, P, E> {
+function abortable<P, E>(): ValveThrough<P, P, E> & { terminate: () => void }{
   let _read: ValveSource<P, E>
   let ended: ValveActionError<E> | ValveActionAbort
 

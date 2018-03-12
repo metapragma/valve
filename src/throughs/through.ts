@@ -20,14 +20,28 @@ export function through<P, E = ValveError>(
   } = {}
 ): ValveThrough<P, P, E> {
   return createThrough<P, P, E>({
-    onAbort: options.onAbort,
-    onError: options.onError,
-    onData(action, cb) {
-      if (isFunction(options.onData)) {
-        options.onData(action)
-      }
+    down: {
+      onAbort(action, cb) {
+        if (isFunction(options.onAbort)) {
+          options.onAbort(action)
+        }
 
-      cb(action)
+        cb(action)
+      },
+      onError(action, cb) {
+        if (isFunction(options.onError)) {
+          options.onError(action)
+        }
+
+        cb(action)
+      },
+      onData(action, cb) {
+        if (isFunction(options.onData)) {
+          options.onData(action)
+        }
+
+        cb(action)
+      }
     }
   })
 }

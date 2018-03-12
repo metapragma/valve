@@ -6,11 +6,13 @@ export function map<P, R, E = ValveError>(
   iteratee: ((data: P) => R)
 ): ValveThrough<P, R, E> {
   return createThrough({
-    onData(action, cb) {
-      cb({
-        type: ValveActionType.Data,
-        payload: iteratee(action.payload)
-      })
+    down: {
+      onData(action, cb) {
+        cb({
+          type: ValveActionType.Data,
+          payload: iteratee(action.payload)
+        })
+      }
     }
   })
 }

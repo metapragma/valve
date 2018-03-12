@@ -1,22 +1,31 @@
 import {
   ValveAction,
   ValveActionAbort,
-  ValveActionData,
   ValveActionError,
   ValveActionType,
   ValveCreateSinkOptions,
   ValveCreateSourceOptions,
+  ValveCreateThroughDownOptions,
   ValveCreateThroughOptions,
+  ValveCreateThroughUpOptions,
   ValveError,
   ValveSink,
   ValveSinkAction,
   ValveSource,
+  ValveSourceAction,
   ValveSourceCallback,
   ValveThrough,
   ValveType
 } from './types'
 
-import { compact, defaults, find, isUndefined, noop } from 'lodash'
+import {
+  compact,
+  defaults,
+  defaultsDeep,
+  find,
+  isUndefined,
+  noop
+} from 'lodash'
 
 export const hasEnded = <E = ValveError>(
   action:
@@ -58,12 +67,16 @@ export const createSource = <T, E = ValveError>(
   return {
     type: ValveType.Source,
     source(action, cb) {
-      if (action.type === ValveActionType.Abort) {
-        _options.onAbort(action, cb)
-      } else if (action.type === ValveActionType.Error) {
-        _options.onError(action, cb)
-      } else if (action.type === ValveActionType.Pull) {
-        _options.onPull(action, cb)
+      switch (action.type) {
+        case ValveActionType.Abort:
+          _options.onAbort(action, cb)
+
+          break
+        case ValveActionType.Error:
+          _options.onError(action, cb)
+          break
+        case ValveActionType.Pull:
+          _options.onPull(action, cb)
       }
     }
   }
@@ -84,12 +97,12 @@ export const createSink = <T, E = ValveError>(
     createSinkDefaultOptions
   )
 
-  let request: ValveSinkAction<E> = { type: ValveActionType.Pull }
+  let ended: ValveSinkAction<E> | undefined
 
   return {
     type: ValveType.Sink,
     terminate: (action = { type: ValveActionType.Abort }) => {
-      request = action
+      ended = findEnded<T, E>(ended, action)
     },
     sink: source => {
       // this function is much simpler to write if you
@@ -103,36 +116,43 @@ export const createSink = <T, E = ValveError>(
         while (loop) {
           cbed = false
 
-          source.source(request, action => {
-            cbed = true
+          source.source(
+            isUndefined(ended) ? { type: ValveActionType.Pull } : ended,
+            action => {
+              cbed = true
 
-            switch (action.type) {
-              case ValveActionType.Abort: {
-                loop = false
+              switch (action.type) {
+                case ValveActionType.Abort: {
+                  loop = false
 
-                _options.onAbort(action)
+                  ended = action
 
-                break
-              }
-              case ValveActionType.Error: {
-                loop = false
+                  _options.onAbort(action)
 
-                _options.onError(action)
+                  break
+                }
+                case ValveActionType.Error: {
+                  loop = false
 
-                break
-              }
-              case ValveActionType.Noop: {
-                break
-              }
-              case ValveActionType.Data: {
-                _options.onData(action)
+                  ended = action
 
-                if (!loop) {
-                  next()
+                  _options.onError(action)
+
+                  break
+                }
+                case ValveActionType.Noop: {
+                  break
+                }
+                case ValveActionType.Data: {
+                  _options.onData(action)
+
+                  if (!loop) {
+                    next()
+                  }
                 }
               }
             }
-          })
+          )
 
           if (!cbed) {
             loop = false
@@ -147,79 +167,109 @@ export const createSink = <T, E = ValveError>(
   }
 }
 
+// tslint:disable-next-line max-func-body-length
 export const createThrough = <T, R = T, E = ValveError>(
-  options: Partial<ValveCreateThroughOptions<T, R, E>> = {}
+  options: Partial<{
+    up: Partial<ValveCreateThroughUpOptions<T, R, E>>
+    down: Partial<ValveCreateThroughDownOptions<T, R, E>>
+  }> = {}
 ): ValveThrough<T, R, E> => {
   // tslint:disable-next-line no-any
   const defaultOptions: ValveCreateThroughOptions<T, any, E> = {
-    onAbort: noop,
-    onError: noop,
-    onData(action, cb) {
-      cb(action)
+    up: {
+      onAbort(action, cb, source) {
+        source.source(action, cb)
+      },
+      onError(action, cb, source) {
+        source.source(action, cb)
+      },
+      onPull(action, cb, source) {
+        source.source(action, cb)
+      }
+    },
+    down: {
+      onAbort(action, cb) {
+        cb(action)
+      },
+      onError(action, cb) {
+        cb(action)
+      },
+      onData(action, cb) {
+        cb(action)
+      }
     }
   }
 
-  const _options: ValveCreateThroughOptions<T, R, E> = defaults(
+  // tslint:disable-next-line no-unsafe-any
+  const _options: ValveCreateThroughOptions<T, R, E> = defaultsDeep(
     {},
     options,
     defaultOptions
   )
 
-  let ended: ValveActionAbort | ValveActionError<E> | undefined
-  let cbed: boolean = false
+  const sourceActionHandler = (
+    // tslint:disable-next-line no-any
+    action: ValveSourceAction<any, E>,
+    cb: ValveSourceCallback<R, E>
+  ) => {
+    switch (action.type) {
+      case ValveActionType.Data: {
+        _options.down.onData(action, cb)
+        break
+      }
+      case ValveActionType.Abort: {
+        _options.down.onAbort(action, cb)
+        break
+      }
+      case ValveActionType.Error: {
+        _options.down.onError(action, cb)
+        break
+      }
+      default: {
+        cb(action)
+      }
+    }
+  }
 
-  const processEnded = (cb: ValveSourceCallback<R, E>): void => {
-    if (!isUndefined(ended)) {
-      if (cbed === false) {
-        switch (ended.type) {
-          case ValveActionType.Abort: {
-            _options.onAbort(ended)
-            break
-          }
-
-          case ValveActionType.Error: {
-            _options.onError(ended)
-          }
-        }
-
-        cb(ended)
-
-        cbed = true
+  const sinkActionHandler = (
+    action: ValveSinkAction<E>,
+    cb: ValveSourceCallback<R, E>,
+    source: ValveSource<T, E>
+  ) => {
+    switch (action.type) {
+      case ValveActionType.Pull: {
+        _options.up.onPull(
+          action,
+          _action => sourceActionHandler(_action, cb),
+          source
+        )
+        break
+      }
+      case ValveActionType.Abort: {
+        _options.up.onAbort(
+          action,
+          _action => sourceActionHandler(_action, cb),
+          source
+        )
+        break
+      }
+      case ValveActionType.Error: {
+        _options.up.onError(
+          action,
+          _action => sourceActionHandler(_action, cb),
+          source
+        )
       }
     }
   }
 
   return {
     type: ValveType.Through,
-    terminate(action = { type: ValveActionType.Abort }) {
-      ended = findEnded<T, E>(ended, action)
-    },
     sink(source) {
       return {
         type: ValveType.Source,
         source(action, cb) {
-          ended = findEnded<T, E>(ended, action)
-
-          source.source(isUndefined(ended) ? action : ended, _action => {
-            ended = findEnded<T, E>(ended, action, _action)
-
-            if (!isUndefined(ended)) {
-              processEnded(cb)
-            } else if (_action.type === ValveActionType.Noop) {
-              cb(_action)
-            } else {
-              _options.onData(
-                _action as ValveActionData<T>,
-                // tslint:disable-next-line variable-name
-                __action => {
-                  ended = findEnded<R, E>(ended, __action)
-
-                  cb(__action)
-                },
-                source
-              )
-            }
-          })
+          sinkActionHandler(action, cb, source)
         }
       }
     }

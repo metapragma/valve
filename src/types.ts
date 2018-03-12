@@ -90,7 +90,6 @@ export interface ValveSource<P, E = ValveError> {
 export interface ValveThrough<P, R, E = ValveError> {
   type: ValveType.Through
   sink: ValveThroughFunction<P, R, E>
-  terminate: (action?: ValveActionAbort | ValveActionError<E>) => void
 }
 
 // Utilities
@@ -107,14 +106,33 @@ export interface ValveCreateSinkOptions<T, E = ValveError> {
   onData(action: ValveActionData<T>): void
 }
 
-export interface ValveCreateThroughOptions<T, R = T, E = ValveError> {
-  onAbort(action: ValveActionAbort): void
-  onError(action: ValveActionError<E>): void
-  onData(
-    action: ValveActionData<T>,
+export interface ValveCreateThroughUpOptions<T, R = T, E = ValveError> {
+  onAbort(
+    action: ValveActionAbort,
     cb: ValveSourceCallback<R, E>,
     source: ValveSource<T, E>
   ): void
+  onError(
+    action: ValveActionError<E>,
+    cb: ValveSourceCallback<R, E>,
+    source: ValveSource<T, E>
+  ): void
+  onPull(
+    action: ValveActionPull,
+    cb: ValveSourceCallback<R, E>,
+    source: ValveSource<T, E>
+  ): void
+}
+
+export interface ValveCreateThroughDownOptions<T, R = T, E = ValveError> {
+  onAbort(action: ValveActionAbort, cb: ValveSourceCallback<R, E>): void
+  onError(action: ValveActionError<E>, cb: ValveSourceCallback<R, E>): void
+  onData(action: ValveActionData<T>, cb: ValveSourceCallback<R, E>): void
+}
+
+export interface ValveCreateThroughOptions<T, R = T, E = ValveError> {
+  up: ValveCreateThroughUpOptions<T, R, E>
+  down: ValveCreateThroughDownOptions<T, R, E>
 }
 
 // Sinks

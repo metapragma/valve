@@ -384,72 +384,126 @@ describe('utilities', () => {
     )
   })
 
-  it('createThrough onData', done => {
+  it('createThrough down', done => {
     const spy = sinonSpy()
+    const spyTwo = sinonSpy()
 
     valve(
       count(5),
       createThrough({
-        onData(action, cb) {
-          spy()
-          assert.equal(action.type, ValveActionType.Data)
-          assert(isNumber(action.payload))
-          assert(isFunction(cb))
+        down: {
+          onData(action, cb) {
+            spy()
+            assert.equal(action.type, ValveActionType.Data)
+            assert(isNumber(action.payload))
+            assert(isFunction(cb))
 
-          cb(action)
+            cb(action)
+          },
+          onAbort(action, cb) {
+            spyTwo()
+            assert.equal(action.type, ValveActionType.Abort)
+            assert(isFunction(cb))
+
+            cb(action)
+          }
         }
       }),
       collect({
         onData(action) {
           assert.deepEqual(action.payload, [1, 2, 3, 4, 5])
           assert.equal(spy.callCount, 5)
+          assert.equal(spyTwo.callCount, 1)
           done()
         }
       })
     )
   })
 
-  it('createThrough onAbort', done => {
+  it('createThrough down onError', done => {
     const spy = sinonSpy()
-
-    valve(
-      count(5),
-      createThrough({
-        onAbort(action) {
-          spy()
-          assert.equal(action.type, ValveActionType.Abort)
-        }
-      }),
-      collect({
-        onData(action) {
-          assert.deepEqual(action.payload, [1, 2, 3, 4, 5])
-          assert.equal(spy.callCount, 1)
-          done()
-        }
-      })
-    )
-  })
-
-  it('createThrough onError', done => {
-    const spy = sinonSpy()
+    const spyTwo = sinonSpy()
     const err = new Error('err')
 
     valve(
       error(err),
       createThrough({
-        onError(action) {
-          spy()
-          assert.equal(action.type, ValveActionType.Error)
-          assert.equal(action.payload, err)
+        down: {
+          onData(action, cb) {
+            spy()
+            assert.equal(action.type, ValveActionType.Data)
+            assert(isFunction(cb))
+
+            cb(action)
+          },
+          onError(action, cb) {
+            spyTwo()
+            assert.equal(action.type, ValveActionType.Error)
+            assert.equal(action.payload, err)
+            assert(isFunction(cb))
+
+            cb(action)
+          }
         }
       }),
       collect({
         onError(action) {
-          assert.deepEqual(action.payload, err)
-          assert.equal(spy.callCount, 1)
+          assert.equal(action.payload, err)
+          assert.equal(spy.callCount, 0)
+          assert.equal(spyTwo.callCount, 1)
           done()
         }
       })
     )
   })
+
+  it('createThrough up', done => {
+    const spy = sinonSpy()
+    const spyTwo = sinonSpy()
+    const spyThree = sinonSpy()
+
+    valve(
+      count(5),
+      createThrough({
+        up: {
+          onPull(action, cb, source) {
+            spy()
+            assert.equal(action.type, ValveActionType.Pull)
+            assert(isFunction(cb))
+
+            source.source(action, cb)
+          }
+        },
+        down: {
+          onData(action, cb) {
+            spyTwo()
+            assert.equal(action.type, ValveActionType.Data)
+            assert(isNumber(action.payload))
+            assert(isFunction(cb))
+
+            cb(action)
+          },
+          onAbort(action, cb) {
+            spyThree()
+            assert.equal(action.type, ValveActionType.Abort)
+            assert(isFunction(cb))
+
+            cb(action)
+          }
+        }
+      }),
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, [1, 2, 3, 4, 5])
+          assert.equal(spy.callCount, 6)
+          assert.equal(spyTwo.callCount, 5)
+          assert.equal(spyThree.callCount, 1)
+          done()
+        }
+      })
+    )
+  })
+
+  // TODO: sink error
+  // TODO: sink abort
 })

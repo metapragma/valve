@@ -12,8 +12,6 @@ import { ValveActionType, ValveError, ValveThrough, ValveType } from '../types'
 
 import { spy as sinonSpy } from 'sinon'
 
-import { noop } from 'lodash'
-
 import { hasEnded } from '../utilities'
 
 // tslint:disable-next-line
@@ -139,7 +137,6 @@ describe('throughs/take', () => {
 
     const thr = <P, E = ValveError>(): ValveThrough<P, P, E> => ({
       type: ValveType.Through,
-      terminate: noop,
       sink(source) {
         return {
           type: ValveType.Source,
