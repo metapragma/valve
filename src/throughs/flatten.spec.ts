@@ -40,38 +40,6 @@ describe('throughs/flatten', () => {
     )
   })
 
-  // it('objects', done => {
-  //   pull(
-  //     fromIterable([
-  //       { a: 1, b: 2, c: 3 },
-  //       { a: 4, b: 5, c: 6 },
-  //       { a: 7, b: 8, c: 9 }
-  //     ]),
-  //     flatten(),
-  //     collect((err, numbers) => {
-  //       expect(err).to.equal(null)
-  //       expect(numbers).to.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9])
-  //       done()
-  //     })
-  //   )
-  // })
-  //
-  // it('stream (objects)', done => {
-  //   pull(
-  //     fromIterable([
-  //       fromIterable({ a: 1, b: 2, c: 3 }),
-  //       fromIterable({ a: 4, b: 5, c: 6 }),
-  //       fromIterable({ a: 7, b: 8, c: 9 })
-  //     ]),
-  //     flatten(),
-  //     collect((err, numbers) => {
-  //       expect(err).to.equal(null)
-  //       expect(numbers).to.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9])
-  //       done()
-  //     })
-  //   )
-  // })
-
   it('stream of number streams', done => {
     valve(
       fromIterable([
@@ -179,23 +147,29 @@ describe('throughs/flatten', () => {
       flatten()
     )
 
-    stream.source({ type: ValveActionType.Pull }, action => {
-      if (action.type === ValveActionType.Data) {
-        expect(action.payload).to.equal(1)
-      } else {
+    stream.source({ type: ValveActionType.Pull }, act => {
+      if (act.type !== ValveActionType.Noop) {
         done(new Error('Action type mismatch'))
-      }
+      } else {
+        stream.source({ type: ValveActionType.Pull }, action => {
+          if (action.type === ValveActionType.Data) {
+            expect(action.payload).to.equal(1)
+          } else {
+            done(new Error('Action type mismatch'))
+          }
 
-      stream.source({ type: ValveActionType.Abort }, _action => {
-        expect(_action.type).to.equal(ValveActionType.Abort)
+          stream.source({ type: ValveActionType.Abort }, _action => {
+            expect(_action.type).to.equal(ValveActionType.Abort)
 
-        immediate(() => {
-          expect(s3Ended).to.deep.equal({ type: ValveActionType.Abort }) // should abort stream of streams
-          expect(s1Ended).to.deep.equal({ type: ValveActionType.Abort }) // should abort current nested stream
-          expect(s2Ended).to.equal(undefined) // should not abort queued nested stream
-          done()
+            immediate(() => {
+              expect(s3Ended).to.deep.equal({ type: ValveActionType.Abort }) // should abort stream of streams
+              expect(s1Ended).to.deep.equal({ type: ValveActionType.Abort }) // should abort current nested stream
+              expect(s2Ended).to.equal(undefined) // should not abort queued nested stream
+              done()
+            })
+          })
         })
-      })
+      }
     })
   })
 

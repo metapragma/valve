@@ -8,6 +8,7 @@ import { once } from '../sources/once'
 import {
   ValveActionType,
   ValveSource,
+  ValveSourceAction,
   ValveSourceCallback,
   ValveThrough,
   ValveType
@@ -15,86 +16,72 @@ import {
 
 import { isArray, isPlainObject, isUndefined } from 'lodash'
 
-import { hasEnded } from '../utilities'
+import { createThrough } from '../utilities'
 
-// TODO: use helpers
-//
 export function flatten<S, E = Error>(): ValveThrough<
   ValveSource<S, E> | S[] | S,
   S,
   E
 > {
-  return {
-    type: ValveType.Through,
-    sink(source) {
-      // read
-      let _source: ValveSource<S, E> | undefined
+  let _source: ValveSource<S, E> | undefined
 
-      return {
-        type: ValveType.Source,
-        source(action, cb) {
-          if (hasEnded(action)) {
-            // abort the current stream, and then stream of streams.
-            !isUndefined(_source)
-              ? _source.source(action, _action => {
-                  source.source(
-                    hasEnded(_action) ? _action : action,
-                    cb as ValveSourceCallback<{}, E>
-                  )
-                })
-              : source.source(action, cb as ValveSourceCallback<{}, E>)
-          } else if (!isUndefined(_source)) {
-            nextChunk()
-          } else {
-            nextStream()
-          }
+  function isSource(x: ValveSource<{}, E>): x is ValveSource<S, E> {
+    return isPlainObject(x) && x.type === ValveType.Source
+  }
 
-          function nextChunk() {
-            if (!isUndefined(_source)) {
-              _source.source({ type: ValveActionType.Pull }, _action => {
-                if (_action.type === ValveActionType.Abort) {
-                  nextStream()
-                } else if (_action.type === ValveActionType.Error) {
-                  source.source(_action, _ => {
-                    // TODO: what do we do with the abortErr?
-
-                    cb(_action)
-                  })
-                } else {
-                  cb(_action)
-                }
-              })
+  return createThrough({
+    up: {
+      onPull(action, cb, source) {
+        if (!isUndefined(_source)) {
+          _source.source(action, _action => {
+            switch (_action.type) {
+              case ValveActionType.Abort:
+                _source = undefined
+                cb({ type: ValveActionType.Noop })
+                break
+              case ValveActionType.Error:
+                _source = undefined
+                cb(_action)
+                break
+              default:
+                cb(_action)
             }
+          })
+        } else {
+          source.source(action, cb as ValveSourceCallback<{}, E>)
+        }
+      }
+    },
+    down: {
+      onAbort(action, cb) {
+        if (!isUndefined(_source)) {
+          _source.source(action, cb)
+        } else {
+          cb(action)
+        }
+      },
+      onError(action, cb) {
+        if (!isUndefined(_source)) {
+          _source.source(action, cb)
+        } else {
+          cb(action)
+        }
+      },
+      onData(action, cb) {
+        if (!isUndefined(_source)) {
+          cb(action as ValveSourceAction<S, E>)
+        } else {
+          if (isArray(action.payload)) {
+            _source = fromIterable(action.payload)
+          } else if (isSource(action.payload as ValveSource<S, E>)) {
+            _source = action.payload as ValveSource<S, E>
+          } else {
+            _source = once(action.payload as S)
           }
 
-          function nextStream() {
-            _source = undefined
-
-            source.source({ type: ValveActionType.Pull }, _action => {
-              if (hasEnded(_action) || _action.type === ValveActionType.Noop) {
-                return cb(_action)
-              }
-
-              function isSource(x: ValveSource<{}, E>): x is ValveSource<S, E> {
-                return isPlainObject(x) && x.type === ValveType.Source
-              }
-
-              if (isArray(_action.payload)) {
-                _source = fromIterable(_action.payload)
-              } else if (isSource(_action.payload as ValveSource<S, E>)) {
-                _source = _action.payload as ValveSource<S, E>
-                // } else if (isPlainObject(stream)) {
-                //   _source = fromIterable(stream as O)
-              } else {
-                // tslint:disable-next-line no-parameter-reassignment
-                _source = once(_action.payload as S)
-              }
-
-              nextChunk()
-            })
-          }
+          cb({ type: ValveActionType.Noop })
         }
       }
     }
-  }
+  })
 }
