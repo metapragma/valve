@@ -1,17 +1,12 @@
-.manage_modules
-.nyc_output/
-/drafts
-/lib
-/types
-coverage
-coverage.lcov
-
 .DS_Store
-node_modules/
-/dist/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+.awcache
+.idea
+.manage_modules
+.rpt2_cache
+.vscode
+compiled
+docs
+lib
 
 # Editor directories and files
 .idea
@@ -19,6 +14,7 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
+
 # Logs
 logs
 *.log
@@ -37,6 +33,7 @@ lib-cov
 
 # Coverage directory used by tools like istanbul
 coverage
+coverage.lcov
 
 # nyc test coverage
 .nyc_output
@@ -77,4 +74,3 @@ typings/
 
 # dotenv environment variables file
 .env
-

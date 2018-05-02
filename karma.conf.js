@@ -1,18 +1,25 @@
-const name = require('./package.json').name
+const puppeteer = require('puppeteer')
+const { camelCase } = require('lodash')
+const { name } = require('./package.json')
 
-process.env.CHROME_BIN = require('puppeteer').executablePath()
+process.env.CHROME_BIN = puppeteer.executablePath()
 
-module.exports = function(config) {
+module.exports = config => {
   config.set({
+    mime: {
+      'text/x-typescript': ['ts']
+    },
     client: {
       captureConsole: false
     },
+    plugins: ['karma-chrome-launcher', 'karma-mocha', 'karma-sauce-launcher', 'karma-typescript'],
     frameworks: ['mocha', 'karma-typescript'],
     files: [
+      'node_modules/@babel/polyfill/dist/polyfill.js',
       'src/**/*.ts'
     ],
     preprocessors: {
-      'src/**/*.ts': 'karma-typescript',
+      'src/**/*.ts': 'karma-typescript'
     },
     reporters: ['dots', 'karma-typescript'],
     browsers: ['puppeteer'],
@@ -23,29 +30,34 @@ module.exports = function(config) {
       }
     },
     karmaTypescriptConfig: {
+      reports: {},
       compilerOptions: {
-        sourceMap: true
+        emitDecoratorMetadata: true,
+        experimentalDecorators: true,
+        module: 'commonjs',
+        sourceMap: true,
+        target: 'ES5'
       },
       tsconfig: './tsconfig.json'
     }
   })
 
-  if (process.env['SAUCE_USERNAME'] && process.env['SAUCE_ACCESS_KEY']) {
+  if (process.env.SAUCE_USERNAME && process.env.SAUCE_ACCESS_KEY) {
     const customLaunchers = {
       sl_firefox: {
-        base: "SauceLabs",
-        browserName: "Firefox",
+        base: 'SauceLabs',
+        browserName: 'Firefox',
         version: '55'
       },
       sl_chrome: {
-        base: "SauceLabs",
-        browserName: "Chrome",
-        version: "61"
+        base: 'SauceLabs',
+        browserName: 'Chrome',
+        version: '61'
       },
       sl_safari: {
-        base: "SauceLabs",
-        browserName: "Safari",
-        version: "10"
+        base: 'SauceLabs',
+        browserName: 'Safari',
+        version: '10'
       },
       sl_edge: {
         base: 'SauceLabs',
@@ -62,11 +74,11 @@ module.exports = function(config) {
       // },
       sl_android: {
         base: 'SauceLabs',
-        deviceName: "Android Emulator",
-        deviceOrientation: "portrait",
-        browserName: "Chrome",
-        platformVersion: "6.0",
-        platformName: "Android"
+        deviceName: 'Android Emulator',
+        deviceOrientation: 'portrait',
+        browserName: 'Chrome',
+        platformVersion: '6.0',
+        platformName: 'Android'
       }
     }
 
@@ -79,9 +91,7 @@ module.exports = function(config) {
       browserDisconnectTolerance: 3,
       sauceLabs: {
         testName: `${name} karma test`,
-        tunnelIdentifier: process.env.TRAVIS
-          ? process.env.TRAVIS_JOB_NUMBER
-          : name
+        tunnelIdentifier: process.env.TRAVIS ? process.env.TRAVIS_JOB_NUMBER : camelCase(name)
       },
       customLaunchers: customLaunchers,
       browsers: Object.keys(customLaunchers),

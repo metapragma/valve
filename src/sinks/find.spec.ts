@@ -4,9 +4,6 @@ import { asyncMap, empty, error, find, fromIterable, valve } from '../index'
 import 'mocha'
 import { assert } from 'chai'
 
-// tslint:disable-next-line
-import immediate = require('immediate')
-
 describe('sinks/find', () => {
   it('...', done => {
     valve(
@@ -69,7 +66,7 @@ describe('sinks/find', () => {
       asyncMap(
         e =>
           new Promise(resolve => {
-            immediate(() => {
+            setImmediate(() => {
               resolve(e)
             })
           })

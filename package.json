@@ -2,91 +2,97 @@
   "name": "valve",
   "description": "minimal pull stream",
   "version": "4.1.0",
-  "homepage": "https://github.com/escapace/valve",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/escapace/valve.git"
-  },
-  "types": "./types/index.d.ts",
+  "keywords": ["TypeScript", "pull-stream", "stream"],
   "main": "lib/cjs/index.js",
-  "module": "lib/es/index.js",
+  "module": "lib/esm/index.js",
+  "browser": "lib/umd/index.js",
+  "typings": "lib/types/index.d.ts",
   "sideEffects": false,
-  "files": [
-    "lib",
-    "types"
-  ],
+  "files": ["lib"],
+  "bugs": "https://github.com/escapace/valve/issues",
+  "author": "escapace <opensource@escapace.com>",
+  "license": "MPL-2.0",
+  "homepage": "https://github.com/escapace/valve",
+  "repository": "escapace/valve",
+  "engines": {
+    "node": ">=9.0.0"
+  },
   "scripts": {
-    "test:qwe": "cross-env TS_NODE_COMPILER_OPTIONS='{ \"declaration\": false, \"module\": \"CommonJS\" }' mocha --require ts-node/register",
-    "build:dts": "rm -rf lib types && tsc && rm -rf lib",
-    "build:cjs": "cross-env NODE_ROLLUP_TARGET=cjs rollup -c -o lib/cjs/index.js",
-    "build:es": "cross-env NODE_ROLLUP_TARGET=es rollup -c -o lib/es/index.js",
-    "build": "npm run build:dts && npm run build:cjs && npm run build:es",
-    "lint": "tslint --project tsconfig.json",
-    "fix": "./manage fix",
-    "test:karma": "karma start --single-run",
-    "test": "npm run test:node && npm run test:karma",
-    "test:travis": "npm run lint && npm run test:node && npm run test:karma",
-    "test:node": "cross-env TS_NODE_COMPILER_OPTIONS='{ \"declaration\": false, \"module\": \"CommonJS\" }' mocha --require ts-node/register src/**/*.spec.ts src/*.spec.ts",
-    "test:coverage": "cross-env TS_NODE_COMPILER_OPTIONS='{ \"declaration\": false, \"module\": \"CommonJS\" }' nyc mocha --require ts-node/register --require source-map-support/register --full-trace --bail src/**/*.spec.ts src/*.spec.ts",
-    "test:codecov": "npm run test:coverage && nyc report --reporter=text-lcov > coverage.lcov && codecov"
+    "lint":
+      "tslint --exclude 'src/types/**/*.ts' --project tsconfig.json -t codeFrame 'src/**/*.ts'",
+    "build": "recce build -e src/index.ts",
+    "test:travis": "npm run lint && npm run test",
+    "test": "npm run test:node && npm run test:browser",
+    "report-coverage":
+      "npm run test:coverage && nyc report --reporter=text-lcov > coverage.lcov && codecov ; rimraf coverage.lcov",
+    "test:browser": "karma start --single-run",
+    "test:node":
+      "cross-env TS_NODE_PROJECT=tsconfig-node.json mocha --opts .mocha.opts 'src/**/*.spec.ts'",
+    "test:coverage": "nyc npm run test:node"
+  },
+  "lint-staged": {
+    "{src,test}/**/*.ts": [
+      "tslint --exclude 'src/types/**/*.ts' --project tsconfig.json --fix",
+      "prettier --write --parser typescript --trailing-comma none --no-semi --single-quote",
+      "git add"
+    ],
+    "{src,test}/**/*.js": [
+      "prettier --write --trailing-comma none --no-semi --single-quote",
+      "git add"
+    ],
+    "**/*.json": ["prettier --write --parser json", "git add"],
+    "**/*.md": ["prettier --parser markdown --print-width 80", "git add"]
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "validate-commit-msg",
+      "pre-commit": "lint-staged"
+    }
+  },
+  "nyc": {
+    "tempDirectory": "./node_modules/.cache/nyc_output",
+    "include": ["src/**/*.ts"],
+    "extension": [".ts", ".tsx"],
+    "exclude": ["src/**/*.spec.ts"],
+    "require": ["ts-node/register"],
+    "reporter": ["text"],
+    "sourceMap": true,
+    "instrument": true
   },
   "devDependencies": {
-    "@types/chai": "^4.1.2",
-    "@types/lodash": "^4.14.105",
-    "@types/mocha": "^2.2.48",
-    "@types/node": "^9.4.7",
-    "@types/sinon": "^4.3.0",
+    "@babel/polyfill": "^7.0.0-beta.46",
+    "@types/chai": "^4.1.3",
+    "@types/lodash": "^4.14.108",
+    "@types/mocha": "^5.2.0",
+    "@types/node": "^10.0.3",
+    "@types/sinon": "^4.3.1",
     "chai": "^4.1.2",
-    "codecov": "^3.0.0",
+    "codecov": "^3.0.1",
     "cross-env": "^5.1.4",
-    "fastbench": "^1.0.1",
-    "immediate": "^3.2.3",
-    "karma": "^2.0.0",
+    "husky": "^0.15.0-rc.13",
+    "karma": "^2.0.2",
     "karma-chrome-launcher": "^2.2.0",
     "karma-mocha": "^1.3.0",
     "karma-sauce-launcher": "^1.2.0",
     "karma-typescript": "^3.0.12",
-    "mocha": "5.0.4",
-    "nyc": "^11.6.0",
-    "prettier": "^1.11.1",
-    "puppeteer": "^1.2.0",
-    "rollup": "^0.57.1",
-    "rollup-plugin-typescript": "^0.8.1",
-    "sinon": "^4.4.8",
-    "source-map-support": "^0.5.4",
-    "ts-node": "^5.0.1",
+    "lint-staged": "^7.0.5",
+    "mocha": "^5.1.1",
+    "nyc": "^11.7.1",
+    "prettier": "^1.12.1",
+    "puppeteer": "^1.3.0",
+    "rimraf": "^2.6.2",
+    "sinon": "^5.0.3",
+    "source-map-support": "^0.5.5",
+    "ts-node": "^6.0.2",
     "tslint": "^5.9.1",
-    "tslint-config-escapace": "^1.0.0",
-    "tslint-config-prettier": "^1.10.0",
+    "tslint-config-escapace": "^1.1.0",
+    "tslint-config-prettier": "^1.12.0",
     "tslint-config-standard": "^7.0.0",
     "tslint-microsoft-contrib": "^5.0.3",
-    "typescript": "^2.7.2"
+    "typescript": "^2.8.3",
+    "validate-commit": "^3.4.0"
   },
-  "author": "escapace <opensource@escapace.com>",
-  "license": "MPL-2.0",
   "dependencies": {
-    "lodash": "^4.17.5"
-  },
-  "nyc": {
-    "include": [
-      "*.ts",
-      "**/*.ts"
-    ],
-    "extension": [
-      ".ts",
-      ".tsx"
-    ],
-    "exclude": [
-      "*.spec.ts",
-      "**/*.spec.ts"
-    ],
-    "require": [
-      "ts-node/register"
-    ],
-    "reporter": [
-      "text"
-    ],
-    "sourceMap": true,
-    "instrument": true
+    "lodash": "^4.17.10"
   }
 }

@@ -5,9 +5,6 @@ import 'mocha'
 import { assert } from 'chai'
 import { spy } from 'sinon'
 
-// tslint:disable-next-line
-import immediate = require('immediate')
-
 describe('throughs/through', () => {
   it('...', done => {
     const s = spy()
@@ -34,7 +31,7 @@ describe('throughs/through', () => {
       infinite(),
       through({
         onAbort() {
-          immediate(() => {
+          setImmediate(() => {
             done()
           })
         }

@@ -5,8 +5,6 @@ import 'mocha'
 import { assert } from 'chai'
 
 // tslint:disable-next-line
-import immediate = require('immediate')
-
 import { map, take, through, valve } from './index'
 
 import { isFunction, noop } from 'lodash'
@@ -46,7 +44,7 @@ function hang<P, E>(values: P[], onAbort?: () => void): ValveSource<P, E> {
   }
 }
 
-function abortable<P, E>(): ValveThrough<P, P, E> & { terminate: () => void }{
+function abortable<P, E>(): ValveThrough<P, P, E> & { terminate: () => void } {
   let _read: ValveSource<P, E>
   let ended: ValveActionError<E> | ValveActionAbort
 
@@ -74,10 +72,7 @@ function abortable<P, E>(): ValveThrough<P, P, E> & { terminate: () => void }{
   }
 }
 
-function test<E>(
-  trx: ValveThrough<number, number, E>,
-  done: (err?: {}) => void
-) {
+function test<E>(trx: ValveThrough<number, number, E>, done: (err?: {}) => void) {
   const source = (): ValveSource<number, E> =>
     hang([1, 2, 3], () => {
       done()
@@ -88,7 +83,7 @@ function test<E>(
   const sink = createSink<number, E>({
     onData(action) {
       if (action.payload === 3) {
-        immediate(() => {
+        setImmediate(() => {
           abortableThrough.terminate()
         })
       }

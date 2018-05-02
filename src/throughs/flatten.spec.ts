@@ -8,9 +8,6 @@ import { createSink } from '../utilities'
 import 'mocha'
 import { expect } from 'chai'
 
-// tslint:disable-next-line
-import immediate = require('immediate')
-
 describe('throughs/flatten', () => {
   it('stream of arrays of numbers', done => {
     valve(
@@ -42,11 +39,7 @@ describe('throughs/flatten', () => {
 
   it('stream of number streams', done => {
     valve(
-      fromIterable([
-        fromIterable([1, 2, 3]),
-        fromIterable([4, 5, 6]),
-        fromIterable([7, 8, 9])
-      ]),
+      fromIterable([fromIterable([1, 2, 3]), fromIterable([4, 5, 6]), fromIterable([7, 8, 9])]),
       flatten(),
       collect({
         onData(action) {
@@ -60,10 +53,7 @@ describe('throughs/flatten', () => {
 
   it('stream of string streams', done => {
     valve(
-      fromIterable([
-        fromIterable(['a', 'b', 'c']),
-        fromIterable(['d', 'e', 'f'])
-      ]),
+      fromIterable([fromIterable(['a', 'b', 'c']), fromIterable(['d', 'e', 'f'])]),
       flatten(),
       collect({
         onData(action) {
@@ -77,11 +67,7 @@ describe('throughs/flatten', () => {
 
   it('through', done => {
     valve(
-      fromIterable([
-        fromIterable([1, 2, 3]),
-        fromIterable([4, 5, 6]),
-        fromIterable([7, 8, 9])
-      ]),
+      fromIterable([fromIterable([1, 2, 3]), fromIterable([4, 5, 6]), fromIterable([7, 8, 9])]),
       // tslint:disable-next-line no-empty
       through(),
       flatten(),
@@ -104,7 +90,7 @@ describe('throughs/flatten', () => {
       createSink({
         onError(action) {
           expect(action.payload).to.equal(err)
-          immediate(() => {
+          setImmediate(() => {
             expect(action.payload).to.equal(err) // should abort stream of streams
             done()
           })
@@ -161,7 +147,7 @@ describe('throughs/flatten', () => {
           stream.source({ type: ValveActionType.Abort }, _action => {
             expect(_action.type).to.equal(ValveActionType.Abort)
 
-            immediate(() => {
+            setImmediate(() => {
               expect(s3Ended).to.deep.equal({ type: ValveActionType.Abort }) // should abort stream of streams
               expect(s1Ended).to.deep.equal({ type: ValveActionType.Abort }) // should abort current nested stream
               expect(s2Ended).to.equal(undefined) // should not abort queued nested stream
@@ -211,7 +197,7 @@ describe('throughs/flatten', () => {
     stream.source({ type: ValveActionType.Abort }, action => {
       expect(action.type).to.equal(ValveActionType.Abort)
 
-      immediate(() => {
+      setImmediate(() => {
         expect(sosEnded).to.deep.equal({ type: ValveActionType.Abort }) // should abort stream of streams
         expect(s1Ended).to.equal(undefined) // should abort current nested stream
         done()

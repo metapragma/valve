@@ -1,21 +1,10 @@
-import {
-  collect,
-  empty,
-  error,
-  fromIterable,
-  take,
-  through,
-  valve
-} from '../index'
+import { collect, empty, error, fromIterable, take, through, valve } from '../index'
 
 import { ValveActionType, ValveError, ValveThrough, ValveType } from '../types'
 
 import { spy as sinonSpy } from 'sinon'
 
 import { hasEnded } from '../utilities'
-
-// tslint:disable-next-line
-import immediate = require('immediate')
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -60,7 +49,7 @@ describe('throughs/take', () => {
       take(5),
       through({
         onAbort() {
-          immediate(() => {
+          setImmediate(() => {
             done()
           })
         }
@@ -159,7 +148,7 @@ describe('throughs/take', () => {
       collect({
         onData(action) {
           assert.deepEqual(action.payload, [1, 2, 3, 4, 5])
-          immediate(() => {
+          setImmediate(() => {
             assert.equal(pulls.callCount, 5)
             assert.equal(pushes.callCount, 5)
             done()
