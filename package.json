@@ -88,7 +88,7 @@
     "@types/sinon": "4.3.3",
     "chai": "4.1.2",
     "codecov": "3.0.2",
-    "cross-env": "5.1.4",
+    "cross-env": "5.1.6",
     "husky": "0.15.0-rc.13",
     "karma": "2.0.2",
     "karma-chrome-launcher": "2.2.0",
