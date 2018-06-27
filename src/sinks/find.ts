@@ -13,6 +13,7 @@ import {
 import { createSink, createSinkDefaultOptions } from '../utilities'
 
 export function find<P, E = ValveError>(
+  /* istanbul ignore next */
   options: ValveFindOptions<P> & Partial<ValveCreateSinkOptions<P, E>> = {}
 ): ValveSink<P, E> {
   let ended = false

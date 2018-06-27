@@ -40,28 +40,24 @@ export function take<P, E = ValveError>(
 
   // tslint:disable-next-line no-unnecessary-local-variable
   const through = createThrough<P, P, E>({
-    up: {
-      onPull(action, cb, source) {
-        if (ended) {
-          source.source({ type: ValveActionType.Abort }, cb)
-        } else {
-          source.source(action, cb)
-        }
+    onSinkPull(action, cb, source) {
+      if (ended) {
+        source.source({ type: ValveActionType.Abort }, cb)
+      } else {
+        source.source(action, cb)
       }
     },
-    down: {
-      onData(action, cb) {
-        ended = ended || !tester(action.payload)
+    onSourceData(action, cb) {
+      ended = ended || !tester(action.payload)
 
-        if (ended) {
-          if (_last) {
-            cb(action)
-          } else {
-            cb({ type: ValveActionType.Abort })
-          }
-        } else {
+      if (ended) {
+        if (_last) {
           cb(action)
+        } else {
+          cb({ type: ValveActionType.Abort })
         }
+      } else {
+        cb(action)
       }
     }
   })

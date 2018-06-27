@@ -15,15 +15,15 @@ import {
   ValveActionAbort,
   ValveActionError,
   ValveActionType,
+  ValveCallback,
   ValveSource,
-  ValveSourceCallback,
   ValveThrough,
   ValveType
 } from './types'
 
 function hang<P, E>(values: P[], onAbort?: () => void): ValveSource<P, E> {
   let i = 0
-  let _cb: ValveSourceCallback<P, E>
+  let _cb: ValveCallback<P, E>
 
   return {
     type: ValveType.Source,

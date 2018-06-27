@@ -1,4 +1,5 @@
-import { collect, count, infinite, take, through, valve } from '../index'
+import { collect, count, error, infinite, take, through, valve } from '../index'
+import { ValveActionType } from '../types'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -12,7 +13,8 @@ describe('throughs/through', () => {
     valve(
       count(5),
       through({
-        onData() {
+        onData(action) {
+          assert.isNumber(action.payload)
           s()
         }
       }),
@@ -30,7 +32,8 @@ describe('throughs/through', () => {
     valve(
       infinite(),
       through({
-        onAbort() {
+        onAbort(action) {
+          assert.isOk(action.type === ValveActionType.Abort)
           setImmediate(() => {
             done()
           })
@@ -40,6 +43,27 @@ describe('throughs/through', () => {
       collect({
         onData(action) {
           assert.equal(action.payload.length, 10)
+        }
+      })
+    )
+  })
+
+  it('error', done => {
+    const s = spy()
+    const err = new Error('bla')
+
+    valve(
+      error(err),
+      through({
+        onError() {
+          s()
+        }
+      }),
+      collect({
+        onError(action) {
+          assert.equal(s.callCount, 1)
+          assert.deepEqual(action.payload, err)
+          done()
         }
       })
     )

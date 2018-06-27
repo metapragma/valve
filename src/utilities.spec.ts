@@ -3,16 +3,7 @@
 import 'mocha'
 import { assert } from 'chai'
 
-import {
-  asyncMap,
-  collect,
-  count,
-  empty,
-  error,
-  fromIterable,
-  infinite,
-  valve
-} from './index'
+import { asyncMap, collect, count, empty, error, fromIterable, infinite, valve } from './index'
 
 import { createSink, createSource, createThrough, hasEnded } from './utilities'
 
@@ -391,22 +382,20 @@ describe('utilities', () => {
     valve(
       count(5),
       createThrough({
-        down: {
-          onData(action, cb) {
-            spy()
-            assert.equal(action.type, ValveActionType.Data)
-            assert(isNumber(action.payload))
-            assert(isFunction(cb))
+        onSourceData(action, cb) {
+          spy()
+          assert.equal(action.type, ValveActionType.Data)
+          assert(isNumber(action.payload))
+          assert(isFunction(cb))
 
-            cb(action)
-          },
-          onAbort(action, cb) {
-            spyTwo()
-            assert.equal(action.type, ValveActionType.Abort)
-            assert(isFunction(cb))
+          cb(action)
+        },
+        onSourceAbort(action, cb) {
+          spyTwo()
+          assert.equal(action.type, ValveActionType.Abort)
+          assert(isFunction(cb))
 
-            cb(action)
-          }
+          cb(action)
         }
       }),
       collect({
@@ -428,22 +417,20 @@ describe('utilities', () => {
     valve(
       error(err),
       createThrough({
-        down: {
-          onData(action, cb) {
-            spy()
-            assert.equal(action.type, ValveActionType.Data)
-            assert(isFunction(cb))
+        onSourceData(action, cb) {
+          spy()
+          assert.equal(action.type, ValveActionType.Data)
+          assert(isFunction(cb))
 
-            cb(action)
-          },
-          onError(action, cb) {
-            spyTwo()
-            assert.equal(action.type, ValveActionType.Error)
-            assert.equal(action.payload, err)
-            assert(isFunction(cb))
+          cb(action)
+        },
+        onSourceError(action, cb) {
+          spyTwo()
+          assert.equal(action.type, ValveActionType.Error)
+          assert.equal(action.payload, err)
+          assert(isFunction(cb))
 
-            cb(action)
-          }
+          cb(action)
         }
       }),
       collect({
@@ -465,31 +452,27 @@ describe('utilities', () => {
     valve(
       count(5),
       createThrough({
-        up: {
-          onPull(action, cb, source) {
-            spy()
-            assert.equal(action.type, ValveActionType.Pull)
-            assert(isFunction(cb))
+        onSinkPull(action, cb, source) {
+          spy()
+          assert.equal(action.type, ValveActionType.Pull)
+          assert(isFunction(cb))
 
-            source.source(action, cb)
-          }
+          source.source(action, cb)
         },
-        down: {
-          onData(action, cb) {
-            spyTwo()
-            assert.equal(action.type, ValveActionType.Data)
-            assert(isNumber(action.payload))
-            assert(isFunction(cb))
+        onSourceData(action, cb) {
+          spyTwo()
+          assert.equal(action.type, ValveActionType.Data)
+          assert(isNumber(action.payload))
+          assert(isFunction(cb))
 
-            cb(action)
-          },
-          onAbort(action, cb) {
-            spyThree()
-            assert.equal(action.type, ValveActionType.Abort)
-            assert(isFunction(cb))
+          cb(action)
+        },
+        onSourceAbort(action, cb) {
+          spyThree()
+          assert.equal(action.type, ValveActionType.Abort)
+          assert(isFunction(cb))
 
-            cb(action)
-          }
+          cb(action)
         }
       }),
       collect({

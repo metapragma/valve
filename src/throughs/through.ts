@@ -12,6 +12,7 @@ import { createThrough } from '../utilities'
 
 import { isFunction } from 'lodash'
 
+/* istanbul ignore next */
 export function through<P, E = ValveError>(
   options: {
     onAbort?(action: ValveActionAbort): void
@@ -20,28 +21,26 @@ export function through<P, E = ValveError>(
   } = {}
 ): ValveThrough<P, P, E> {
   return createThrough<P, P, E>({
-    down: {
-      onAbort(action, cb) {
-        if (isFunction(options.onAbort)) {
-          options.onAbort(action)
-        }
-
-        cb(action)
-      },
-      onError(action, cb) {
-        if (isFunction(options.onError)) {
-          options.onError(action)
-        }
-
-        cb(action)
-      },
-      onData(action, cb) {
-        if (isFunction(options.onData)) {
-          options.onData(action)
-        }
-
-        cb(action)
+    onSourceAbort(action, cb) {
+      if (isFunction(options.onAbort)) {
+        options.onAbort(action)
       }
+
+      cb(action)
+    },
+    onSourceError(action, cb) {
+      if (isFunction(options.onError)) {
+        options.onError(action)
+      }
+
+      cb(action)
+    },
+    onSourceData(action, cb) {
+      if (isFunction(options.onData)) {
+        options.onData(action)
+      }
+
+      cb(action)
     }
   })
 }
