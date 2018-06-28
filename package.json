@@ -1,7 +1,7 @@
 {
   "name": "valve",
   "description": "minimal pull stream",
-  "version": "4.2.0",
+  "version": "5.0.0",
   "keywords": [
     "TypeScript",
     "pull-stream",
