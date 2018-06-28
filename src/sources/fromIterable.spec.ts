@@ -41,6 +41,18 @@ describe('sources/fromIterable', () => {
     )
   })
 
+  it('arrayLike', done => {
+    valve(
+      fromIterable({ length: 2, 0: 'Alpha', 1: 'Beta' }),
+      collect({
+        onData(action) {
+          assert.deepEqual(action.payload, ['Alpha', 'Beta'])
+          done()
+        }
+      })
+    )
+  })
+
   it('error', done => {
     const err = new Error('Problem!')
 

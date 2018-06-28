@@ -8,16 +8,14 @@ import {
 } from '../types'
 
 import { createSource } from '../utilities'
+import { createIterator } from '../iterall'
 
 export function fromIterable<P, E = ValveError>(
-  iterable: Iterable<P>
+  iterable: Iterable<P> | ArrayLike<P>
 ): ValveSource<P, E> {
-  const iterator = iterable[Symbol.iterator]()
+  const iterator = createIterator(iterable)
 
-  const next = ():
-    | ValveActionError<E>
-    | ValveActionData<P>
-    | ValveActionAbort => {
+  const next = (): ValveActionError<E> | ValveActionData<P> | ValveActionAbort => {
     try {
       const { value, done } = iterator.next()
 
