@@ -1,10 +1,4 @@
-import {
-  ValveActionType,
-  ValveCreateSinkOptions,
-  ValveError,
-  ValveReduceOptions,
-  ValveSink
-} from '../types'
+import { ValveCreateSinkOptions, ValveError, ValveReduceOptions, ValveSinkFactory } from '../types'
 
 import { defaults, isUndefined } from 'lodash'
 
@@ -12,7 +6,7 @@ import { createSink, createSinkDefaultOptions } from '../utilities'
 
 export function reduce<P, R = P, E = ValveError>(
   options: ValveReduceOptions<P, R> & Partial<ValveCreateSinkOptions<R, E>>
-): ValveSink<P, E> {
+): ValveSinkFactory<P, E> {
   let first = true
   // tslint:disable-next-line no-any
   let acc: any
@@ -23,29 +17,24 @@ export function reduce<P, R = P, E = ValveError>(
     acc = _options.accumulator
   }
 
-  return createSink<P, E>({
-    onData(action) {
+  return createSink<P, E>(() => ({
+    onData(data) {
       if (first && isUndefined(_options.accumulator)) {
-        acc = action.payload
+        acc = data
       } else {
         // tslint:disable-next-line no-unsafe-any
-        acc = _options.iteratee(acc, action.payload)
+        acc = _options.iteratee(acc, data)
       }
 
       first = false
     },
     onAbort() {
       if (first && isUndefined(_options.accumulator)) {
-        _options.onAbort({
-          type: ValveActionType.Abort
-        })
+        _options.onAbort()
       } else {
-        _options.onData({
-          type: ValveActionType.Data,
-          payload: acc
-        })
+        _options.onData(acc)
       }
     },
     onError: _options.onError
-  })
+  }))
 }

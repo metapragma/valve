@@ -2,19 +2,13 @@
   "name": "valve",
   "description": "minimal pull stream",
   "version": "5.0.1",
-  "keywords": [
-    "TypeScript",
-    "pull-stream",
-    "stream"
-  ],
+  "keywords": ["TypeScript", "stream", "valve"],
   "main": "lib/cjs/index.js",
   "module": "lib/esm/index.js",
   "browser": "lib/umd/index.js",
   "typings": "lib/types/index.d.ts",
   "sideEffects": false,
-  "files": [
-    "lib"
-  ],
+  "files": ["lib"],
   "bugs": "https://github.com/escapace/valve/issues",
   "author": "escapace <opensource@escapace.com>",
   "license": "MPL-2.0",
@@ -24,33 +18,27 @@
     "node": ">=9.0.0"
   },
   "scripts": {
-    "lint": "tslint --exclude 'src/types/**/*.ts' --project tsconfig.json -t codeFrame 'src/**/*.ts'",
+    "lint":
+      "tslint --exclude 'src/types/**/*.ts' --project tsconfig.json -t codeFrame 'src/**/*.ts'",
     "build": "recce build -e src/index.ts",
     "test:travis": "npm run lint && npm run test",
     "test": "npm run test:node && npm run test:browser",
-    "report-coverage": "npm run test:coverage && nyc report --reporter=text-lcov > coverage.lcov && codecov ; rimraf coverage.lcov",
+    "report-coverage":
+      "npm run test:coverage && nyc report --reporter=text-lcov > coverage.lcov && codecov ; rimraf coverage.lcov",
     "test:browser": "karma start --single-run",
-    "test:node": "cross-env TS_NODE_PROJECT=tsconfig-node.json mocha --opts .mocha.opts 'src/**/*.spec.ts'",
+    "test:node":
+      "cross-env TS_NODE_PROJECT=tsconfig-node.json mocha --opts .mocha.opts 'src/**/*.spec.ts'",
     "test:coverage": "nyc npm run test:node"
   },
   "lint-staged": {
     "{src,test}/**/*.ts": [
       "tslint --exclude 'src/types/**/*.ts' --project tsconfig.json --fix",
-      "prettier --write --parser typescript --trailing-comma none --no-semi --single-quote",
+      "prettier --write",
       "git add"
     ],
-    "{src,test}/**/*.js": [
-      "prettier --write --trailing-comma none --no-semi --single-quote",
-      "git add"
-    ],
-    "**/*.json": [
-      "prettier --write --parser json",
-      "git add"
-    ],
-    "**/*.md": [
-      "prettier --parser markdown --print-width 80",
-      "git add"
-    ]
+    "{src,test}/**/*.js": ["prettier --write", "git add"],
+    "**/*.json": ["prettier --write", "git add"],
+    "**/*.md": ["prettier --write", "git add"]
   },
   "husky": {
     "hooks": {
@@ -60,22 +48,11 @@
   },
   "nyc": {
     "tempDirectory": "./node_modules/.cache/nyc_output",
-    "include": [
-      "src/**/*.ts"
-    ],
-    "extension": [
-      ".ts",
-      ".tsx"
-    ],
-    "exclude": [
-      "src/**/*.spec.ts"
-    ],
-    "require": [
-      "ts-node/register"
-    ],
-    "reporter": [
-      "text"
-    ],
+    "include": ["src/**/*.ts"],
+    "extension": [".ts", ".tsx"],
+    "exclude": ["src/**/*.spec.ts"],
+    "require": ["ts-node/register"],
+    "reporter": ["text"],
     "sourceMap": true,
     "instrument": true
   },
@@ -113,6 +90,7 @@
     "validate-commit": "3.4.0"
   },
   "dependencies": {
-    "lodash": "^4.17.10"
+    "lodash": "^4.17.10",
+    "tslib": "^1.9.3"
   }
 }

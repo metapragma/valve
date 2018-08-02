@@ -1,43 +1,59 @@
-import {
-  ValveActionAbort,
-  ValveActionData,
-  ValveActionError,
-  ValveActionType,
-  ValveError,
-  ValveSource
-} from '../types'
+import { ValveError, ValveSourceFactory } from '../types'
 
 import { createSource } from '../utilities'
 import { createIterator } from '../iterall'
 
-export function fromIterable<P, E = ValveError>(
-  iterable: Iterable<P> | ArrayLike<P>
-): ValveSource<P, E> {
-  const iterator = createIterator(iterable)
+function next<P, E>(
+  iterator: Iterator<P>
+): { failed: true; payload: E } | { failed: false; payload: IteratorResult<P> } {
+  try {
+    const result = iterator.next()
 
-  const next = (): ValveActionError<E> | ValveActionData<P> | ValveActionAbort => {
-    try {
-      const { value, done } = iterator.next()
-
-      if (done) {
-        return { type: ValveActionType.Abort }
-      } else {
-        return {
-          type: ValveActionType.Data,
-          payload: value
-        }
-      }
-    } catch (error) {
-      return {
-        type: ValveActionType.Error,
-        payload: error as E
-      }
+    return {
+      failed: false,
+      payload: result
+    }
+  } catch (err) {
+    return {
+      failed: true,
+      payload: err as E
     }
   }
+}
 
-  return createSource<P, E>({
-    onPull(_, cb) {
-      cb(next())
-    }
-  })
+export function fromIterable<P, E = ValveError>(
+  iterable: Iterable<P> | ArrayLike<P>,
+  safe: boolean = true
+): ValveSourceFactory<P, E> {
+  const iterator = createIterator(iterable)
+
+  if (safe === true) {
+    return createSource<P, E>(({ abort, data }) => ({
+      onPull() {
+        const { value, done } = iterator.next()
+
+        if (done) {
+          abort()
+        } else {
+          data(value)
+        }
+      }
+    }))
+  } else {
+    return createSource<P, E>(({ abort, data, error }) => ({
+      onPull() {
+        const result = next<P, E>(iterator)
+
+        if (result.failed === true) {
+          error(result.payload)
+        } else {
+          if (result.payload.done) {
+            abort()
+          } else {
+            data(result.payload.value)
+          }
+        }
+      }
+    }))
+  }
 }

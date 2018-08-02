@@ -1,11 +1,11 @@
 import { reduce } from './reduce'
 
-import { ValveCreateSinkOptions, ValveError, ValveSink } from '../types'
+import { ValveCreateSinkOptions, ValveError, ValveSinkFactory } from '../types'
 
 export function collect<P, E = ValveError>(
   /* istanbul ignore next */
   options: Partial<ValveCreateSinkOptions<P[], E>> = {}
-): ValveSink<P, E> {
+): ValveSinkFactory<P, E> {
   return reduce<P, P[], E>({
     iteratee(arr, item) {
       arr.push(item)

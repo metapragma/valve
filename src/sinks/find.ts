@@ -1,13 +1,11 @@
 import { defaults, identity } from 'lodash'
 
 import {
-  ValveActionAbort,
-  ValveActionError,
   ValveActionType,
   ValveCreateSinkOptions,
   ValveError,
   ValveFindOptions,
-  ValveSink
+  ValveSinkFactory
 } from '../types'
 
 import { createSink, createSinkDefaultOptions } from '../utilities'
@@ -15,39 +13,33 @@ import { createSink, createSinkDefaultOptions } from '../utilities'
 export function find<P, E = ValveError>(
   /* istanbul ignore next */
   options: ValveFindOptions<P> & Partial<ValveCreateSinkOptions<P, E>> = {}
-): ValveSink<P, E> {
+): ValveSinkFactory<P, E> {
   let ended = false
 
   const _options = defaults({}, options, createSinkDefaultOptions, {
     predicate: identity
   })
 
-  const once = (f: typeof _options.onError | typeof _options.onAbort) => (
-    action: ValveActionError<E> | ValveActionAbort
-  ) => {
-    if (!ended) {
-      f(action)
-    }
-  }
-
-  // tslint:disable-next-line no-unnecessary-local-variable
-  const sink = createSink<P, E>({
-    onData(action) {
+  return createSink<P, E>(({ terminate }) => ({
+    onData(data) {
       // tslint:disable-next-line strict-boolean-expressions
-      if (_options.predicate(action.payload)) {
+      if (_options.predicate(data)) {
         ended = true
 
-        _options.onData({
-          type: ValveActionType.Data,
-          payload: action.payload
-        })
+        _options.onData(data)
 
-        sink.terminate({ type: ValveActionType.Abort })
+        terminate({ type: ValveActionType.Abort })
       }
     },
-    onError: once(_options.onError),
-    onAbort: once(_options.onAbort)
-  })
-
-  return sink
+    onError(error) {
+      if (!ended) {
+        _options.onError(error)
+      }
+    },
+    onAbort() {
+      if (!ended) {
+        _options.onAbort()
+      }
+    }
+  }))
 }

@@ -1,10 +1,12 @@
 {
-  "extends": [
-    "tslint-config-escapace"
-  ],
+  "extends": ["tslint-config-escapace"],
   "rules": {
     "promise-function-async": false,
     "type-literal-delimiter": false,
-    "no-void-expression": false
+    "no-void-expression": false,
+    "mocha-avoid-only": false,
+    "mocha-no-side-effect-code": false,
+    "mocha-unneeded-done": false,
+    "no-invalid-this": false
   }
 }

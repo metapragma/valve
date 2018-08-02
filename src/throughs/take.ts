@@ -1,6 +1,6 @@
 // tslint:disable no-conditional-assignment no-shadowed-variable
 
-import { ValveActionType, ValveError, ValveThrough } from '../types'
+import { ValveError, ValveThroughFactory } from '../types'
 
 import { createThrough } from '../utilities'
 
@@ -10,7 +10,7 @@ import { isNumber } from 'lodash'
 export function take<P, E = ValveError>(
   predicate: number | ((data: P) => boolean),
   last: boolean = false
-): ValveThrough<P, P, E> {
+): ValveThroughFactory<P, P, E> {
   let _last: boolean = last
   // let ended: ValveAction<P, E>
   let tester: (data: P) => boolean
@@ -38,29 +38,30 @@ export function take<P, E = ValveError>(
 
   let ended: boolean = false
 
-  // tslint:disable-next-line no-unnecessary-local-variable
-  const through = createThrough<P, P, E>({
-    onSinkPull(action, cb, source) {
-      if (ended) {
-        source.source({ type: ValveActionType.Abort }, cb)
-      } else {
-        source.source(action, cb)
-      }
-    },
-    onSourceData(action, cb) {
-      ended = ended || !tester(action.payload)
+  return createThrough<P, P, E>(
+    ({ data, abort }) => ({
+      onData(payload) {
+        ended = ended || !tester(payload)
 
-      if (ended) {
-        if (_last) {
-          cb(action)
+        if (ended) {
+          if (_last) {
+            data(payload)
+          } else {
+            abort()
+          }
         } else {
-          cb({ type: ValveActionType.Abort })
+          data(payload)
         }
-      } else {
-        cb(action)
       }
-    }
-  })
-
-  return through
+    }),
+    ({ abort, pull }) => ({
+      onPull() {
+        if (ended) {
+          abort()
+        } else {
+          pull()
+        }
+      }
+    })
+  )
 }

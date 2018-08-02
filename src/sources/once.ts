@@ -1,21 +1,18 @@
-import { ValveActionType, ValveError, ValveSource } from '../types'
+import { ValveError, ValveSourceFactory } from '../types'
 
 import { createSource } from '../utilities'
 
-export function once<P, E = ValveError>(value: P): ValveSource<P, E> {
+export function once<P, E = ValveError>(value: P): ValveSourceFactory<P, E> {
   let triggered: boolean = false
 
-  return createSource<P, E>({
-    onPull(_, cb) {
+  return createSource<P, E>(({ abort, data }) => ({
+    onPull() {
       if (triggered === false) {
         triggered = true
-        cb({
-          type: ValveActionType.Data,
-          payload: value
-        })
+        data(value)
       } else {
-        cb({ type: ValveActionType.Abort })
+        abort()
       }
     }
-  })
+  }))
 }

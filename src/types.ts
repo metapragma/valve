@@ -60,44 +60,88 @@ export type ValveCallback<P, E = ValveError, SA = ValveSinkAction<E>> = (
   action: ValveSourceAction<SA, P, E>
 ) => void
 
-export interface ValveSink<P, E = ValveError> {
+export type ValveSink<P, E = ValveError> = (source: ValveSource<P, E>) => void
+
+export type ValveSource<P, E = ValveError> = (
+  action: ValveSinkAction<E>,
+  cb: ValveCallback<P, E>
+) => void
+
+export type ValveThrough<P, R, E = ValveError> = (source: ValveSource<P, E>) => ValveSource<R, E>
+
+// TODO: pass configuration
+// TODO: pass back reference to internal state
+// TODO: reconstruct a global state
+// TODO: ui change to abort() error() data() noop() and pool()
+// TODO: promise
+
+// export type ValveSinkFactory <P, E = ValveError> = () => ValveSink<P, E> // | Promise<ValveSink<P, E>>
+// export type ValveSourceFactory <P, E = ValveError> = () => ValveSource<P, E> // | Promise<ValveSource<P, E>>
+// export type ValveThroughFactory <P, R, E = ValveError> = () => ValveThrough<P, R, E> // | Promise<ValveThrough<P, R, E>>
+
+export interface ValveSinkFactory<P, E = ValveError> {
   type: ValveType.Sink
-  sink: (source: ValveSource<P, E>) => void
-  terminate: (action: ValveActionAbort | ValveActionError<E>) => void
+  (): ValveSink<P, E>
 }
 
-export interface ValveSource<P, E = ValveError> {
+export interface ValveSourceFactory<P, E = ValveError> {
   type: ValveType.Source
-  source: (action: ValveSinkAction<E>, cb: ValveCallback<P, E>) => void
+  (): ValveSource<P, E>
 }
 
-export interface ValveThrough<P, R, E = ValveError> {
+export interface ValveThroughFactory<P, R, E = ValveError> {
   type: ValveType.Through
-  sink: (source: ValveSource<P, E>) => ValveSource<R, E>
+  (): ValveThrough<P, R, E>
 }
+
+export type ValveCompositeSource<P, E = ValveError> = ValveSourceFactory<P, E>
+export type ValveCompositeSink<P, E = ValveError> = ValveSinkFactory<P, E>
+export type ValveCompositeThrough<P, R, E = ValveError> = ValveThroughFactory<P, R, E>
 
 // Utilities
 
-export interface ValveCreateSourceOptions<T, E = ValveError> {
-  onAbort(action: ValveActionAbort, cb: ValveCallback<T, E, ValveActionAbort>): void
-  onError(action: ValveActionError<E>, cb: ValveCallback<T, E, ValveActionError<E>>): void
-  onPull(action: ValveActionPull, cb: ValveCallback<T, E, ValveActionPull>): void
+export type ValveCallbackAbort = () => void
+export type ValveCallbackData<P> = (data: P) => void
+export type ValveCallbackError<E = ValveError> = (error: E) => void
+export type ValveCallbackNoop = () => void
+export type ValveCallbackPull = () => void
+
+export interface ValveSourceCallbacks<P, E = ValveError> {
+  abort: ValveCallbackAbort
+  data: ValveCallbackData<P>
+  error: ValveCallbackError<E>
+  noop: ValveCallbackNoop
+}
+
+export interface ValveSinkCallbacks<E = ValveError> {
+  abort: ValveCallbackAbort
+  error: ValveCallbackError<E>
+  pull: ValveCallbackPull
+}
+
+export interface ValveCreateSourceOptions<E = ValveError> {
+  onAbort(): void
+  onError(error: E): void
+  onPull(): void
 }
 
 export interface ValveCreateSinkOptions<T, E = ValveError> {
-  onAbort(action: ValveActionAbort): void
-  onError(action: ValveActionError<E>): void
-  onData(action: ValveActionData<T>): void
+  onAbort(): void
+  onError(error: E): void
+  onData(data: T): void
 }
 
-export interface ValveCreateThroughOptions<T, R = T, E = ValveError> {
-  onSourceAbort(action: ValveActionAbort, cb: ValveCallback<R, E>): void
-  onSourceError(action: ValveActionError<E>, cb: ValveCallback<R, E>): void
-  onSourceData(action: ValveActionData<T>, cb: ValveCallback<R, E>): void
-  onSinkAbort(action: ValveActionAbort, cb: ValveCallback<R, E>, source: ValveSource<T, E>): void
-  onSinkError(action: ValveActionError<E>, cb: ValveCallback<R, E>, source: ValveSource<T, E>): void
-  onSinkPull(action: ValveActionPull, cb: ValveCallback<R, E>, source: ValveSource<T, E>): void
-}
+// export interface ValveCreateThroughSourceOptions<T, R = T, E = ValveError> {
+//   onAbort(props: ValveSourceCallbacks<R, E>): void
+//   onError(error: E): void
+//   onData(data: T): void
+// }
+//
+// export interface ValveCreateThroughSinkOptions<E = ValveError> {
+//   onAbort(): void
+//   onError(error: E): void
+//   onPull(): void
+// }
 
 // Sinks
 

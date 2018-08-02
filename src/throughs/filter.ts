@@ -1,17 +1,17 @@
-import { ValveActionType, ValveError, ValveThrough } from '../types'
+import { ValveError, ValveThroughFactory } from '../types'
 
 import { createThrough } from '../utilities'
 
 export function filter<P, E = ValveError>(
   predicate: ((data: P) => boolean)
-): ValveThrough<P, P, E> {
-  return createThrough<P, P, E>({
-    onSourceData(action, cb) {
-      if (predicate(action.payload)) {
-        cb(action)
+): ValveThroughFactory<P, P, E> {
+  return createThrough<P, P, E>(({ data, noop }) => ({
+    onData(payload) {
+      if (predicate(payload)) {
+        data(payload)
       } else {
-        cb({ type: ValveActionType.Noop })
+        noop()
       }
     }
-  })
+  }))
 }

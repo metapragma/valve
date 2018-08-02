@@ -1,5 +1,5 @@
 import { filter } from './filter'
-import { ValveError, ValveThrough } from '../types'
+import { ValveError, ValveThroughFactory } from '../types'
 import { identity, includes } from 'lodash'
 
 // drop items you have already seen
@@ -7,7 +7,7 @@ import { identity, includes } from 'lodash'
 export function unique<P, K, E = ValveError>(
   test: ((data: P) => K) = identity,
   invert: boolean = false
-): ValveThrough<P, P, E> {
+): ValveThroughFactory<P, P, E> {
   const seen: K[] = []
 
   return filter((data: P) => {

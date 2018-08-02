@@ -1,22 +1,15 @@
-import { ValveActionType, ValveError, ValveThrough } from '../types'
+import { ValveError, ValveThroughFactory } from '../types'
 
 import { createThrough } from '../utilities'
 
 export function asyncMap<P, R, E = ValveError>(
   iteratee: (data: P) => Promise<R>
-): ValveThrough<P, R, E> {
-  return createThrough({
-    onSourceData(action, cb) {
-      iteratee(action.payload)
-        .then(payload => {
-          cb({
-            type: ValveActionType.Data,
-            payload
-          })
-        })
-        .catch(payload => {
-          cb({ type: ValveActionType.Error, payload: payload as E })
-        })
+): ValveThroughFactory<P, R, E> {
+  return createThrough(({ data, error }) => ({
+    onData(payload) {
+      iteratee(payload)
+        .then(data)
+        .catch(error)
     }
-  })
+  }))
 }
