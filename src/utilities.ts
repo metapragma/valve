@@ -6,6 +6,8 @@ import {
   ValveActionError,
   ValveActionType,
   ValveCallback,
+  ValveCallbackAbort,
+  ValveCallbackError,
   ValveCreateSinkOptions,
   ValveCreateSourceOptions,
   ValveError,
@@ -95,8 +97,8 @@ export const createSinkDefaultOptions = {
 export const createSink = <T, E = ValveError>(
   handler: (
     actions: {
-      abort: () => void
-      error: (error: E) => void
+      abort: ValveCallbackAbort
+      error: ValveCallbackError<E>
     }
   ) => Partial<ValveCreateSinkOptions<T, E>> = () => createSinkDefaultOptions
 ): ValveSinkFactory<T, E> =>

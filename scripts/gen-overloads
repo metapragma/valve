@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# vim: set ft=sh:
+#
+# @description generate valve function overloads
+
+main ()
+{
+    verbose true
+    strict true
+
+    local files
+
+    while read -d '' -r file
+    do
+        files+=("${file}")
+    done < <(find . -type f \
+        -path './src/*' \
+        -name '*.ts' \
+        -print0 2> /dev/null)
+
+    "${MANAGE_REPOSITORY}/node_modules/.bin/ts-node" -P "${MANAGE_REPOSITORY}/tsconfig-node.json" -T  scripts/_overloads.ts
+}

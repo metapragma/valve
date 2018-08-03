@@ -17,260 +17,826 @@ import {
 
 import { assign, map, reduceRight } from 'lodash'
 
-export function valve<P, E = ValveError>(A1: ValveCompositeSink<P, E>): ValveSinkFactory<P, E>
+/* Source -> Through... -> Sink */
 
-// Source -> ...Through -> Sink
-
-export function valve<P, E = ValveError>(A1: ValveCompositeSource<P, E>): ValveSourceFactory<P, E>
-
-export function valve<P1, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  RR: ValveCompositeSink<P1, E>
+export function valve<T1, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeSink<T1, E>
+): void
+export function valve<T1, T2, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeSink<T2, E>
+): void
+export function valve<T1, T2, T3, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeSink<T3, E>
+): void
+export function valve<T1, T2, T3, T4, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeSink<T4, E>
+): void
+export function valve<T1, T2, T3, T4, T5, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeSink<T5, E>
+): void
+export function valve<T1, T2, T3, T4, T5, T6, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeSink<T6, E>
+): void
+export function valve<T1, T2, T3, T4, T5, T6, T7, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeSink<T7, E>
+): void
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeSink<T8, E>
+): void
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeSink<T9, E>
+): void
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>,
+  A11: ValveCompositeSink<T10, E>
+): void
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>,
+  A11: ValveCompositeThrough<T10, T11, E>,
+  A12: ValveCompositeSink<T11, E>
+): void
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>,
+  A11: ValveCompositeThrough<T10, T11, E>,
+  A12: ValveCompositeThrough<T11, T12, E>,
+  A13: ValveCompositeSink<T12, E>
+): void
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>,
+  A11: ValveCompositeThrough<T10, T11, E>,
+  A12: ValveCompositeThrough<T11, T12, E>,
+  A13: ValveCompositeThrough<T12, T13, E>,
+  A14: ValveCompositeSink<T13, E>
+): void
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>,
+  A11: ValveCompositeThrough<T10, T11, E>,
+  A12: ValveCompositeThrough<T11, T12, E>,
+  A13: ValveCompositeThrough<T12, T13, E>,
+  A14: ValveCompositeThrough<T13, T14, E>,
+  A15: ValveCompositeSink<T14, E>
+): void
+export function valve<
+  T1,
+  T2,
+  T3,
+  T4,
+  T5,
+  T6,
+  T7,
+  T8,
+  T9,
+  T10,
+  T11,
+  T12,
+  T13,
+  T14,
+  T15,
+  E = ValveError
+>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>,
+  A11: ValveCompositeThrough<T10, T11, E>,
+  A12: ValveCompositeThrough<T11, T12, E>,
+  A13: ValveCompositeThrough<T12, T13, E>,
+  A14: ValveCompositeThrough<T13, T14, E>,
+  A15: ValveCompositeThrough<T14, T15, E>,
+  A16: ValveCompositeSink<T15, E>
+): void
+export function valve<
+  T1,
+  T2,
+  T3,
+  T4,
+  T5,
+  T6,
+  T7,
+  T8,
+  T9,
+  T10,
+  T11,
+  T12,
+  T13,
+  T14,
+  T15,
+  T16,
+  E = ValveError
+>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>,
+  A11: ValveCompositeThrough<T10, T11, E>,
+  A12: ValveCompositeThrough<T11, T12, E>,
+  A13: ValveCompositeThrough<T12, T13, E>,
+  A14: ValveCompositeThrough<T13, T14, E>,
+  A15: ValveCompositeThrough<T14, T15, E>,
+  A16: ValveCompositeThrough<T15, T16, E>,
+  A17: ValveCompositeSink<T16, E>
 ): void
 
-export function valve<P1, P2, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>,
-  RR: ValveCompositeSink<P2, E>
-): void
+/* Through... -> Sink */
 
-export function valve<P1, P2, P3, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>,
-  A3: ValveCompositeThrough<P2, P3, E>,
-  RR: ValveCompositeSink<P3, E>
-): void
+export function valve<T1, T2, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeSink<T2, E>
+): ValveSinkFactory<T2, E>
+export function valve<T1, T2, T3, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeSink<T3, E>
+): ValveSinkFactory<T3, E>
+export function valve<T1, T2, T3, T4, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeSink<T4, E>
+): ValveSinkFactory<T4, E>
+export function valve<T1, T2, T3, T4, T5, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeSink<T5, E>
+): ValveSinkFactory<T5, E>
+export function valve<T1, T2, T3, T4, T5, T6, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeSink<T6, E>
+): ValveSinkFactory<T6, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeSink<T7, E>
+): ValveSinkFactory<T7, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeSink<T8, E>
+): ValveSinkFactory<T8, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeSink<T9, E>
+): ValveSinkFactory<T9, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>,
+  A10: ValveCompositeSink<T10, E>
+): ValveSinkFactory<T10, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>,
+  A10: ValveCompositeThrough<T10, T11, E>,
+  A11: ValveCompositeSink<T11, E>
+): ValveSinkFactory<T11, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>,
+  A10: ValveCompositeThrough<T10, T11, E>,
+  A11: ValveCompositeThrough<T11, T12, E>,
+  A12: ValveCompositeSink<T12, E>
+): ValveSinkFactory<T12, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>,
+  A10: ValveCompositeThrough<T10, T11, E>,
+  A11: ValveCompositeThrough<T11, T12, E>,
+  A12: ValveCompositeThrough<T12, T13, E>,
+  A13: ValveCompositeSink<T13, E>
+): ValveSinkFactory<T13, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>,
+  A10: ValveCompositeThrough<T10, T11, E>,
+  A11: ValveCompositeThrough<T11, T12, E>,
+  A12: ValveCompositeThrough<T12, T13, E>,
+  A13: ValveCompositeThrough<T13, T14, E>,
+  A14: ValveCompositeSink<T14, E>
+): ValveSinkFactory<T14, E>
+export function valve<
+  T1,
+  T2,
+  T3,
+  T4,
+  T5,
+  T6,
+  T7,
+  T8,
+  T9,
+  T10,
+  T11,
+  T12,
+  T13,
+  T14,
+  T15,
+  E = ValveError
+>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>,
+  A10: ValveCompositeThrough<T10, T11, E>,
+  A11: ValveCompositeThrough<T11, T12, E>,
+  A12: ValveCompositeThrough<T12, T13, E>,
+  A13: ValveCompositeThrough<T13, T14, E>,
+  A14: ValveCompositeThrough<T14, T15, E>,
+  A15: ValveCompositeSink<T15, E>
+): ValveSinkFactory<T15, E>
+export function valve<
+  T1,
+  T2,
+  T3,
+  T4,
+  T5,
+  T6,
+  T7,
+  T8,
+  T9,
+  T10,
+  T11,
+  T12,
+  T13,
+  T14,
+  T15,
+  T16,
+  E = ValveError
+>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>,
+  A10: ValveCompositeThrough<T10, T11, E>,
+  A11: ValveCompositeThrough<T11, T12, E>,
+  A12: ValveCompositeThrough<T12, T13, E>,
+  A13: ValveCompositeThrough<T13, T14, E>,
+  A14: ValveCompositeThrough<T14, T15, E>,
+  A15: ValveCompositeThrough<T15, T16, E>,
+  A16: ValveCompositeSink<T16, E>
+): ValveSinkFactory<T16, E>
 
-export function valve<P1, P2, P3, P4, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>,
-  A3: ValveCompositeThrough<P2, P3, E>,
-  A4: ValveCompositeThrough<P3, P4, E>,
-  RR: ValveCompositeSink<P4, E>
-): void
+/* Source -> Through ... */
 
-export function valve<P1, P2, P3, P4, P5, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>,
-  A3: ValveCompositeThrough<P2, P3, E>,
-  A4: ValveCompositeThrough<P3, P4, E>,
-  A5: ValveCompositeThrough<P4, P5, E>,
-  RR: ValveCompositeSink<P5, E>
-): void
+export function valve<T1, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>
+): ValveSourceFactory<T1, E>
+export function valve<T1, T2, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>
+): ValveSourceFactory<T2, E>
+export function valve<T1, T2, T3, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>
+): ValveSourceFactory<T3, E>
+export function valve<T1, T2, T3, T4, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>
+): ValveSourceFactory<T4, E>
+export function valve<T1, T2, T3, T4, T5, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>
+): ValveSourceFactory<T5, E>
+export function valve<T1, T2, T3, T4, T5, T6, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>
+): ValveSourceFactory<T6, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>
+): ValveSourceFactory<T7, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>
+): ValveSourceFactory<T8, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>
+): ValveSourceFactory<T9, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>
+): ValveSourceFactory<T10, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>,
+  A11: ValveCompositeThrough<T10, T11, E>
+): ValveSourceFactory<T11, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>,
+  A11: ValveCompositeThrough<T10, T11, E>,
+  A12: ValveCompositeThrough<T11, T12, E>
+): ValveSourceFactory<T12, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>,
+  A11: ValveCompositeThrough<T10, T11, E>,
+  A12: ValveCompositeThrough<T11, T12, E>,
+  A13: ValveCompositeThrough<T12, T13, E>
+): ValveSourceFactory<T13, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, E = ValveError>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>,
+  A11: ValveCompositeThrough<T10, T11, E>,
+  A12: ValveCompositeThrough<T11, T12, E>,
+  A13: ValveCompositeThrough<T12, T13, E>,
+  A14: ValveCompositeThrough<T13, T14, E>
+): ValveSourceFactory<T14, E>
+export function valve<
+  T1,
+  T2,
+  T3,
+  T4,
+  T5,
+  T6,
+  T7,
+  T8,
+  T9,
+  T10,
+  T11,
+  T12,
+  T13,
+  T14,
+  T15,
+  E = ValveError
+>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>,
+  A11: ValveCompositeThrough<T10, T11, E>,
+  A12: ValveCompositeThrough<T11, T12, E>,
+  A13: ValveCompositeThrough<T12, T13, E>,
+  A14: ValveCompositeThrough<T13, T14, E>,
+  A15: ValveCompositeThrough<T14, T15, E>
+): ValveSourceFactory<T15, E>
+export function valve<
+  T1,
+  T2,
+  T3,
+  T4,
+  T5,
+  T6,
+  T7,
+  T8,
+  T9,
+  T10,
+  T11,
+  T12,
+  T13,
+  T14,
+  T15,
+  T16,
+  E = ValveError
+>(
+  A1: ValveCompositeSource<T1, E>,
+  A2: ValveCompositeThrough<T1, T2, E>,
+  A3: ValveCompositeThrough<T2, T3, E>,
+  A4: ValveCompositeThrough<T3, T4, E>,
+  A5: ValveCompositeThrough<T4, T5, E>,
+  A6: ValveCompositeThrough<T5, T6, E>,
+  A7: ValveCompositeThrough<T6, T7, E>,
+  A8: ValveCompositeThrough<T7, T8, E>,
+  A9: ValveCompositeThrough<T8, T9, E>,
+  A10: ValveCompositeThrough<T9, T10, E>,
+  A11: ValveCompositeThrough<T10, T11, E>,
+  A12: ValveCompositeThrough<T11, T12, E>,
+  A13: ValveCompositeThrough<T12, T13, E>,
+  A14: ValveCompositeThrough<T13, T14, E>,
+  A15: ValveCompositeThrough<T14, T15, E>,
+  A16: ValveCompositeThrough<T15, T16, E>
+): ValveSourceFactory<T16, E>
 
-export function valve<P1, P2, P3, P4, P5, P6, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>,
-  A3: ValveCompositeThrough<P2, P3, E>,
-  A4: ValveCompositeThrough<P3, P4, E>,
-  A5: ValveCompositeThrough<P4, P5, E>,
-  A6: ValveCompositeThrough<P5, P6, E>,
-  RR: ValveCompositeSink<P6, E>
-): void
+/* Through ... */
 
-export function valve<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>,
-  A3: ValveCompositeThrough<P2, P3, E>,
-  A4: ValveCompositeThrough<P3, P4, E>,
-  A5: ValveCompositeThrough<P4, P5, E>,
-  A6: ValveCompositeThrough<P5, P6, E>,
-  A7: ValveCompositeThrough<P6, P7, E>,
-  RR: ValveCompositeSink<P7, E>
-): void
+export function valve<T1, T2, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>
+): ValveThroughFactory<T1, T2, E>
+export function valve<T1, T2, T3, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>
+): ValveThroughFactory<T1, T3, E>
+export function valve<T1, T2, T3, T4, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>
+): ValveThroughFactory<T1, T4, E>
+export function valve<T1, T2, T3, T4, T5, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>
+): ValveThroughFactory<T1, T5, E>
+export function valve<T1, T2, T3, T4, T5, T6, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>
+): ValveThroughFactory<T1, T6, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>
+): ValveThroughFactory<T1, T7, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>
+): ValveThroughFactory<T1, T8, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>
+): ValveThroughFactory<T1, T9, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>
+): ValveThroughFactory<T1, T10, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>,
+  A10: ValveCompositeThrough<T10, T11, E>
+): ValveThroughFactory<T1, T11, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>,
+  A10: ValveCompositeThrough<T10, T11, E>,
+  A11: ValveCompositeThrough<T11, T12, E>
+): ValveThroughFactory<T1, T12, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>,
+  A10: ValveCompositeThrough<T10, T11, E>,
+  A11: ValveCompositeThrough<T11, T12, E>,
+  A12: ValveCompositeThrough<T12, T13, E>
+): ValveThroughFactory<T1, T13, E>
+export function valve<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, E = ValveError>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>,
+  A10: ValveCompositeThrough<T10, T11, E>,
+  A11: ValveCompositeThrough<T11, T12, E>,
+  A12: ValveCompositeThrough<T12, T13, E>,
+  A13: ValveCompositeThrough<T13, T14, E>
+): ValveThroughFactory<T1, T14, E>
+export function valve<
+  T1,
+  T2,
+  T3,
+  T4,
+  T5,
+  T6,
+  T7,
+  T8,
+  T9,
+  T10,
+  T11,
+  T12,
+  T13,
+  T14,
+  T15,
+  E = ValveError
+>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>,
+  A10: ValveCompositeThrough<T10, T11, E>,
+  A11: ValveCompositeThrough<T11, T12, E>,
+  A12: ValveCompositeThrough<T12, T13, E>,
+  A13: ValveCompositeThrough<T13, T14, E>,
+  A14: ValveCompositeThrough<T14, T15, E>
+): ValveThroughFactory<T1, T15, E>
+export function valve<
+  T1,
+  T2,
+  T3,
+  T4,
+  T5,
+  T6,
+  T7,
+  T8,
+  T9,
+  T10,
+  T11,
+  T12,
+  T13,
+  T14,
+  T15,
+  T16,
+  E = ValveError
+>(
+  A1: ValveCompositeThrough<T1, T2, E>,
+  A2: ValveCompositeThrough<T2, T3, E>,
+  A3: ValveCompositeThrough<T3, T4, E>,
+  A4: ValveCompositeThrough<T4, T5, E>,
+  A5: ValveCompositeThrough<T5, T6, E>,
+  A6: ValveCompositeThrough<T6, T7, E>,
+  A7: ValveCompositeThrough<T7, T8, E>,
+  A8: ValveCompositeThrough<T8, T9, E>,
+  A9: ValveCompositeThrough<T9, T10, E>,
+  A10: ValveCompositeThrough<T10, T11, E>,
+  A11: ValveCompositeThrough<T11, T12, E>,
+  A12: ValveCompositeThrough<T12, T13, E>,
+  A13: ValveCompositeThrough<T13, T14, E>,
+  A14: ValveCompositeThrough<T14, T15, E>,
+  A15: ValveCompositeThrough<T15, T16, E>
+): ValveThroughFactory<T1, T16, E>
 
-export function valve<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>,
-  A3: ValveCompositeThrough<P2, P3, E>,
-  A4: ValveCompositeThrough<P3, P4, E>,
-  A5: ValveCompositeThrough<P4, P5, E>,
-  A6: ValveCompositeThrough<P5, P6, E>,
-  A7: ValveCompositeThrough<P6, P7, E>,
-  A8: ValveCompositeThrough<P6, P8, E>,
-  RR: ValveCompositeSink<P8, E>
-): void
-
-// ...Through -> Sink
-
-export function valve<P1, P2, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>,
-  A2: ValveCompositeSink<P2, E>
-): ValveSinkFactory<P2, E>
-
-export function valve<P1, P2, P3, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>,
-  A2: ValveCompositeThrough<P2, P3, E>,
-  A3: ValveCompositeSink<P3, E>
-): ValveSinkFactory<P3, E>
-
-export function valve<P1, P2, P3, P4, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>,
-  A2: ValveCompositeThrough<P2, P3, E>,
-  A3: ValveCompositeThrough<P3, P4, E>,
-  A4: ValveCompositeSink<P4, E>
-): ValveSinkFactory<P4, E>
-
-export function valve<P1, P2, P3, P4, P5, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>,
-  A2: ValveCompositeThrough<P2, P3, E>,
-  A3: ValveCompositeThrough<P3, P4, E>,
-  A4: ValveCompositeThrough<P4, P5, E>,
-  A5: ValveCompositeSink<P5, E>
-): ValveSinkFactory<P5, E>
-
-export function valve<P1, P2, P3, P4, P5, P6, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>,
-  A2: ValveCompositeThrough<P2, P3, E>,
-  A3: ValveCompositeThrough<P3, P4, E>,
-  A4: ValveCompositeThrough<P4, P5, E>,
-  A5: ValveCompositeThrough<P5, P6, E>,
-  A6: ValveCompositeSink<P6, E>
-): ValveSinkFactory<P6, E>
-
-export function valve<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>,
-  A2: ValveCompositeThrough<P2, P3, E>,
-  A3: ValveCompositeThrough<P3, P4, E>,
-  A4: ValveCompositeThrough<P4, P5, E>,
-  A5: ValveCompositeThrough<P5, P6, E>,
-  A6: ValveCompositeThrough<P6, P7, E>,
-  A7: ValveCompositeSink<P7, E>
-): ValveSinkFactory<P7, E>
-
-export function valve<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>,
-  A2: ValveCompositeThrough<P2, P3, E>,
-  A3: ValveCompositeThrough<P3, P4, E>,
-  A4: ValveCompositeThrough<P4, P5, E>,
-  A5: ValveCompositeThrough<P5, P6, E>,
-  A6: ValveCompositeThrough<P6, P7, E>,
-  A7: ValveCompositeThrough<P7, P8, E>,
-  A8: ValveCompositeSink<P8, E>
-): ValveSinkFactory<P8, E>
-
-// Source -> ...Through (TODO: finish this)
-
-export function valve<P1, P2, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>
-): ValveSourceFactory<P2, E>
-
-export function valve<P1, P2, P3, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>,
-  A3: ValveCompositeThrough<P2, P3, E>
-): ValveSourceFactory<P3, E>
-
-export function valve<P1, P2, P3, P4, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>,
-  A3: ValveCompositeThrough<P2, P3, E>,
-  A4: ValveCompositeThrough<P3, P4, E>
-): ValveSourceFactory<P4, E>
-
-export function valve<P1, P2, P3, P4, P5, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>,
-  A3: ValveCompositeThrough<P2, P3, E>,
-  A4: ValveCompositeThrough<P3, P4, E>,
-  A5: ValveCompositeThrough<P4, P5, E>
-): ValveSourceFactory<P5, E>
-
-export function valve<P1, P2, P3, P4, P5, P6, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>,
-  A3: ValveCompositeThrough<P2, P3, E>,
-  A4: ValveCompositeThrough<P3, P4, E>,
-  A5: ValveCompositeThrough<P4, P5, E>,
-  A6: ValveCompositeThrough<P5, P6, E>
-): ValveSourceFactory<P6, E>
-
-export function valve<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>,
-  A3: ValveCompositeThrough<P2, P3, E>,
-  A4: ValveCompositeThrough<P3, P4, E>,
-  A5: ValveCompositeThrough<P4, P5, E>,
-  A6: ValveCompositeThrough<P5, P6, E>,
-  A7: ValveCompositeThrough<P6, P7, E>
-): ValveSourceFactory<P7, E>
-
-export function valve<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
-  A1: ValveCompositeSource<P1, E>,
-  A2: ValveCompositeThrough<P1, P2, E>,
-  A3: ValveCompositeThrough<P2, P3, E>,
-  A4: ValveCompositeThrough<P3, P4, E>,
-  A5: ValveCompositeThrough<P4, P5, E>,
-  A6: ValveCompositeThrough<P5, P6, E>,
-  A7: ValveCompositeThrough<P6, P7, E>,
-  A8: ValveCompositeThrough<P7, P8, E>
-): ValveSourceFactory<P8, E>
-
-// ...Through
-
-export function valve<P1, P2, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>
-): ValveThroughFactory<P1, P2, E>
-
-export function valve<P1, P2, P3, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>,
-  A2: ValveCompositeThrough<P2, P3, E>
-): ValveThroughFactory<P1, P3, E>
-
-export function valve<P1, P2, P3, P4, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>,
-  A2: ValveCompositeThrough<P2, P3, E>,
-  A3: ValveCompositeThrough<P3, P4, E>
-): ValveThroughFactory<P1, P4, E>
-
-export function valve<P1, P2, P3, P4, P5, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>,
-  A2: ValveCompositeThrough<P2, P3, E>,
-  A3: ValveCompositeThrough<P3, P4, E>,
-  A4: ValveCompositeThrough<P4, P5, E>
-): ValveThroughFactory<P1, P5, E>
-
-export function valve<P1, P2, P3, P4, P5, P6, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>,
-  A2: ValveCompositeThrough<P2, P3, E>,
-  A3: ValveCompositeThrough<P3, P4, E>,
-  A4: ValveCompositeThrough<P4, P5, E>,
-  A5: ValveCompositeThrough<P5, P6, E>
-): ValveThroughFactory<P1, P6, E>
-
-export function valve<P1, P2, P3, P4, P5, P6, P7, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>,
-  A2: ValveCompositeThrough<P2, P3, E>,
-  A3: ValveCompositeThrough<P3, P4, E>,
-  A4: ValveCompositeThrough<P4, P5, E>,
-  A5: ValveCompositeThrough<P5, P6, E>,
-  A6: ValveCompositeThrough<P6, P7, E>
-): ValveThroughFactory<P1, P7, E>
-
-export function valve<P1, P2, P3, P4, P5, P6, P7, P8, E = ValveError>(
-  A1: ValveCompositeThrough<P1, P2, E>,
-  A2: ValveCompositeThrough<P2, P3, E>,
-  A3: ValveCompositeThrough<P3, P4, E>,
-  A4: ValveCompositeThrough<P4, P5, E>,
-  A5: ValveCompositeThrough<P5, P6, E>,
-  A6: ValveCompositeThrough<P6, P7, E>,
-  A7: ValveCompositeThrough<P7, P8, E>
-): ValveThroughFactory<P1, P8, E>
-
-export function valve<E = ValveError>(
-  ...props: Array<ValveCompositeThrough<any, any, E>>
-): ValveThroughFactory<any, any, E>
-
-export function valve<E = ValveError>(
-  A1: ValveCompositeSource<any, E>,
-  ...props: Array<ValveCompositeThrough<any, any, E>>
-): ValveSourceFactory<any, E>
-
-export function valve<E = ValveError>(
-  A1: ValveCompositeSource<any, E>,
-  A2: ValveCompositeSink<any, E>
-): void
+/// Implementation
 
 export function valve<E = ValveError>(
   ...props: Array<
