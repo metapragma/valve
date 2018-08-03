@@ -22,6 +22,7 @@
     "build": "recce build -e src/index.ts",
     "test:travis": "npm run lint && npm run test",
     "test": "npm run test:node && npm run test:browser",
+    "typecheck": "tsc --noEmit",
     "report-coverage": "npm run test:coverage && nyc report --reporter=text-lcov > coverage.lcov && codecov ; rimraf coverage.lcov",
     "test:browser": "karma start --single-run",
     "test:node": "cross-env TS_NODE_PROJECT=tsconfig-node.json mocha --opts .mocha.opts 'src/**/*.spec.ts'",

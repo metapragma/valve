@@ -94,7 +94,10 @@ export const createSinkDefaultOptions = {
 
 export const createSink = <T, E = ValveError>(
   handler: (
-    actions: { terminate: ((action: ValveActionAbort | ValveActionError<E>) => void) }
+    actions: {
+      abort: () => void
+      error: (error: E) => void
+    }
   ) => Partial<ValveCreateSinkOptions<T, E>> = () => createSinkDefaultOptions
 ): ValveSinkFactory<T, E> =>
   assign<() => ValveSink<T, E>, { type: ValveType.Sink }>(
@@ -109,7 +112,14 @@ export const createSink = <T, E = ValveError>(
 
       const _options: ValveCreateSinkOptions<T, E> = defaults(
         {},
-        handler({ terminate }),
+        handler({
+          abort() {
+            ended = findEnded<T, E>(ended, { type: ValveActionType.Abort })
+          },
+          error(error: E) {
+            ended = findEnded<T, E>(ended, { type: ValveActionType.Error, payload: error })
+          }
+        }),
         createSinkDefaultOptions
       )
 

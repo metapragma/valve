@@ -270,14 +270,15 @@ describe('createSink', () => {
   it('...', done => {
     const spy = sinonSpy()
 
-    const drain = createSink(({ terminate }) => ({
+    const drain = createSink(({ abort, error }) => ({
       onData(data) {
         spy()
         assert(isNumber(data))
       },
       onAbort() {
         assert.equal(spy.callCount, 4)
-        assert(isFunction(terminate))
+        assert(isFunction(error))
+        assert(isFunction(abort))
         done()
       }
     }))
@@ -295,14 +296,14 @@ describe('createSink', () => {
     const spy = sinonSpy()
     let c = 100
 
-    const drain = createSink(({ terminate }) => ({
+    const drain = createSink(({ abort }) => ({
       onData(data) {
         spy()
 
         assert(isNumber(data))
         if (c < 0) throw new Error('stream should have aborted')
         // tslint:disable-next-line no-increment-decrement
-        if (!--c) terminate({ type: ValveActionType.Abort })
+        if (!--c) abort()
       },
       onAbort() {
         assert.equal(spy.callCount, 100)
@@ -318,14 +319,14 @@ describe('createSink', () => {
     const ERR = new Error('Error')
     let c = 100
 
-    const drain = createSink(({ terminate }) => ({
+    const drain = createSink(({ error }) => ({
       onData(data) {
         spy()
 
         assert(isNumber(data))
         if (c < 0) throw new Error('stream should have aborted')
         // tslint:disable-next-line no-increment-decrement
-        if (!--c) terminate({ type: ValveActionType.Error, payload: ERR })
+        if (!--c) error(ERR)
       },
       onError(err) {
         assert.equal(err, ERR)
@@ -341,14 +342,14 @@ describe('createSink', () => {
     const spy = sinonSpy()
     let c = 100
 
-    const drain = createSink(({ terminate }) => ({
+    const drain = createSink(({ abort }) => ({
       onData(data) {
         spy()
 
         assert(isNumber(data))
         if (c < 0) throw new Error('stream should have aborted')
         // tslint:disable-next-line no-increment-decrement
-        if (!--c) terminate({ type: ValveActionType.Abort })
+        if (!--c) abort()
       },
       onAbort() {
         assert.equal(spy.callCount, 100)
@@ -364,14 +365,14 @@ describe('createSink', () => {
     const ERR = new Error('Error')
     let c = 100
 
-    const drain = createSink(({ terminate }) => ({
+    const drain = createSink(({ error }) => ({
       onData(data) {
         spy()
 
         assert(isNumber(data))
         if (c < 0) throw new Error('stream should have aborted')
         // tslint:disable-next-line no-increment-decrement
-        if (!--c) terminate({ type: ValveActionType.Error, payload: ERR })
+        if (!--c) error(ERR)
       },
       onError(err) {
         assert.equal(err, ERR)

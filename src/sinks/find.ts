@@ -20,7 +20,7 @@ export function find<P, E = ValveError>(
     predicate: identity
   })
 
-  return createSink<P, E>(({ terminate }) => ({
+  return createSink<P, E>(({ abort }) => ({
     onData(data) {
       // tslint:disable-next-line strict-boolean-expressions
       if (_options.predicate(data)) {
@@ -28,7 +28,7 @@ export function find<P, E = ValveError>(
 
         _options.onData(data)
 
-        terminate({ type: ValveActionType.Abort })
+        abort()
       }
     },
     onError(error) {
