@@ -106,12 +106,6 @@ export const createSink = <T, E = ValveError>(
     () => {
       let ended: ValveSinkAction<E> | undefined
 
-      const terminate = (
-        action: ValveActionAbort | ValveActionError<E> = { type: ValveActionType.Abort }
-      ) => {
-        ended = findEnded<T, E>(ended, action)
-      }
-
       const _options: ValveCreateSinkOptions<T, E> = defaults(
         {},
         handler({
@@ -126,9 +120,9 @@ export const createSink = <T, E = ValveError>(
       )
 
       return source => {
-        // this function is much simpler to write if you
-        // just use recursion, but by using a while loop
-        // we do not blow the stack if the stream happens to be sync.
+        // this function is much simpler to write if you just use recursion,
+        // but by using a while loop we do not blow the stack if the stream
+        // happens to be sync.
 
         const next = (): void => {
           let loop = true
