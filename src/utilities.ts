@@ -94,6 +94,24 @@ export const createSinkDefaultOptions = {
   onData: noop
 }
 
+const scheduler = (tick: () => boolean): void => {
+  let loop = true
+
+  while (loop) {
+    loop = tick()
+  }
+
+  // const next = () => process.nextTick(() => {
+  //   if (loop) {
+  //     loop = tick()
+  //
+  //     next()
+  //   }
+  // })
+
+  // next()
+}
+
 export const createSink = <T, E = ValveError>(
   handler: (
     actions: {
@@ -106,16 +124,18 @@ export const createSink = <T, E = ValveError>(
     () => {
       let ended: ValveSinkAction<E> | undefined
 
-      const _options: ValveCreateSinkOptions<T, E> = defaults(
+      const actions = {
+        abort() {
+          ended = findEnded<T, E>(ended, { type: ValveActionType.Abort })
+        },
+        error(error: E) {
+          ended = findEnded<T, E>(ended, { type: ValveActionType.Error, payload: error })
+        }
+      }
+
+      const options: ValveCreateSinkOptions<T, E> = defaults(
         {},
-        handler({
-          abort() {
-            ended = findEnded<T, E>(ended, { type: ValveActionType.Abort })
-          },
-          error(error: E) {
-            ended = findEnded<T, E>(ended, { type: ValveActionType.Error, payload: error })
-          }
-        }),
+        handler(actions),
         createSinkDefaultOptions
       )
 
@@ -126,30 +146,30 @@ export const createSink = <T, E = ValveError>(
 
         const next = (): void => {
           let loop = true
-          let cbed = false
+          let hasResponded = false
 
-          while (loop) {
-            cbed = false
+          const tick = () => {
+            hasResponded = false
 
             source(isUndefined(ended) ? { type: ValveActionType.Pull } : ended, action => {
-              cbed = true
+              hasResponded = true
 
               switch (action.type) {
                 case ValveActionType.Abort: {
                   loop = false
 
-                  ended = action
+                  actions.abort()
 
-                  _options.onAbort()
+                  options.onAbort()
 
                   break
                 }
                 case ValveActionType.Error: {
                   loop = false
 
-                  ended = action
+                  actions.error(action.payload)
 
-                  _options.onError(action.payload)
+                  options.onError(action.payload)
 
                   break
                 }
@@ -157,7 +177,7 @@ export const createSink = <T, E = ValveError>(
                   break
                 }
                 case ValveActionType.Data: {
-                  _options.onData(action.payload)
+                  options.onData(action.payload)
 
                   if (!loop) {
                     next()
@@ -166,12 +186,16 @@ export const createSink = <T, E = ValveError>(
               }
             })
 
-            if (!cbed) {
+            if (!hasResponded) {
               loop = false
 
-              return
+              return loop
             }
+
+            return loop
           }
+
+          scheduler(tick)
         }
 
         next()
