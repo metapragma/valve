@@ -4,7 +4,7 @@ import { identity, includes } from 'lodash'
 
 // drop items you have already seen
 
-export function unique<P, K, E = ValveError>(
+export function unique<P, K, E extends ValveError = ValveError>(
   test: ((data: P) => K) = identity,
   invert: boolean = false
 ): ValveThroughFactory<P, P, {}, E> {

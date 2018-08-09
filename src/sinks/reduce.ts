@@ -1,10 +1,15 @@
-import { ValveCreateSinkOptions, ValveError, ValveReduceOptions, ValveSinkFactory } from '../types'
+import {
+  ValveCreateSinkOptions,
+  ValveError,
+  ValveReduceOptions,
+  ValveSinkFactory
+} from '../types'
 
 import { defaults, isUndefined } from 'lodash'
 
 import { createSink, createSinkDefaultOptions } from '../utilities'
 
-export function reduce<P, R = P, E = ValveError>(
+export function reduce<P, R = P, E extends ValveError = ValveError>(
   options: ValveReduceOptions<P, R> & Partial<ValveCreateSinkOptions<R, E>>
 ): ValveSinkFactory<P, {}, E> {
   let first = true

@@ -7,7 +7,7 @@ import { createThrough } from '../utilities'
 import { isNumber } from 'lodash'
 
 // read a number of items and then stop.
-export function take<P, E = ValveError>(
+export function take<P, E extends ValveError = ValveError>(
   predicate: number | ((data: P) => boolean),
   last: boolean = false
 ): ValveThroughFactory<P, P, {}, E> {

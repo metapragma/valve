@@ -23,7 +23,9 @@ const SYMBOL_ITERATOR = SYMBOL && SYMBOL.iterator
 
 const $$iterator: symbol | string = SYMBOL_ITERATOR || '@@iterator'
 
-export function getIterator<TValue>(iterable: Iterable<TValue>): Iterator<TValue>
+export function getIterator<TValue>(
+  iterable: Iterable<TValue>
+): Iterator<TValue>
 export function getIterator(iterable: any): void | Iterator<any> {
   const method = getIteratorMethod(iterable)
 
@@ -32,10 +34,13 @@ export function getIterator(iterable: any): void | Iterator<any> {
   }
 }
 
-export function getIteratorMethod<TValue>(iterable: Iterable<TValue>): () => Iterator<TValue>
+export function getIteratorMethod<TValue>(
+  iterable: Iterable<TValue>
+): () => Iterator<TValue>
 export function getIteratorMethod(iterable: any): void | (() => Iterator<any>) {
   if (iterable != null) {
-    const method = (SYMBOL_ITERATOR && iterable[SYMBOL_ITERATOR]) || iterable['@@iterator']
+    const method =
+      (SYMBOL_ITERATOR && iterable[SYMBOL_ITERATOR]) || iterable['@@iterator']
     if (typeof method === 'function') {
       return method
     }

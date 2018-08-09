@@ -16,9 +16,9 @@ import {
 } from 'lodash'
 
 const options = {
-  functionName: 'valve',
+  functionName: 'compose',
   number: 16,
-  extra: 'E = ValveError',
+  extra: 'E extends ERR',
   extraArgument: 'E'
 }
 
@@ -248,7 +248,7 @@ function generate(type: ValveFlow) {
 
     // console.log('here')
     // return popReturn()
-    return `export function ${options.functionName}<${join(
+    return `function ${options.functionName}<${join(
       union(PGenerics, SGenerics),
       ', '
     )}, ${options.extra}>(${join(args, ', ')}): ${popReturn()}`

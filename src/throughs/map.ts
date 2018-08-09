@@ -2,7 +2,7 @@ import { ValveError, ValveThroughFactory } from '../types'
 
 import { createThrough } from '../utilities'
 
-export function map<P, R, E = ValveError>(
+export function map<P, R, E extends ValveError = ValveError>(
   iteratee: ((data: P) => R)
 ): ValveThroughFactory<P, R, {}, E> {
   return createThrough(({ data }) => ({

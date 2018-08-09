@@ -23,7 +23,14 @@ import {
 import 'mocha'
 import { assert } from 'chai'
 
-import { ValveActionType, ValveSource, ValveThrough, ValveThroughFactory, ValveType } from './types'
+import {
+  ValveActionType,
+  ValveError,
+  ValveSource,
+  ValveThrough,
+  ValveThroughFactory,
+  ValveType
+} from './types'
 
 import { assign } from 'lodash'
 
@@ -42,7 +49,7 @@ function delay(ms: number) {
 
 describe('throughs/async-map', () => {
   it('...', done => {
-    valve(
+    valve()(
       count(),
       take(21),
       delay(50),
@@ -56,7 +63,7 @@ describe('throughs/async-map', () => {
   })
 
   it('...', done => {
-    valve(
+    valve()(
       count(),
       take(21),
       asyncMap(data => Promise.resolve(data + 1)),
@@ -70,7 +77,7 @@ describe('throughs/async-map', () => {
   })
 
   it('...', done => {
-    valve(
+    valve()(
       fromIterable([1, 2, 3]),
       asyncMap(data => Promise.resolve(data + 1)),
       collect({
@@ -85,7 +92,7 @@ describe('throughs/async-map', () => {
   it('abort on error', done => {
     const ERR = new Error('abort')
 
-    valve(
+    valve()(
       fromIterable([1, 2, 3]),
       asyncMap(() => Promise.reject(ERR)),
       createThrough(({ error }) => ({
@@ -106,7 +113,7 @@ describe('throughs/async-map', () => {
 
 describe('throughs/filter-not', () => {
   it('random', done => {
-    valve(
+    valve()(
       infinite(),
       filterNot(d => {
         return d > 0.5
@@ -128,7 +135,7 @@ describe('throughs/filter-not', () => {
   })
 
   it('regexp', done => {
-    valve(
+    valve()(
       infinite(),
       map(d => {
         return Math.round(d * 1000).toString(16)
@@ -151,7 +158,7 @@ describe('throughs/filter-not', () => {
 
 describe('throughs/filter', () => {
   it('count', done => {
-    valve(
+    valve()(
       count(10),
       filter(d => {
         return d >= 5
@@ -166,7 +173,7 @@ describe('throughs/filter', () => {
   })
 
   it('random', done => {
-    valve(
+    valve()(
       infinite(),
       filter(d => {
         return d > 0.5
@@ -188,7 +195,7 @@ describe('throughs/filter', () => {
   })
 
   it('regexp', done => {
-    valve(
+    valve()(
       infinite(),
       map(d => {
         return Math.round(d * 1000).toString(16)
@@ -209,7 +216,7 @@ describe('throughs/filter', () => {
   })
 
   it('empty', done => {
-    valve(
+    valve()(
       empty(),
       filter(() => {
         return false
@@ -226,7 +233,7 @@ describe('throughs/filter', () => {
   it('error', done => {
     const ERR = new Error('qwe')
 
-    valve(
+    valve<typeof ERR>()(
       error(ERR),
       filter(() => {
         return false
@@ -243,7 +250,7 @@ describe('throughs/filter', () => {
 
 describe('throughs/map', () => {
   it('...', done => {
-    valve(
+    valve()(
       fromIterable([1, 2, 3, 4, 5, 6]),
       map(n => {
         return n + 1
@@ -263,7 +270,7 @@ describe('throughs/map', () => {
     const sink = createSink()
     assert.throws(
       () =>
-        valve(
+        valve()(
           fromIterable([1, 2, 3, 3.4, 4], false),
           map(e => {
             // tslint:disable-next-line no-bitwise
@@ -284,7 +291,7 @@ describe('throughs/non-unique', () => {
   it('...', done => {
     const numbers = [1, 2, 2, 3, 4, 5, 6, 4, 0, 6, 7, 8, 3, 1, 2, 9, 0]
 
-    valve(
+    valve()(
       fromIterable(numbers),
       nonUnique(),
       collect({
@@ -299,7 +306,7 @@ describe('throughs/non-unique', () => {
 
 describe('throughs/take', () => {
   it('...', done => {
-    valve(
+    valve()(
       fromIterable([1]),
       take(0),
       collect({
@@ -312,7 +319,7 @@ describe('throughs/take', () => {
   })
 
   it('...', done => {
-    valve(
+    valve()(
       fromIterable([1, 2, undefined, 4, 5, 6, 7, 8, 9, 10]),
       take(5),
       collect({
@@ -325,7 +332,7 @@ describe('throughs/take', () => {
   })
 
   it('...', done => {
-    valve(
+    valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       take(5),
       createThrough(({ abort }) => ({
@@ -348,7 +355,7 @@ describe('throughs/take', () => {
   it('error', done => {
     const ERR = new Error()
 
-    valve(
+    valve<typeof ERR>()(
       error(ERR),
       take(0),
       collect({
@@ -361,7 +368,7 @@ describe('throughs/take', () => {
   })
 
   it('empty', done => {
-    valve(
+    valve()(
       empty(),
       take(0),
       collect({
@@ -374,7 +381,7 @@ describe('throughs/take', () => {
   })
 
   it('exclude last', done => {
-    valve(
+    valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       take(n => {
         return n < 5
@@ -389,7 +396,7 @@ describe('throughs/take', () => {
   })
 
   it('include last', done => {
-    valve(
+    valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       take(n => {
         return n < 5
@@ -407,7 +414,7 @@ describe('throughs/take', () => {
     const pulls = spy()
     const pushes = spy()
 
-    function thr<P, E>(): ValveThroughFactory<P, P, E> {
+    function thr<P, E>(): ValveThroughFactory<P, P, {}, E> {
       return assign<() => ValveThrough<P, P, E>, { type: ValveType.Through }>(
         () => source => (action, cb) => {
           // tslint:disable-next-line no-increment-decrement
@@ -421,7 +428,7 @@ describe('throughs/take', () => {
       )
     }
 
-    valve(
+    valve()(
       fromIterable([1, 2, 3, 4, 5, 5, 7, 5, 9, 10]),
       thr(),
       take(5),
@@ -443,8 +450,8 @@ describe('throughs/take', () => {
     let ended = false
     let i = 0
 
-    const read = valve(
-      assign<() => ValveSource<number>, { type: ValveType.Source }>(
+    const read = valve()(
+      assign<() => ValveSource<number, {}>, { type: ValveType.Source }>(
         () => (action, cb) => {
           if (hasEnded(action)) {
             ended = true
@@ -489,7 +496,7 @@ describe('throughs/through', () => {
   it('...', done => {
     const s = spy()
 
-    valve(
+    valve()(
       count(5),
       createThrough(),
       createThrough(({ data }) => ({
@@ -510,7 +517,7 @@ describe('throughs/through', () => {
   })
 
   it('onEnd', done => {
-    valve(
+    valve()(
       infinite(),
       createThrough(({ abort }) => ({
         onAbort() {
@@ -534,7 +541,7 @@ describe('throughs/through', () => {
     const s = spy()
     const ERR = new Error('bla')
 
-    valve(
+    valve<typeof ERR>()(
       error(ERR),
       createThrough(({ error }) => ({
         onError(err) {
@@ -558,7 +565,7 @@ describe('throughs/unique', () => {
   it('...', done => {
     const numbers = [1, 2, 2, 3, 4, 5, 6, 4, 0, 6, 7, 8, 3, 1, 2, 9, 0]
 
-    valve(
+    valve()(
       fromIterable(numbers),
       unique(),
       collect({
@@ -573,7 +580,7 @@ describe('throughs/unique', () => {
   it('iteratee', done => {
     const numbers = [0.1, 0.6, 1.1, 1.6]
 
-    valve(
+    valve()(
       fromIterable(numbers),
       unique(Math.floor),
       collect({
@@ -588,7 +595,7 @@ describe('throughs/unique', () => {
 
 // describe('throughs/flatten', () => {
 //   it('stream of arrays of numbers', done => {
-//     valve(
+//     valve()(
 //       fromIterable([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),
 //       flatten(),
 //       collect({
@@ -602,7 +609,7 @@ describe('throughs/unique', () => {
 //   })
 //
 //   it('stream of arrays of string', done => {
-//     valve(
+//     valve()(
 //       fromIterable([['a', 'b', 'c'], ['d', 'e', 'f']]),
 //       flatten(),
 //       collect({
@@ -616,7 +623,7 @@ describe('throughs/unique', () => {
 //   })
 //
 //   it('stream of number streams', done => {
-//     valve(
+//     valve()(
 //       fromIterable([fromIterable([1, 2, 3]), fromIterable([4, 5, 6]), fromIterable([7, 8, 9])]),
 //       flatten(),
 //       collect({
@@ -630,7 +637,7 @@ describe('throughs/unique', () => {
 //   })
 //
 //   it('stream of string streams', done => {
-//     valve(
+//     valve()(
 //       fromIterable([fromIterable(['a', 'b', 'c']), fromIterable(['d', 'e', 'f'])]),
 //       flatten(),
 //       collect({
@@ -644,7 +651,7 @@ describe('throughs/unique', () => {
 //   })
 //
 //   it('through', done => {
-//     valve(
+//     valve()(
 //       fromIterable([fromIterable([1, 2, 3]), fromIterable([4, 5, 6]), fromIterable([7, 8, 9])]),
 //       // tslint:disable-next-line no-empty
 //       through(),
@@ -662,7 +669,7 @@ describe('throughs/unique', () => {
 //   it('broken stream', done => {
 //     const err = new Error('I am broken')
 //
-//     valve(
+//     valve()(
 //       fromIterable([error(err)]),
 //       flatten(),
 //       createSink({
@@ -682,10 +689,10 @@ describe('throughs/unique', () => {
 //     let s2Ended: {}
 //     let s3Ended: {}
 //
-//     const stream = valve(
-//       valve(
+//     const stream = valve()(
+//       valve()(
 //         fromIterable([
-//           valve(
+//           valve()(
 //             fromIterable([1, 2]),
 //             through({
 //               onAbort(action) {
@@ -693,7 +700,7 @@ describe('throughs/unique', () => {
 //               }
 //             })
 //           ),
-//           valve(
+//           valve()(
 //             fromIterable([3, 4]),
 //             through({
 //               onAbort(action) {
@@ -751,10 +758,10 @@ describe('throughs/unique', () => {
 //     //   flatten()
 //     // )
 //
-//     const stream = valve(
-//       valve(
+//     const stream = valve()(
+//       valve()(
 //         fromIterable([
-//           valve(
+//           valve()(
 //             fromIterable([1, 2]),
 //             through({
 //               onAbort(action) {
@@ -784,7 +791,7 @@ describe('throughs/unique', () => {
 //   })
 //
 //   it('flattern handles stream with normal objects', done => {
-//     valve(
+//     valve()(
 //       fromIterable([[1, 2, 3], 4, [5, 6, 7], 8, 9, 10]),
 //       flatten(),
 //       collect({
@@ -798,7 +805,7 @@ describe('throughs/unique', () => {
 //   })
 //
 //   it('flattern handles stream mixed objects', done => {
-//     valve(
+//     valve()(
 //       fromIterable([[1, 2, 3], 4, fromIterable([5, 6, 7]), 8, 9, 10]),
 //       flatten(),
 //       collect({

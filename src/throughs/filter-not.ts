@@ -2,7 +2,7 @@ import { filter } from './filter'
 
 import { ValveError, ValveThroughFactory } from '../types'
 
-export function filterNot<P, E = ValveError>(
+export function filterNot<P, E extends ValveError = ValveError>(
   test: ((data: P) => boolean)
 ): ValveThroughFactory<P, P, {}, E> {
   return filter<P, E>(data => {

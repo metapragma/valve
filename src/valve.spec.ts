@@ -1,5 +1,14 @@
 // import { fromIterable, map, reduce, through, valve } from './index'
-import { collect, count, createThrough, error, fromIterable, map, reduce, valve } from './index'
+import {
+  collect,
+  count,
+  createThrough,
+  error,
+  fromIterable,
+  map,
+  reduce,
+  valve
+} from './index'
 import { ValveActionType, ValveType } from './types'
 import { spy } from 'sinon'
 
@@ -9,7 +18,7 @@ import { assert } from 'chai'
 
 describe('pull', () => {
   it('source -> sink', done => {
-    valve(
+    valve()(
       count(4),
       createThrough(({ data }) => ({
         onData(payload) {
@@ -27,7 +36,7 @@ describe('pull', () => {
   })
 
   it('(source -> through) -> sink', done => {
-    const source = valve(
+    const source = valve()(
       count(4),
       createThrough(({ data }) => ({
         onData(payload) {
@@ -40,7 +49,7 @@ describe('pull', () => {
     assert.equal(source.type, ValveType.Source)
     assert.isFunction(source)
 
-    valve(
+    valve()(
       source,
       collect({
         onData(data) {
@@ -52,7 +61,7 @@ describe('pull', () => {
   })
 
   it('source -> (through -> through) -> sink', done => {
-    const through = valve(
+    const through = valve()(
       createThrough<number>(({ data }) => ({
         onData(payload) {
           // console.log('through', action)
@@ -70,7 +79,7 @@ describe('pull', () => {
     assert.equal(through.type, ValveType.Through)
     assert.isFunction(through)
 
-    valve(
+    valve()(
       count(4),
       through,
       collect({
@@ -83,7 +92,7 @@ describe('pull', () => {
   })
 
   it('source -> (through -> sink)', done => {
-    const sink = valve(
+    const sink = valve()(
       createThrough<number>(({ data }) => ({
         onData(payload) {
           // console.log('through', action)
@@ -101,11 +110,11 @@ describe('pull', () => {
     assert.equal(sink.type, ValveType.Sink)
     assert.isFunction(sink)
 
-    valve(count(4), sink)
+    valve()(count(4), sink)
   })
 
   it('source -> (through -> (through -> through)) -> sink', done => {
-    const through = valve(
+    const through = valve()(
       createThrough<number>(({ data }) => ({
         onData(payload) {
           // console.log('through', action)
@@ -120,7 +129,7 @@ describe('pull', () => {
       }))
     )
 
-    const through2 = valve(
+    const through2 = valve()(
       through,
       createThrough<number>(({ data }) => ({
         onData(payload) {
@@ -133,7 +142,7 @@ describe('pull', () => {
     assert.equal(through.type, ValveType.Through)
     assert.isFunction(through)
 
-    valve(
+    valve()(
       count(4),
       through2,
       collect({
@@ -146,7 +155,7 @@ describe('pull', () => {
   })
 
   it('wrap pull streams into stream', done => {
-    valve(
+    valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       map(e => e * e),
       createThrough(),
@@ -163,9 +172,9 @@ describe('pull', () => {
   })
 
   it('turn pull(through,...) -> Through', done => {
-    valve(
+    valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-      valve(
+      valve()(
         map<number, number>(e => {
           return e * e
         }),
@@ -206,7 +215,7 @@ describe('pull', () => {
   // })
 
   it('test through streams compose on pipe', done => {
-    const pipeline = valve(
+    const pipeline = valve()(
       map((d: string) => {
         // make exciting!
         return `${d}!`
@@ -221,13 +230,17 @@ describe('pull', () => {
       })
     )
 
-    const read = valve(fromIterable(['billy', 'joe', 'zeke']), pipeline)
+    const read = valve()(fromIterable(['billy', 'joe', 'zeke']), pipeline)
 
-    valve(
+    valve()(
       read,
       collect({
         onData(payload) {
-          assert.deepEqual(payload, ['*** BILLY! ***', '*** JOE! ***', '*** ZEKE! ***'])
+          assert.deepEqual(payload, [
+            '*** BILLY! ***',
+            '*** JOE! ***',
+            '*** ZEKE! ***'
+          ])
 
           done()
         }
@@ -241,7 +254,7 @@ describe('pull', () => {
     const sB = spy()
     const sC = spy()
 
-    const stream = valve(
+    const stream = valve()(
       count(5),
       map(item => {
         sA()
@@ -271,7 +284,7 @@ describe('pull', () => {
       }
     })
 
-    valve(
+    valve()(
       stream,
       collect({
         onData(data) {
@@ -288,7 +301,7 @@ describe('pull', () => {
   it('continuable stream (error)', done => {
     const ERR = new Error('test')
 
-    const stream = valve(error(ERR), createThrough())
+    const stream = valve<typeof ERR>()(error(ERR), createThrough())
 
     stream()({ type: ValveActionType.Pull }, action => {
       if (action.type === ValveActionType.Error) {

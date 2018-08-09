@@ -31,10 +31,10 @@ import {
   ValveType
 } from './types'
 
-function delay() {
-  return asyncMap(
+function delay<A, C>() {
+  return asyncMap<A, A, C>(
     e =>
-      new Promise(resolve => {
+      new Promise<A>(resolve => {
         setTimeout(() => {
           resolve(e)
         }, 1)
@@ -42,7 +42,10 @@ function delay() {
   )
 }
 
-function hang<P, E>(values: P[], onAbort?: () => void): ValveSourceFactory<P, E> {
+function hang<P, E>(
+  values: P[],
+  onAbort?: () => void
+): ValveSourceFactory<P, {}, E> {
   let i = 0
   let _cb: ValveCallback<P, E>
 
@@ -65,7 +68,9 @@ function hang<P, E>(values: P[], onAbort?: () => void): ValveSourceFactory<P, E>
   )
 }
 
-function abortable<P, E>(): ValveThroughFactory<P, P, E> & { terminate: () => void } {
+function abortable<P, E>(): ValveThroughFactory<P, P, {}, E> & {
+  terminate: () => void
+} {
   let _read: ValveSource<P, E>
   let ended: ValveActionError<E> | ValveActionAbort
 
@@ -98,15 +103,18 @@ function abortable<P, E>(): ValveThroughFactory<P, P, E> & { terminate: () => vo
   )
 }
 
-function test<E>(trx: ValveThroughFactory<number, number, E>, done: (err?: {}) => void) {
-  const source = (): ValveSourceFactory<number, E> =>
+function test<E>(
+  trx: ValveThroughFactory<number, number, {}, E>,
+  done: (err?: {}) => void
+) {
+  const source = (): ValveSourceFactory<number, {}, E> =>
     hang([1, 2, 3], () => {
       done()
     })
 
   const abortableThrough = abortable<number, E>()
 
-  const sink = createSink<number, E>(() => ({
+  const sink = createSink<number, {}, E>(() => ({
     onData(data) {
       if (data === 3) {
         setImmediate(() => {
@@ -116,7 +124,7 @@ function test<E>(trx: ValveThroughFactory<number, number, E>, done: (err?: {}) =
     }
   }))
 
-  valve(source(), trx, abortableThrough, sink)
+  valve<E>()(source(), trx, abortableThrough, sink)
 }
 
 describe('utilities', () => {
@@ -232,7 +240,7 @@ describe('createSource', () => {
     const spy = sinonSpy()
     const ERR = new Error('Error')
 
-    const source = createSource<string>(({ error }) => ({
+    const source = createSource<string, {}, typeof ERR>(({ error }) => ({
       onError(err) {
         spy()
         assert.equal(err, ERR)
@@ -289,7 +297,7 @@ describe('createSink', () => {
     const instance = drain()
     assert(isFunction(instance))
 
-    valve(fromIterable([1, 2, 3, 4]), drain)
+    valve()(fromIterable([1, 2, 3, 4]), drain)
   })
 
   it('createSink abort', done => {
@@ -311,7 +319,7 @@ describe('createSink', () => {
       }
     }))
 
-    valve(infinite(), drain)
+    valve()(infinite(), drain)
   })
 
   it('createSink error', done => {
@@ -335,7 +343,7 @@ describe('createSink', () => {
       }
     }))
 
-    valve(infinite(), drain)
+    valve()(infinite(), drain)
   })
 
   it('createSink abort', done => {
@@ -357,7 +365,7 @@ describe('createSink', () => {
       }
     }))
 
-    valve(infinite(), delay(), drain)
+    valve()(infinite(), delay(), drain)
   })
 
   it('delayed createSink error', done => {
@@ -365,24 +373,26 @@ describe('createSink', () => {
     const ERR = new Error('Error')
     let c = 100
 
-    const drain = createSink(({ error }) => ({
-      onData(data) {
-        spy()
+    valve()(
+      infinite(),
+      delay(),
+      createSink(({ error }) => ({
+        onData(data) {
+          spy()
 
-        assert(isNumber(data))
-        if (c < 0) throw new Error('stream should have aborted')
-        // tslint:disable-next-line no-increment-decrement
-        if (!--c) error(ERR)
-      },
-      onError(err) {
-        assert.equal(err, ERR)
-        assert.equal(spy.callCount, 100)
+          assert(isNumber(data))
+          if (c < 0) throw new Error('stream should have aborted')
+          // tslint:disable-next-line no-increment-decrement
+          if (!--c) error(ERR)
+        },
+        onError(err) {
+          assert.equal(err, ERR)
+          assert.equal(spy.callCount, 100)
 
-        done()
-      }
-    }))
-
-    valve(infinite(), delay(), drain)
+          done()
+        }
+      }))
+    )
   })
 
   // it('createSink instant abort', done => {
@@ -437,31 +447,32 @@ describe('createSink', () => {
       }
     }))
 
-    valve(empty(), drain)
+    valve()(empty(), drain)
   })
 
   it('createSink source error', done => {
     const spy = sinonSpy()
     const ERR = new Error('Error')
 
-    const drain = createSink(() => ({
-      onData() {
-        spy()
-      },
-      onError(err) {
-        assert.equal(err, ERR)
-        assert.equal(spy.callCount, 0)
-        done()
-      }
-    }))
-
-    valve(error(ERR), drain)
+    valve<typeof ERR>()(
+      error(ERR),
+      createSink(() => ({
+        onData() {
+          spy()
+        },
+        onError(err) {
+          assert.equal(err, ERR)
+          assert.equal(spy.callCount, 0)
+          done()
+        }
+      }))
+    )
   })
 
   it('createSink deaults', () => {
     const drain = createSink()
 
-    valve(empty(), drain)
+    valve()(empty(), drain)
   })
 })
 
@@ -469,7 +480,7 @@ describe('createSource', () => {
   it('...', done => {
     // const spy = sinonSpy()
 
-    valve(
+    valve()(
       count(5),
       createThrough(),
       collect({
@@ -485,7 +496,7 @@ describe('createSource', () => {
     const spy = sinonSpy()
     const spyTwo = sinonSpy()
 
-    valve(
+    valve()(
       count(5),
       createThrough(({ data, abort }) => ({
         onData(n) {
@@ -518,7 +529,7 @@ describe('createSource', () => {
     const spyTwo = sinonSpy()
     const ERR = new Error('err')
 
-    valve(
+    valve<typeof ERR>()(
       error(ERR),
       createThrough(({ data, error }) => ({
         onData(n) {
@@ -552,7 +563,7 @@ describe('createSource', () => {
     const spySourceAbort = sinonSpy()
     const spySinkAbort = sinonSpy()
 
-    valve(
+    valve()(
       count(5),
       createThrough(
         ({ data, abort }) => ({
@@ -601,7 +612,7 @@ describe('createSource', () => {
     const spySinkError = sinonSpy()
     const ERR = new Error('err')
 
-    valve(
+    valve<typeof ERR>()(
       error(ERR),
       createThrough(
         ({ data, error }) => ({

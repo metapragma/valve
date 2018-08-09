@@ -1,4 +1,14 @@
-import { collect, count, empty, error, fromIterable, infinite, once, take, valve } from './index'
+import {
+  collect,
+  count,
+  empty,
+  error,
+  fromIterable,
+  infinite,
+  once,
+  take,
+  valve
+} from './index'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
@@ -6,7 +16,7 @@ import { assert } from 'chai'
 
 describe('sources/count', () => {
   it('...', done => {
-    valve(
+    valve()(
       count(5),
       collect({
         onData(data) {
@@ -20,7 +30,7 @@ describe('sources/count', () => {
 
 describe('sources/empty', () => {
   it('...', done => {
-    valve(
+    valve()(
       empty(),
       collect({
         onData(data) {
@@ -36,7 +46,7 @@ describe('sources/error', () => {
   it('...', done => {
     const ee = new Error('Some error')
 
-    valve(
+    valve<typeof ee>()(
       error(ee),
       collect({
         onError(err) {
@@ -50,7 +60,7 @@ describe('sources/error', () => {
 
 describe('sources/fromIterable', () => {
   it('set', done => {
-    valve(
+    valve()(
       fromIterable(new Set([1, 2, 3])),
       collect({
         onData(data) {
@@ -62,7 +72,7 @@ describe('sources/fromIterable', () => {
   })
 
   it('map', done => {
-    valve(
+    valve()(
       fromIterable(new Map([['one', 1], ['two', 2]])),
       collect({
         onData(data) {
@@ -74,7 +84,7 @@ describe('sources/fromIterable', () => {
   })
 
   it('array', done => {
-    valve(
+    valve()(
       fromIterable([1, 2, 3]),
       collect({
         onData(data) {
@@ -86,7 +96,7 @@ describe('sources/fromIterable', () => {
   })
 
   it('arrayLike', done => {
-    valve(
+    valve()(
       fromIterable({ length: 2, 0: 'Alpha', 1: 'Beta' }),
       collect({
         onData(data) {
@@ -106,7 +116,7 @@ describe('sources/fromIterable', () => {
       throw err
     }
 
-    valve(
+    valve()(
       fromIterable(genFunc(), false),
       collect({
         onError(_err) {
@@ -118,7 +128,7 @@ describe('sources/fromIterable', () => {
   })
 
   it('object', done => {
-    valve(
+    valve()(
       fromIterable(Object.values({ a: 1, b: 2, c: 3 })),
       collect({
         onData(data) {
@@ -132,7 +142,7 @@ describe('sources/fromIterable', () => {
 
 describe('sources/infinite', () => {
   it('default', done => {
-    valve(
+    valve()(
       infinite(),
       take(5),
       collect({
@@ -145,7 +155,7 @@ describe('sources/infinite', () => {
   })
 
   it('custom', done => {
-    valve(
+    valve()(
       infinite(() => 's'),
       take(3),
       collect({
@@ -160,7 +170,7 @@ describe('sources/infinite', () => {
 
 describe('sources/once', () => {
   it('...', done => {
-    valve(
+    valve()(
       once({ a: 1, b: 2, c: 3 }),
       collect({
         onData(data) {

@@ -2,7 +2,7 @@ import { reduce } from './reduce'
 
 import { ValveCreateSinkOptions, ValveError, ValveSinkFactory } from '../types'
 
-export function collect<P, E = ValveError>(
+export function collect<P, E extends ValveError = ValveError>(
   /* istanbul ignore next */
   options: Partial<ValveCreateSinkOptions<P[], E>> = {}
 ): ValveSinkFactory<P, {}, E> {

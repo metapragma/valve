@@ -5,7 +5,9 @@ import { createIterator } from '../iterall'
 
 function next<P, E>(
   iterator: Iterator<P>
-): { failed: true; payload: E } | { failed: false; payload: IteratorResult<P> } {
+):
+  | { failed: true; payload: E }
+  | { failed: false; payload: IteratorResult<P> } {
   try {
     const result = iterator.next()
 
@@ -21,7 +23,7 @@ function next<P, E>(
   }
 }
 
-export function fromIterable<P, E = ValveError>(
+export function fromIterable<P, E extends ValveError = ValveError>(
   iterable: Iterable<P> | ArrayLike<P>,
   safe: boolean = true
 ): ValveSourceFactory<P, {}, E> {

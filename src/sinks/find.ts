@@ -10,7 +10,7 @@ import {
 
 import { createSink, createSinkDefaultOptions } from '../utilities'
 
-export function find<P, E = ValveError>(
+export function find<P, E extends ValveError = ValveError>(
   /* istanbul ignore next */
   options: ValveFindOptions<P> & Partial<ValveCreateSinkOptions<P, E>> = {}
 ): ValveSinkFactory<P, {}, E> {

@@ -27,7 +27,7 @@ import {
 
 import { assign, compact, defaults, find, isUndefined, noop } from 'lodash'
 
-export const hasEnded = <E = ValveError>(
+export const hasEnded = <E>(
   action:
     | undefined
     | {
@@ -38,14 +38,20 @@ export const hasEnded = <E = ValveError>(
 ): action is ValveActionAbort | ValveActionError<E> =>
   isUndefined(action)
     ? false
-    : action.type === ValveActionType.Abort || action.type === ValveActionType.Error
+    : action.type === ValveActionType.Abort ||
+      action.type === ValveActionType.Error
 
-const findEnded = <P, E = ValveError>(
+const findEnded = <P, E>(
   ...actions: Array<undefined | ValveAction<P, E>>
 ): ValveActionAbort | ValveActionError<E> | undefined =>
-  find<ValveAction<P, E>, ValveActionAbort | ValveActionError<E>>(compact(actions), hasEnded)
+  // tslint:disable-next-line no-any no-unsafe-any
+  find<any>(compact(actions), hasEnded)
 
-export const createSource = <T, S = ValveState, E = ValveError>(
+export const createSource = <
+  T,
+  S = ValveState,
+  E extends ValveError = ValveError
+>(
   handler: (
     actions: ValveSourceCallbacks<T, E>
   ) => Partial<ValveCreateSourceOptions<E>> = () => ({})
@@ -68,7 +74,11 @@ export const createSource = <T, S = ValveState, E = ValveError>(
         onPull: () => actions.abort()
       }
 
-      const opts: ValveCreateSourceOptions<E> = defaults({}, handler(actions), defaultOptions)
+      const opts: ValveCreateSourceOptions<E> = defaults(
+        {},
+        handler(actions),
+        defaultOptions
+      )
 
       return (action, _cb) => {
         cb = _cb
@@ -113,7 +123,11 @@ const scheduler = (tick: () => boolean): void => {
   // next()
 }
 
-export const createSink = <T, S = ValveState, E = ValveError>(
+export const createSink = <
+  T,
+  S = ValveState,
+  E extends ValveError = ValveError
+>(
   handler: (
     actions: {
       abort: ValveCallbackAbort
@@ -130,7 +144,10 @@ export const createSink = <T, S = ValveState, E = ValveError>(
           ended = findEnded<T, E>(ended, { type: ValveActionType.Abort })
         },
         error(error: E) {
-          ended = findEnded<T, E>(ended, { type: ValveActionType.Error, payload: error })
+          ended = findEnded<T, E>(ended, {
+            type: ValveActionType.Error,
+            payload: error
+          })
         }
       }
 
@@ -152,40 +169,43 @@ export const createSink = <T, S = ValveState, E = ValveError>(
           const tick = () => {
             hasResponded = false
 
-            source(isUndefined(ended) ? { type: ValveActionType.Pull } : ended, action => {
-              hasResponded = true
+            source(
+              isUndefined(ended) ? { type: ValveActionType.Pull } : ended,
+              action => {
+                hasResponded = true
 
-              switch (action.type) {
-                case ValveActionType.Abort: {
-                  loop = false
+                switch (action.type) {
+                  case ValveActionType.Abort: {
+                    loop = false
 
-                  actions.abort()
+                    actions.abort()
 
-                  options.onAbort()
+                    options.onAbort()
 
-                  break
-                }
-                case ValveActionType.Error: {
-                  loop = false
+                    break
+                  }
+                  case ValveActionType.Error: {
+                    loop = false
 
-                  actions.error(action.payload)
+                    actions.error(action.payload)
 
-                  options.onError(action.payload)
+                    options.onError(action.payload)
 
-                  break
-                }
-                case ValveActionType.Noop: {
-                  break
-                }
-                case ValveActionType.Data: {
-                  options.onData(action.payload)
+                    break
+                  }
+                  case ValveActionType.Noop: {
+                    break
+                  }
+                  case ValveActionType.Data: {
+                    options.onData(action.payload)
 
-                  if (!loop) {
-                    next()
+                    if (!loop) {
+                      next()
+                    }
                   }
                 }
               }
-            })
+            )
 
             if (!hasResponded) {
               loop = false
@@ -206,11 +226,18 @@ export const createSink = <T, S = ValveState, E = ValveError>(
   )
 
 // tslint:disable-next-line max-func-body-length
-export const createThrough = <T, R = T, S = ValveState, E = ValveError>(
+export const createThrough = <
+  T,
+  R = T,
+  S = ValveState,
+  E extends ValveError = ValveError
+>(
   sourceHandler: (
     actions: ValveSourceCallbacks<R, E>
   ) => Partial<ValveCreateSinkOptions<T, E>> = () => ({}),
-  sinkHandler: (actions: ValveSinkCallbacks<E>) => Partial<ValveCreateSourceOptions<E>> = () => ({})
+  sinkHandler: (
+    actions: ValveSinkCallbacks<E>
+  ) => Partial<ValveCreateSourceOptions<E>> = () => ({})
 ): ValveThroughFactory<T, R, S, E> =>
   assign<() => ValveThrough<T, R, E>, { type: ValveType.Through }>(
     // tslint:disable-next-line max-func-body-length
@@ -224,39 +251,49 @@ export const createThrough = <T, R = T, S = ValveState, E = ValveError>(
       const sourceActions: ValveSourceCallbacks<R, E> = {
         abort: () => sourceCb({ type: ValveActionType.Abort }),
         data: data => sourceCb({ type: ValveActionType.Data, payload: data }),
-        error: error => sourceCb({ type: ValveActionType.Error, payload: error }),
+        error: error =>
+          sourceCb({ type: ValveActionType.Error, payload: error }),
         noop: () => sourceCb({ type: ValveActionType.Noop })
       }
 
       const sinkActions: ValveSinkCallbacks<E> = {
         abort: () => sinkSource({ type: ValveActionType.Abort }, sinkCb),
-        error: error => sinkSource({ type: ValveActionType.Error, payload: error }, sinkCb),
+        error: error =>
+          sinkSource({ type: ValveActionType.Error, payload: error }, sinkCb),
         pull: () => sinkSource({ type: ValveActionType.Pull }, sinkCb)
       }
 
-      const sourceOpts: ValveCreateSinkOptions<R, E> = defaults({}, sourceHandler(sourceActions), {
-        onAbort() {
-          sourceActions.abort()
-        },
-        onError(error: E) {
-          sourceActions.error(error)
-        },
-        onData(data: R) {
-          sourceActions.data(data)
+      const sourceOpts: ValveCreateSinkOptions<R, E> = defaults(
+        {},
+        sourceHandler(sourceActions),
+        {
+          onAbort() {
+            sourceActions.abort()
+          },
+          onError(error: E) {
+            sourceActions.error(error)
+          },
+          onData(data: R) {
+            sourceActions.data(data)
+          }
         }
-      })
+      )
 
-      const sinkOpts: ValveCreateSourceOptions<E> = defaults({}, sinkHandler(sinkActions), {
-        onAbort() {
-          sinkActions.abort()
-        },
-        onError(error: E) {
-          sinkActions.error(error)
-        },
-        onPull() {
-          sinkActions.pull()
+      const sinkOpts: ValveCreateSourceOptions<E> = defaults(
+        {},
+        sinkHandler(sinkActions),
+        {
+          onAbort() {
+            sinkActions.abort()
+          },
+          onError(error: E) {
+            sinkActions.error(error)
+          },
+          onPull() {
+            sinkActions.pull()
+          }
         }
-      })
+      )
 
       const sourceActionHandler = (
         // tslint:disable-next-line no-any
