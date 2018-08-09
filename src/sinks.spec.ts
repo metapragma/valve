@@ -51,7 +51,7 @@ describe('sinks/concat', () => {
 
     valve(
       fromIterable('hello there this is a test'.split(/([aeiou])/)),
-      createThrough(({ data }) => ({
+      createThrough<string>(({ data }) => ({
         onData(str) {
           // tslint:disable-next-line no-increment-decrement
           n++

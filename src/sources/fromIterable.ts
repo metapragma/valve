@@ -24,11 +24,11 @@ function next<P, E>(
 export function fromIterable<P, E = ValveError>(
   iterable: Iterable<P> | ArrayLike<P>,
   safe: boolean = true
-): ValveSourceFactory<P, E> {
+): ValveSourceFactory<P, {}, E> {
   const iterator = createIterator(iterable)
 
   if (safe === true) {
-    return createSource<P, E>(({ abort, data }) => ({
+    return createSource<P, {}, E>(({ abort, data }) => ({
       onPull() {
         const { value, done } = iterator.next()
 
@@ -40,7 +40,7 @@ export function fromIterable<P, E = ValveError>(
       }
     }))
   } else {
-    return createSource<P, E>(({ abort, data, error }) => ({
+    return createSource<P, {}, E>(({ abort, data, error }) => ({
       onPull() {
         const result = next<P, E>(iterator)
 

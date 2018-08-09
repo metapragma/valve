@@ -75,28 +75,28 @@ export type ValveThrough<P, R, E = ValveError> = (source: ValveSource<P, E>) => 
 // TODO: ui change to abort() error() data() noop() and pool()
 // TODO: promise
 
-// export type ValveSinkFactory <P, E = ValveError> = () => ValveSink<P, E> // | Promise<ValveSink<P, E>>
-// export type ValveSourceFactory <P, E = ValveError> = () => ValveSource<P, E> // | Promise<ValveSource<P, E>>
-// export type ValveThroughFactory <P, R, E = ValveError> = () => ValveThrough<P, R, E> // | Promise<ValveThrough<P, R, E>>
+export type ValveStateComposite<A> = A
+// tslint:disable-next-line no-any
+export type ValveState = any
 
-export interface ValveSinkFactory<P, E = ValveError> {
+export interface ValveSinkFactory<P, S, E = ValveError> {
   type: ValveType.Sink
-  (): ValveSink<P, E>
+  (props?: S): ValveSink<P, E>
 }
 
-export interface ValveSourceFactory<P, E = ValveError> {
+export interface ValveSourceFactory<P, S, E = ValveError> {
   type: ValveType.Source
-  (): ValveSource<P, E>
+  (props?: S): ValveSource<P, E>
 }
 
-export interface ValveThroughFactory<P, R, E = ValveError> {
+export interface ValveThroughFactory<P, R, S, E = ValveError> {
   type: ValveType.Through
-  (): ValveThrough<P, R, E>
+  (props?: S): ValveThrough<P, R, E>
 }
 
-export type ValveCompositeSource<P, E = ValveError> = ValveSourceFactory<P, E>
-export type ValveCompositeSink<P, E = ValveError> = ValveSinkFactory<P, E>
-export type ValveCompositeThrough<P, R, E = ValveError> = ValveThroughFactory<P, R, E>
+export type ValveCompositeSource<P, S, E = ValveError> = ValveSourceFactory<P, S, E>
+export type ValveCompositeSink<P, S, E = ValveError> = ValveSinkFactory<P, S, E>
+export type ValveCompositeThrough<P, R, S, E = ValveError> = ValveThroughFactory<P, R, S, E>
 
 // Utilities
 

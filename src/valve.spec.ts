@@ -52,14 +52,14 @@ describe('pull', () => {
   })
 
   it('source -> (through -> through) -> sink', done => {
-    const through = valve<number, number, number>(
-      createThrough(({ data }) => ({
+    const through = valve(
+      createThrough<number>(({ data }) => ({
         onData(payload) {
           // console.log('through', action)
           data(payload + 1)
         }
       })),
-      createThrough(({ data }) => ({
+      createThrough<number>(({ data }) => ({
         onData(payload) {
           // console.log('through', action)
           data(payload + 1)
@@ -83,14 +83,14 @@ describe('pull', () => {
   })
 
   it('source -> (through -> sink)', done => {
-    const sink = valve<number, number, number>(
-      createThrough(({ data }) => ({
+    const sink = valve(
+      createThrough<number>(({ data }) => ({
         onData(payload) {
           // console.log('through', action)
           data(payload + 1)
         }
       })),
-      collect({
+      collect<number>({
         onData(action) {
           assert.deepEqual(action, [2, 3, 4, 5])
           done()
@@ -105,14 +105,14 @@ describe('pull', () => {
   })
 
   it('source -> (through -> (through -> through)) -> sink', done => {
-    const through = valve<number, number, number>(
-      createThrough(({ data }) => ({
+    const through = valve(
+      createThrough<number>(({ data }) => ({
         onData(payload) {
           // console.log('through', action)
           data(payload + 1)
         }
       })),
-      createThrough(({ data }) => ({
+      createThrough<number>(({ data }) => ({
         onData(payload) {
           // console.log('through', action)
           data(payload + 1)
@@ -120,9 +120,9 @@ describe('pull', () => {
       }))
     )
 
-    const through2 = valve<number, number, number>(
+    const through2 = valve(
       through,
-      createThrough(({ data }) => ({
+      createThrough<number>(({ data }) => ({
         onData(payload) {
           // console.log('through', action)
           data(payload + 1)

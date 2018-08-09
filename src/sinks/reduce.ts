@@ -6,7 +6,7 @@ import { createSink, createSinkDefaultOptions } from '../utilities'
 
 export function reduce<P, R = P, E = ValveError>(
   options: ValveReduceOptions<P, R> & Partial<ValveCreateSinkOptions<R, E>>
-): ValveSinkFactory<P, E> {
+): ValveSinkFactory<P, {}, E> {
   let first = true
   // tslint:disable-next-line no-any
   let acc: any
@@ -17,7 +17,7 @@ export function reduce<P, R = P, E = ValveError>(
     acc = _options.accumulator
   }
 
-  return createSink<P, E>(() => ({
+  return createSink<P, {}, E>(() => ({
     onData(data) {
       if (first && isUndefined(_options.accumulator)) {
         acc = data

@@ -19,6 +19,7 @@ import {
   ValveSourceAction,
   ValveSourceCallbacks,
   ValveSourceFactory,
+  ValveState,
   ValveThrough,
   ValveThroughFactory,
   ValveType
@@ -44,11 +45,11 @@ const findEnded = <P, E = ValveError>(
 ): ValveActionAbort | ValveActionError<E> | undefined =>
   find<ValveAction<P, E>, ValveActionAbort | ValveActionError<E>>(compact(actions), hasEnded)
 
-export const createSource = <T, E = ValveError>(
+export const createSource = <T, S = ValveState, E = ValveError>(
   handler: (
     actions: ValveSourceCallbacks<T, E>
   ) => Partial<ValveCreateSourceOptions<E>> = () => ({})
-): ValveSourceFactory<T, E> =>
+): ValveSourceFactory<T, S, E> =>
   assign<() => ValveSource<T, E>, { type: ValveType.Source }>(
     () => {
       let cb: ValveCallback<T, E>
@@ -112,14 +113,14 @@ const scheduler = (tick: () => boolean): void => {
   // next()
 }
 
-export const createSink = <T, E = ValveError>(
+export const createSink = <T, S = ValveState, E = ValveError>(
   handler: (
     actions: {
       abort: ValveCallbackAbort
       error: ValveCallbackError<E>
     }
   ) => Partial<ValveCreateSinkOptions<T, E>> = () => createSinkDefaultOptions
-): ValveSinkFactory<T, E> =>
+): ValveSinkFactory<T, S, E> =>
   assign<() => ValveSink<T, E>, { type: ValveType.Sink }>(
     () => {
       let ended: ValveSinkAction<E> | undefined
@@ -205,12 +206,12 @@ export const createSink = <T, E = ValveError>(
   )
 
 // tslint:disable-next-line max-func-body-length
-export const createThrough = <T, R = T, E = ValveError>(
+export const createThrough = <T, R = T, S = ValveState, E = ValveError>(
   sourceHandler: (
     actions: ValveSourceCallbacks<R, E>
   ) => Partial<ValveCreateSinkOptions<T, E>> = () => ({}),
   sinkHandler: (actions: ValveSinkCallbacks<E>) => Partial<ValveCreateSourceOptions<E>> = () => ({})
-): ValveThroughFactory<T, R, E> =>
+): ValveThroughFactory<T, R, S, E> =>
   assign<() => ValveThrough<T, R, E>, { type: ValveType.Through }>(
     // tslint:disable-next-line max-func-body-length
     () => {

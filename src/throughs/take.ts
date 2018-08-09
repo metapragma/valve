@@ -10,7 +10,7 @@ import { isNumber } from 'lodash'
 export function take<P, E = ValveError>(
   predicate: number | ((data: P) => boolean),
   last: boolean = false
-): ValveThroughFactory<P, P, E> {
+): ValveThroughFactory<P, P, {}, E> {
   let _last: boolean = last
   // let ended: ValveAction<P, E>
   let tester: (data: P) => boolean
@@ -38,7 +38,7 @@ export function take<P, E = ValveError>(
 
   let ended: boolean = false
 
-  return createThrough<P, P, E>(
+  return createThrough<P, P, {}, E>(
     ({ data, abort }) => ({
       onData(payload) {
         ended = ended || !tester(payload)

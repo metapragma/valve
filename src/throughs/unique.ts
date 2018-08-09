@@ -7,7 +7,7 @@ import { identity, includes } from 'lodash'
 export function unique<P, K, E = ValveError>(
   test: ((data: P) => K) = identity,
   invert: boolean = false
-): ValveThroughFactory<P, P, E> {
+): ValveThroughFactory<P, P, {}, E> {
   const seen: K[] = []
 
   return filter((data: P) => {

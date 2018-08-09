@@ -13,14 +13,14 @@ import { createSink, createSinkDefaultOptions } from '../utilities'
 export function find<P, E = ValveError>(
   /* istanbul ignore next */
   options: ValveFindOptions<P> & Partial<ValveCreateSinkOptions<P, E>> = {}
-): ValveSinkFactory<P, E> {
+): ValveSinkFactory<P, {}, E> {
   let ended = false
 
   const _options = defaults({}, options, createSinkDefaultOptions, {
     predicate: identity
   })
 
-  return createSink<P, E>(({ abort }) => ({
+  return createSink<P, {}, E>(({ abort }) => ({
     onData(data) {
       // tslint:disable-next-line strict-boolean-expressions
       if (_options.predicate(data)) {

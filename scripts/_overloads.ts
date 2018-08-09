@@ -11,6 +11,7 @@ import {
   range,
   reduce,
   slice,
+  union,
   uniq
 } from 'lodash'
 
@@ -47,176 +48,230 @@ const mapArgReturn = (t: ValveArguments | 'void') => {
   }
 }
 
-function generateOverloads(props: {
+const enum ValveFlow {
+  STS, // Source -> [Through...] -> Sink = void
+  T, // Through ... = Through
+  TS, // [Through...] -> Sink = Sink
+  ST // Source -> [Through...] = Source
+}
+
+const configuration = (type: ValveFlow) => (
+  n: number
+): {
+  mA: number
+  A: number
+  returnType: ValveArguments | 'void'
+  gP: number
+  gS: number
   start: ValveArguments
   end: ValveArguments
-  return?: ValveArguments
   middle: ValveArguments
-}) {
-  return map(range(1, options.number + 1), n => {
-    const generics = map(range(1, n + 1), a => `T${a}`)
-    const length = generics.length
+} => {
+  const getArity = (mA: number) => (mA === 1 ? n : n + mA - 1)
 
-    if (props.start === ValveArguments.through && length === 1) {
+  switch (type) {
+    case ValveFlow.STS: {
+      const mA = 2
+      const A = getArity(mA)
+      const gS = A
+
+      const offset = -1
+      const gP = A + offset
+
+      // 2: 1 (S -> S)
+      // 3: 2 (S -> T - S)
+      // 4: 3 (S -> T -> T -> S )
+      // 5: 4 (S -> T -> T -> T -> S )
+
+      return {
+        A,
+        end: ValveArguments.sink,
+        gP,
+        gS,
+        mA,
+        middle: ValveArguments.through,
+        returnType: 'void',
+        start: ValveArguments.source
+      }
+    }
+
+    case ValveFlow.ST: {
+      const mA = 2
+      const A = getArity(mA)
+      const gP = A
+      const gS = A
+      const offset = 0
+
+      // 2: 2 (S -> T)
+      // 3: 3 (S -> T -> T)
+      // 4: 4 (S -> T -> T -> T)
+
+      return {
+        A,
+        end: ValveArguments.through,
+        gP,
+        gS,
+        mA,
+        middle: ValveArguments.through,
+        returnType: ValveArguments.source,
+        start: ValveArguments.source
+      }
+    }
+
+    case ValveFlow.T: {
+      const mA = 1
+      const A = getArity(mA)
+      const gS = A
+      const offset = 1
+      const gP = A + offset
+
+      // 1: 2 (T)
+      // 2: 3 (T, T)
+      // 3: 4 (T, T, T)
+
+      return {
+        A,
+        end: ValveArguments.through,
+        gP,
+        gS,
+        mA,
+        middle: ValveArguments.through,
+        returnType: ValveArguments.through,
+        start: ValveArguments.through
+      }
+    }
+
+    case ValveFlow.TS: {
+      const mA = 2
+      const A = getArity(mA)
+      const gP = A
+      const gS = A
+      const offset = 0
+
+      // 2: 2 (T, S)
+      // 3: 3 (T, T, S)
+      // 4: 4 (T, T, T, S)
+
+      return {
+        A,
+        end: ValveArguments.sink,
+        gP,
+        gS,
+        mA,
+        middle: ValveArguments.through,
+        returnType: ValveArguments.sink,
+        start: ValveArguments.through
+      }
+    }
+
+    default:
       return
-    }
+  }
+}
 
-    const getReturnGenerics = (type: ValveArguments) => {
-      switch (type) {
+function generate(type: ValveFlow) {
+  return map(range(1, options.number + 1), n => {
+    const { mA, A, gP, gS, returnType, start, end, middle } = configuration(type)(n)
+
+    const PGenerics = map(range(1, gP + 1), a => `P${a}`)
+    const SGenerics = map(range(1, gS + 1), a => `S${a}`)
+    const SEnum = `ValveStateComposite<[${join(SGenerics, ', ')}]>`
+    const mappedSGenerics = map(range(1, gS + 1), a => `S${a} = ValveState`)
+
+    const getReturnGenerics = () => {
+      switch (returnType) {
         case ValveArguments.sink:
-          return [last(generics)]
+          return [last(PGenerics), SEnum]
         case ValveArguments.source:
-          return [last(generics)]
+          return [last(PGenerics), SEnum]
         case ValveArguments.through:
-          return [first(generics), last(generics)]
-      }
-    }
-
-    const popGenerics = (type: ValveArguments, start: number) => {
-      switch (type) {
-        case ValveArguments.sink:
-          return slice(generics, start - 1, start)
-        case ValveArguments.source:
-          return slice(generics, start - 1, start)
-        case ValveArguments.through:
-          return slice(generics, start - 1, start + 1)
-      }
-    }
-
-    const getArity = () => {
-      if (props.end === ValveArguments.through && props.start === ValveArguments.through) {
-        return n
-      } else if (props.end === ValveArguments.sink && props.start === ValveArguments.source) {
-        return n + 2
-      } else {
-        return n + 1
+          return [first(PGenerics), last(PGenerics), SEnum]
       }
     }
 
     const popReturn = () => {
-      const a = getArity()
-
-      const returnType = a === 1 ? props.start : props.return === undefined ? 'void' : props.return
       const returnTypeString = mapArgReturn(returnType)
 
       const returnGenerics =
         returnType === 'void'
           ? ''
-          : `<${join(getReturnGenerics(returnType), ', ')}, ${options.extraArgument}>`
+          : `<${join(getReturnGenerics(), ', ')}, ${options.extraArgument}>`
 
       return `${returnTypeString}${returnGenerics}`
     }
 
-    const args = map(range(1, getArity()), a => {
-      let type: ValveArguments
+    const popGenerics = (t: ValveArguments, a: number) => {
+      let shift = a
+
+      switch (type) {
+        case ValveFlow.STS: {
+          if (t !== ValveArguments.source) {
+            shift = a -1
+          }
+          break
+        }
+
+        case ValveFlow.ST: {
+          if (t !== ValveArguments.source) {
+            shift = a - 1
+          }
+        }
+      }
+
+      switch (t) {
+        case ValveArguments.sink:
+          return union(slice(PGenerics, shift - 1, shift), slice(SGenerics, a - 1, a))
+        case ValveArguments.source:
+          return union(slice(PGenerics, shift - 1, shift), slice(SGenerics, a - 1, a))
+        case ValveArguments.through:
+          return union(
+            slice(PGenerics, shift - 1, shift + 1),
+            slice(SGenerics, a - 1, a)
+          )
+      }
+    }
+
+    const args = map(range(1, A + 1), a => {
+      let t: ValveArguments
 
       if (a === 1) {
-        type = props.start
-      } else if (a === getArity() - 1) {
-        type = props.end
+        t = start
+      } else if (a === A) {
+        t = end
       } else {
-        type = props.middle
+        t = middle
       }
 
-      let offset = a
 
-      if (
-        type === ValveArguments.through &&
-        props.start === ValveArguments.source &&
-        props.end === ValveArguments.through
-      ) {
-        offset = offset - 1
-      }
-
-      if (
-        type !== ValveArguments.source &&
-        props.start === ValveArguments.source &&
-        props.end === ValveArguments.sink
-      ) {
-        offset = offset - 1
-      }
-
-      return `A${a}: ${type}<${join(popGenerics(type, offset), ', ')}, ${options.extraArgument}>`
+      return `A${a}: ${t}<${join(popGenerics(t, a), ', ')}, ${options.extraArgument}>`
     })
 
-    return `export function ${options.functionName}<${join(generics, ', ')}, ${
-      options.extra
-    }>(${join(args, ', ')}): ${popReturn()}`
+    // console.log('here')
+    // return popReturn()
+    return `export function ${options.functionName}<${join(
+      union(PGenerics, mappedSGenerics),
+      ', '
+    )}, ${options.extra}>(${join(args, ', ')}): ${popReturn()}`
   })
 }
 
-const enum ValveFlow {
-  STS, // Source -> [Through...] -> Sink
-  T, // Through ...
-  TS, // [Through...] -> Sink
-  ST // Source -> [Through...]
-}
-
-function generateFlow(type: ValveFlow) {
-  switch (type) {
-    case ValveFlow.STS: {
-      return generateOverloads({
-        end: ValveArguments.sink,
-        middle: ValveArguments.through,
-        // return: ValveArguments.none,
-        start: ValveArguments.source
-      })
-
-      break
-    }
-
-    case ValveFlow.T: {
-      return generateOverloads({
-        end: ValveArguments.through,
-        middle: ValveArguments.through,
-        return: ValveArguments.through,
-        start: ValveArguments.through
-      })
-
-      break
-    }
-
-    case ValveFlow.TS: {
-      return generateOverloads({
-        end: ValveArguments.sink,
-        middle: ValveArguments.through,
-        return: ValveArguments.sink,
-        start: ValveArguments.through
-      })
-
-      break
-    }
-
-    case ValveFlow.ST: {
-      return generateOverloads({
-        end: ValveArguments.through,
-        middle: ValveArguments.through,
-        return: ValveArguments.source,
-        start: ValveArguments.source
-      })
-    }
-  }
-}
+//
 
 const comment = (text: string) => `\n /* ${text} */\n`
 
-const generate = () => {
-  const strings = compact(
-    uniq(
-      flatten([
-        comment('Source -> Through... -> Sink'),
-        generateFlow(ValveFlow.STS),
-        comment('Through... -> Sink'),
-        generateFlow(ValveFlow.TS),
-        comment('Source -> Through ...'),
-        generateFlow(ValveFlow.ST),
-        comment('Through ...'),
-        generateFlow(ValveFlow.T)
-      ])
-    )
+const strings = compact(
+  uniq(
+    flatten([
+      comment('Source -> Through... -> Sink'),
+      generate(ValveFlow.STS),
+      comment('Source -> Through ...'),
+      generate(ValveFlow.ST),
+      comment('Through... -> Sink'),
+      generate(ValveFlow.TS),
+      comment('Through ...'),
+      generate(ValveFlow.T)
+    ])
   )
+)
 
-  console.log(join(strings, '\n'))
-}
-
-generate()
+console.log(join(strings, '\n'))
