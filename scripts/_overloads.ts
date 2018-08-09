@@ -176,7 +176,7 @@ function generate(type: ValveFlow) {
     const PGenerics = map(range(1, gP + 1), a => `P${a}`)
     const SGenerics = map(range(1, gS + 1), a => `S${a}`)
     const SEnum = `ValveStateComposite<[${join(SGenerics, ', ')}]>`
-    const mappedSGenerics = map(range(1, gS + 1), a => `S${a} = ValveState`)
+    // const mappedSGenerics = map(range(1, gS + 1), a => `S${a} = ValveState`)
 
     const getReturnGenerics = () => {
       switch (returnType) {
@@ -249,7 +249,7 @@ function generate(type: ValveFlow) {
     // console.log('here')
     // return popReturn()
     return `export function ${options.functionName}<${join(
-      union(PGenerics, mappedSGenerics),
+      union(PGenerics, SGenerics),
       ', '
     )}, ${options.extra}>(${join(args, ', ')}): ${popReturn()}`
   })
