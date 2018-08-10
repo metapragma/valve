@@ -19,8 +19,8 @@ describe('sources/count', () => {
     valve()(
       count(5),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [1, 2, 3, 4, 5])
+        next(next) {
+          assert.deepEqual(next, [1, 2, 3, 4, 5])
           done()
         }
       })
@@ -33,8 +33,8 @@ describe('sources/empty', () => {
     valve()(
       empty(),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [])
+        next(next) {
+          assert.deepEqual(next, [])
           done()
         }
       })
@@ -49,7 +49,7 @@ describe('sources/error', () => {
     valve<typeof ee>()(
       error(ee),
       collect({
-        onError(err) {
+        error(err) {
           assert.equal(err, ee)
           done()
         }
@@ -63,8 +63,8 @@ describe('sources/fromIterable', () => {
     valve()(
       fromIterable(new Set([1, 2, 3])),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [1, 2, 3])
+        next(next) {
+          assert.deepEqual(next, [1, 2, 3])
           done()
         }
       })
@@ -75,8 +75,8 @@ describe('sources/fromIterable', () => {
     valve()(
       fromIterable(new Map([['one', 1], ['two', 2]])),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [['one', 1], ['two', 2]])
+        next(next) {
+          assert.deepEqual(next, [['one', 1], ['two', 2]])
           done()
         }
       })
@@ -87,8 +87,8 @@ describe('sources/fromIterable', () => {
     valve()(
       fromIterable([1, 2, 3]),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [1, 2, 3])
+        next(next) {
+          assert.deepEqual(next, [1, 2, 3])
           done()
         }
       })
@@ -99,8 +99,8 @@ describe('sources/fromIterable', () => {
     valve()(
       fromIterable({ length: 2, 0: 'Alpha', 1: 'Beta' }),
       collect({
-        onData(data) {
-          assert.deepEqual(data, ['Alpha', 'Beta'])
+        next(next) {
+          assert.deepEqual(next, ['Alpha', 'Beta'])
           done()
         }
       })
@@ -119,7 +119,7 @@ describe('sources/fromIterable', () => {
     valve()(
       fromIterable(genFunc(), false),
       collect({
-        onError(_err) {
+        error(_err) {
           assert.deepEqual(_err, err)
           done()
         }
@@ -131,8 +131,8 @@ describe('sources/fromIterable', () => {
     valve()(
       fromIterable(Object.values({ a: 1, b: 2, c: 3 })),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [1, 2, 3])
+        next(next) {
+          assert.deepEqual(next, [1, 2, 3])
           done()
         }
       })
@@ -146,8 +146,8 @@ describe('sources/infinite', () => {
       infinite(),
       take(5),
       collect({
-        onData(data) {
-          assert.equal(data.length, 5)
+        next(next) {
+          assert.equal(next.length, 5)
           done()
         }
       })
@@ -159,8 +159,8 @@ describe('sources/infinite', () => {
       infinite(() => 's'),
       take(3),
       collect({
-        onData(data) {
-          assert.deepEqual(data, ['s', 's', 's'])
+        next(next) {
+          assert.deepEqual(next, ['s', 's', 's'])
           done()
         }
       })
@@ -173,8 +173,8 @@ describe('sources/once', () => {
     valve()(
       once({ a: 1, b: 2, c: 3 }),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [{ a: 1, b: 2, c: 3 }])
+        next(next) {
+          assert.deepEqual(next, [{ a: 1, b: 2, c: 3 }])
           done()
         }
       })

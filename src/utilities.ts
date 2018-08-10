@@ -1,24 +1,24 @@
 /* tslint:disable no-unnecessary-callback-wrapper */
 
 import {
-  ValveAction,
-  ValveActionAbort,
+  ValveActionComplete,
   ValveActionError,
-  ValveActionType,
   ValveCallback,
-  ValveCallbackAbort,
-  ValveCallbackError,
   ValveCreateSinkOptions,
   ValveCreateSourceOptions,
   ValveError,
+  ValveMessage,
+  ValveMessageComplete,
+  ValveMessageError,
+  ValveMessageType,
   ValveSink,
   ValveSinkAction,
-  ValveSinkCallbacks,
   ValveSinkFactory,
+  ValveSinkMessage,
   ValveSource,
   ValveSourceAction,
-  ValveSourceCallbacks,
   ValveSourceFactory,
+  ValveSourceMessage,
   ValveState,
   ValveThrough,
   ValveThroughFactory,
@@ -31,19 +31,19 @@ export const hasEnded = <E>(
   action:
     | undefined
     | {
-        type: ValveActionType
+        type: ValveMessageType
         // tslint:disable-next-line no-any
         [key: string]: any
       }
-): action is ValveActionAbort | ValveActionError<E> =>
+): action is ValveMessageComplete | ValveMessageError<E> =>
   isUndefined(action)
     ? false
-    : action.type === ValveActionType.Abort ||
-      action.type === ValveActionType.Error
+    : action.type === ValveMessageType.Complete ||
+      action.type === ValveMessageType.Error
 
 const findEnded = <P, E>(
-  ...actions: Array<undefined | ValveAction<P, E>>
-): ValveActionAbort | ValveActionError<E> | undefined =>
+  ...actions: Array<undefined | ValveMessage<P, E>>
+): ValveMessageComplete | ValveMessageError<E> | undefined =>
   // tslint:disable-next-line no-any no-unsafe-any
   find<any>(compact(actions), hasEnded)
 
@@ -53,25 +53,25 @@ export const createSource = <
   E extends ValveError = ValveError
 >(
   handler: (
-    actions: ValveSourceCallbacks<T, E>
+    actions: ValveSourceAction<T, E>
   ) => Partial<ValveCreateSourceOptions<E>> = () => ({})
 ): ValveSourceFactory<T, S, E> =>
   assign<() => ValveSource<T, E>, { type: ValveType.Source }>(
     () => {
       let cb: ValveCallback<T, E>
 
-      const actions: ValveSourceCallbacks<T, E> = {
-        abort: () => cb({ type: ValveActionType.Abort }),
-        data: data => cb({ type: ValveActionType.Data, payload: data }),
-        error: error => cb({ type: ValveActionType.Error, payload: error }),
-        noop: () => cb({ type: ValveActionType.Noop })
-        // pull: () => cb({ type: ValveActionType.Pull }),
+      const actions: ValveSourceAction<T, E> = {
+        complete: () => cb({ type: ValveMessageType.Complete }),
+        next: next => cb({ type: ValveMessageType.Next, payload: next }),
+        error: error => cb({ type: ValveMessageType.Error, payload: error }),
+        noop: () => cb({ type: ValveMessageType.Noop })
+        // pull: () => cb({ type: ValveMessageType.Pull }),
       }
 
       const defaultOptions: ValveCreateSourceOptions<E> = {
-        onAbort: () => actions.abort(),
-        onError: error => actions.error(error),
-        onPull: () => actions.abort()
+        complete: () => actions.complete(),
+        error: error => actions.error(error),
+        pull: () => actions.complete()
       }
 
       const opts: ValveCreateSourceOptions<E> = defaults(
@@ -84,15 +84,15 @@ export const createSource = <
         cb = _cb
 
         switch (action.type) {
-          case ValveActionType.Abort:
-            opts.onAbort()
+          case ValveMessageType.Complete:
+            opts.complete()
 
             break
-          case ValveActionType.Error:
-            opts.onError(action.payload)
+          case ValveMessageType.Error:
+            opts.error(action.payload)
             break
-          case ValveActionType.Pull:
-            opts.onPull()
+          case ValveMessageType.Pull:
+            opts.pull()
         }
       }
     },
@@ -100,9 +100,9 @@ export const createSource = <
   )
 
 export const createSinkDefaultOptions = {
-  onAbort: noop,
-  onError: noop,
-  onData: noop
+  complete: noop,
+  error: noop,
+  next: noop
 }
 
 const scheduler = (tick: () => boolean): void => {
@@ -130,22 +130,22 @@ export const createSink = <
 >(
   handler: (
     actions: {
-      abort: ValveCallbackAbort
-      error: ValveCallbackError<E>
+      complete: ValveActionComplete
+      error: ValveActionError<E>
     }
   ) => Partial<ValveCreateSinkOptions<T, E>> = () => createSinkDefaultOptions
 ): ValveSinkFactory<T, S, E> =>
   assign<() => ValveSink<T, E>, { type: ValveType.Sink }>(
     () => {
-      let ended: ValveSinkAction<E> | undefined
+      let ended: ValveSinkMessage<E> | undefined
 
       const actions = {
-        abort() {
-          ended = findEnded<T, E>(ended, { type: ValveActionType.Abort })
+        complete() {
+          ended = findEnded<T, E>(ended, { type: ValveMessageType.Complete })
         },
         error(error: E) {
           ended = findEnded<T, E>(ended, {
-            type: ValveActionType.Error,
+            type: ValveMessageType.Error,
             payload: error
           })
         }
@@ -170,34 +170,34 @@ export const createSink = <
             hasResponded = false
 
             source(
-              isUndefined(ended) ? { type: ValveActionType.Pull } : ended,
+              isUndefined(ended) ? { type: ValveMessageType.Pull } : ended,
               action => {
                 hasResponded = true
 
                 switch (action.type) {
-                  case ValveActionType.Abort: {
+                  case ValveMessageType.Complete: {
                     loop = false
 
-                    actions.abort()
+                    actions.complete()
 
-                    options.onAbort()
+                    options.complete()
 
                     break
                   }
-                  case ValveActionType.Error: {
+                  case ValveMessageType.Error: {
                     loop = false
 
                     actions.error(action.payload)
 
-                    options.onError(action.payload)
+                    options.error(action.payload)
 
                     break
                   }
-                  case ValveActionType.Noop: {
+                  case ValveMessageType.Noop: {
                     break
                   }
-                  case ValveActionType.Data: {
-                    options.onData(action.payload)
+                  case ValveMessageType.Next: {
+                    options.next(action.payload)
 
                     if (!loop) {
                       next()
@@ -233,10 +233,10 @@ export const createThrough = <
   E extends ValveError = ValveError
 >(
   sourceHandler: (
-    actions: ValveSourceCallbacks<R, E>
+    actions: ValveSourceAction<R, E>
   ) => Partial<ValveCreateSinkOptions<T, E>> = () => ({}),
   sinkHandler: (
-    actions: ValveSinkCallbacks<E>
+    actions: ValveSinkAction<E>
   ) => Partial<ValveCreateSourceOptions<E>> = () => ({})
 ): ValveThroughFactory<T, R, S, E> =>
   assign<() => ValveThrough<T, R, E>, { type: ValveType.Through }>(
@@ -246,35 +246,35 @@ export const createThrough = <
       let sourceCb: ValveCallback<R, E>
       let sinkSource: ValveSource<T, E>
       // tslint:disable-next-line no-any
-      let sinkCb: (_action: ValveSourceAction<any, any, E>) => void
+      let sinkCb: (_action: ValveSourceMessage<any, any, E>) => void
 
-      const sourceActions: ValveSourceCallbacks<R, E> = {
-        abort: () => sourceCb({ type: ValveActionType.Abort }),
-        data: data => sourceCb({ type: ValveActionType.Data, payload: data }),
+      const sourceActions: ValveSourceAction<R, E> = {
+        complete: () => sourceCb({ type: ValveMessageType.Complete }),
+        next: next => sourceCb({ type: ValveMessageType.Next, payload: next }),
         error: error =>
-          sourceCb({ type: ValveActionType.Error, payload: error }),
-        noop: () => sourceCb({ type: ValveActionType.Noop })
+          sourceCb({ type: ValveMessageType.Error, payload: error }),
+        noop: () => sourceCb({ type: ValveMessageType.Noop })
       }
 
-      const sinkActions: ValveSinkCallbacks<E> = {
-        abort: () => sinkSource({ type: ValveActionType.Abort }, sinkCb),
+      const sinkActions: ValveSinkAction<E> = {
+        complete: () => sinkSource({ type: ValveMessageType.Complete }, sinkCb),
         error: error =>
-          sinkSource({ type: ValveActionType.Error, payload: error }, sinkCb),
-        pull: () => sinkSource({ type: ValveActionType.Pull }, sinkCb)
+          sinkSource({ type: ValveMessageType.Error, payload: error }, sinkCb),
+        pull: () => sinkSource({ type: ValveMessageType.Pull }, sinkCb)
       }
 
       const sourceOpts: ValveCreateSinkOptions<R, E> = defaults(
         {},
         sourceHandler(sourceActions),
         {
-          onAbort() {
-            sourceActions.abort()
+          complete() {
+            sourceActions.complete()
           },
-          onError(error: E) {
+          error(error: E) {
             sourceActions.error(error)
           },
-          onData(data: R) {
-            sourceActions.data(data)
+          next(next: R) {
+            sourceActions.next(next)
           }
         }
       )
@@ -283,13 +283,13 @@ export const createThrough = <
         {},
         sinkHandler(sinkActions),
         {
-          onAbort() {
-            sinkActions.abort()
+          complete() {
+            sinkActions.complete()
           },
-          onError(error: E) {
+          error(error: E) {
             sinkActions.error(error)
           },
-          onPull() {
+          pull() {
             sinkActions.pull()
           }
         }
@@ -297,23 +297,23 @@ export const createThrough = <
 
       const sourceActionHandler = (
         // tslint:disable-next-line no-any
-        action: ValveSourceAction<any, any, E>,
+        action: ValveSourceMessage<any, any, E>,
         cb: ValveCallback<R, E>
       ) => {
         sourceCb = cb
 
         switch (action.type) {
-          case ValveActionType.Data: {
+          case ValveMessageType.Next: {
             // tslint:disable no-unsafe-any
-            sourceOpts.onData(action.payload)
+            sourceOpts.next(action.payload)
             break
           }
-          case ValveActionType.Abort: {
-            sourceOpts.onAbort()
+          case ValveMessageType.Complete: {
+            sourceOpts.complete()
             break
           }
-          case ValveActionType.Error: {
-            sourceOpts.onError(action.payload)
+          case ValveMessageType.Error: {
+            sourceOpts.error(action.payload)
             break
           }
           default: {
@@ -323,7 +323,7 @@ export const createThrough = <
       }
 
       const sinkActionHandler = (
-        action: ValveSinkAction<E>,
+        action: ValveSinkMessage<E>,
         cb: ValveCallback<R, E>,
         source: ValveSource<T, E>
       ) => {
@@ -331,16 +331,16 @@ export const createThrough = <
         sinkSource = source
 
         switch (action.type) {
-          case ValveActionType.Pull: {
-            sinkOpts.onPull()
+          case ValveMessageType.Pull: {
+            sinkOpts.pull()
             break
           }
-          case ValveActionType.Abort: {
-            sinkOpts.onAbort()
+          case ValveMessageType.Complete: {
+            sinkOpts.complete()
             break
           }
-          case ValveActionType.Error: {
-            sinkOpts.onError(action.payload)
+          case ValveMessageType.Error: {
+            sinkOpts.error(action.payload)
           }
         }
       }

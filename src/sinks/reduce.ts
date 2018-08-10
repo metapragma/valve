@@ -23,23 +23,23 @@ export function reduce<P, R = P, E extends ValveError = ValveError>(
   }
 
   return createSink<P, {}, E>(() => ({
-    onData(data) {
+    next(next) {
       if (first && isUndefined(_options.accumulator)) {
-        acc = data
+        acc = next
       } else {
         // tslint:disable-next-line no-unsafe-any
-        acc = _options.iteratee(acc, data)
+        acc = _options.iteratee(acc, next)
       }
 
       first = false
     },
-    onAbort() {
+    complete() {
       if (first && isUndefined(_options.accumulator)) {
-        _options.onAbort()
+        _options.complete()
       } else {
-        _options.onData(acc)
+        _options.next(acc)
       }
     },
-    onError: _options.onError
+    error: _options.error
   }))
 }

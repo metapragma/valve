@@ -18,9 +18,9 @@ export function infinite<P = number, E extends ValveError = ValveError>(
         Math.random
       : generate
 
-  return createSource<P | number, {}, E>(({ data }) => ({
-    onPull() {
-      data(f())
+  return createSource<P | number, {}, E>(({ next }) => ({
+    pull() {
+      next(f())
     }
   }))
 }

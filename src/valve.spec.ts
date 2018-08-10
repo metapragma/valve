@@ -9,7 +9,7 @@ import {
   reduce,
   valve
 } from './index'
-import { ValveActionType, ValveType } from './types'
+import { ValveMessageType, ValveType } from './types'
 import { spy } from 'sinon'
 
 // tslint:disable-next-line no-import-side-effect
@@ -20,15 +20,15 @@ describe('pull', () => {
   it('source -> sink', done => {
     valve()(
       count(4),
-      createThrough(({ data }) => ({
-        onData(payload) {
+      createThrough(({ next }) => ({
+        next(payload) {
           // console.log('through', action)
-          data(payload + 1)
+          next(payload + 1)
         }
       })),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [2, 3, 4, 5])
+        next(next) {
+          assert.deepEqual(next, [2, 3, 4, 5])
           done()
         }
       })
@@ -38,10 +38,10 @@ describe('pull', () => {
   it('(source -> through) -> sink', done => {
     const source = valve()(
       count(4),
-      createThrough(({ data }) => ({
-        onData(payload) {
+      createThrough(({ next }) => ({
+        next(payload) {
           // console.log('through', action)
-          data(payload + 1)
+          next(payload + 1)
         }
       }))
     )
@@ -52,8 +52,8 @@ describe('pull', () => {
     valve()(
       source,
       collect({
-        onData(data) {
-          assert.deepEqual(data, [2, 3, 4, 5])
+        next(next) {
+          assert.deepEqual(next, [2, 3, 4, 5])
           done()
         }
       })
@@ -62,16 +62,16 @@ describe('pull', () => {
 
   it('source -> (through -> through) -> sink', done => {
     const through = valve()(
-      createThrough<number>(({ data }) => ({
-        onData(payload) {
+      createThrough<number>(({ next }) => ({
+        next(payload) {
           // console.log('through', action)
-          data(payload + 1)
+          next(payload + 1)
         }
       })),
-      createThrough<number>(({ data }) => ({
-        onData(payload) {
+      createThrough<number>(({ next }) => ({
+        next(payload) {
           // console.log('through', action)
-          data(payload + 1)
+          next(payload + 1)
         }
       }))
     )
@@ -83,7 +83,7 @@ describe('pull', () => {
       count(4),
       through,
       collect({
-        onData(payload) {
+        next(payload) {
           assert.deepEqual(payload, [3, 4, 5, 6])
           done()
         }
@@ -93,14 +93,14 @@ describe('pull', () => {
 
   it('source -> (through -> sink)', done => {
     const sink = valve()(
-      createThrough<number>(({ data }) => ({
-        onData(payload) {
+      createThrough<number>(({ next }) => ({
+        next(payload) {
           // console.log('through', action)
-          data(payload + 1)
+          next(payload + 1)
         }
       })),
       collect<number>({
-        onData(action) {
+        next(action) {
           assert.deepEqual(action, [2, 3, 4, 5])
           done()
         }
@@ -115,26 +115,26 @@ describe('pull', () => {
 
   it('source -> (through -> (through -> through)) -> sink', done => {
     const through = valve()(
-      createThrough<number>(({ data }) => ({
-        onData(payload) {
+      createThrough<number>(({ next }) => ({
+        next(payload) {
           // console.log('through', action)
-          data(payload + 1)
+          next(payload + 1)
         }
       })),
-      createThrough<number>(({ data }) => ({
-        onData(payload) {
+      createThrough<number>(({ next }) => ({
+        next(payload) {
           // console.log('through', action)
-          data(payload + 1)
+          next(payload + 1)
         }
       }))
     )
 
     const through2 = valve()(
       through,
-      createThrough<number>(({ data }) => ({
-        onData(payload) {
+      createThrough<number>(({ next }) => ({
+        next(payload) {
           // console.log('through', action)
-          data(payload + 1)
+          next(payload + 1)
         }
       }))
     )
@@ -146,7 +146,7 @@ describe('pull', () => {
       count(4),
       through2,
       collect({
-        onData(action) {
+        next(action) {
           assert.deepEqual(action, [4, 5, 6, 7])
           done()
         }
@@ -160,11 +160,11 @@ describe('pull', () => {
       map(e => e * e),
       createThrough(),
       reduce({
-        iteratee(acc, data) {
-          return acc + data
+        iteratee(acc, next) {
+          return acc + next
         },
-        onData(data) {
-          assert.equal(data, 385)
+        next(next) {
+          assert.equal(next, 385)
           done()
         }
       })
@@ -181,11 +181,11 @@ describe('pull', () => {
         createThrough<number, number>()
       ),
       reduce({
-        iteratee(acc, data) {
-          return acc + data
+        iteratee(acc, next) {
+          return acc + next
         },
-        onData(data) {
-          assert.equal(data, 385)
+        next(next) {
+          assert.equal(next, 385)
           done()
         }
       })
@@ -198,10 +198,10 @@ describe('pull', () => {
   //       return e * e
   //     }),
   //     reduce({
-  //       iteratee(acc, data) {
-  //         return acc + data
+  //       iteratee(acc, next) {
+  //         return acc + next
   //       },
-  //       onData(action) {
+  //       next(action) {
   //         assert.equal(action.payload, 385)
   //       }
   //     })
@@ -235,7 +235,7 @@ describe('pull', () => {
     valve()(
       read,
       collect({
-        onData(payload) {
+        next(payload) {
           assert.deepEqual(payload, [
             '*** BILLY! ***',
             '*** JOE! ***',
@@ -264,20 +264,20 @@ describe('pull', () => {
       createThrough()
     )
 
-    stream()({ type: ValveActionType.Pull }, action => {
+    stream()({ type: ValveMessageType.Pull }, action => {
       sB()
 
-      if (action.type === ValveActionType.Data) {
+      if (action.type === ValveMessageType.Next) {
         assert.equal(action.payload, 2)
       } else {
         done(new Error('Action type mismatch'))
       }
     })
 
-    stream()({ type: ValveActionType.Pull }, action => {
+    stream()({ type: ValveMessageType.Pull }, action => {
       sC()
 
-      if (action.type === ValveActionType.Data) {
+      if (action.type === ValveMessageType.Next) {
         assert.equal(action.payload, 4)
       } else {
         done(new Error('Action type mismatch'))
@@ -287,11 +287,11 @@ describe('pull', () => {
     valve()(
       stream,
       collect({
-        onData(data) {
+        next(next) {
           assert.equal(sA.callCount, 5)
           assert.equal(sB.callCount, 1)
           assert.equal(sC.callCount, 1)
-          assert.deepEqual(data, [6, 8, 10])
+          assert.deepEqual(next, [6, 8, 10])
           done()
         }
       })
@@ -303,16 +303,16 @@ describe('pull', () => {
 
     const stream = valve<typeof ERR>()(error(ERR), createThrough())
 
-    stream()({ type: ValveActionType.Pull }, action => {
-      if (action.type === ValveActionType.Error) {
+    stream()({ type: ValveMessageType.Pull }, action => {
+      if (action.type === ValveMessageType.Error) {
         assert.deepEqual(action.payload, ERR)
       } else {
         done(new Error('Action type mismatch'))
       }
     })
 
-    stream()({ type: ValveActionType.Pull }, action => {
-      if (action.type === ValveActionType.Error) {
+    stream()({ type: ValveMessageType.Pull }, action => {
+      if (action.type === ValveMessageType.Error) {
         assert.deepEqual(action.payload, ERR)
         done()
       } else {

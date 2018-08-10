@@ -1,50 +1,50 @@
 export type ValveError = unknown
 
-export enum ValveActionType {
-  Abort,
-  Data,
+export enum ValveMessageType {
+  Complete,
+  Next,
   Error,
   Noop,
   Pull
 }
 
-export interface ValveActionGeneric {
-  type: ValveActionType
+export interface ValveMessageGeneric {
+  type: ValveMessageType
 }
 
-export interface ValveActionPull extends ValveActionGeneric {
-  type: ValveActionType.Pull
+export interface ValveMessagePull extends ValveMessageGeneric {
+  type: ValveMessageType.Pull
 }
 
-export interface ValveActionData<P> extends ValveActionGeneric {
-  type: ValveActionType.Data
+export interface ValveMessageNext<P> extends ValveMessageGeneric {
+  type: ValveMessageType.Next
   payload: P
 }
 
-export interface ValveActionError<E> extends ValveActionGeneric {
-  type: ValveActionType.Error
+export interface ValveMessageError<E> extends ValveMessageGeneric {
+  type: ValveMessageType.Error
   payload: E
 }
 
-export interface ValveActionAbort extends ValveActionGeneric {
-  type: ValveActionType.Abort
+export interface ValveMessageComplete extends ValveMessageGeneric {
+  type: ValveMessageType.Complete
 }
 
-export interface ValveActionNoop extends ValveActionGeneric {
-  type: ValveActionType.Noop
+export interface ValveMessageNoop extends ValveMessageGeneric {
+  type: ValveMessageType.Noop
 }
 
-export type ValveAction<P, E> =
-  | ValveActionAbort
-  | ValveActionData<P>
-  | ValveActionError<E>
-  | ValveActionNoop
-  | ValveActionPull
+export type ValveMessage<P, E> =
+  | ValveMessageComplete
+  | ValveMessageNext<P>
+  | ValveMessageError<E>
+  | ValveMessageNoop
+  | ValveMessagePull
 
-export type ValveSinkAction<E> =
-  | ValveActionAbort
-  | ValveActionError<E>
-  | ValveActionPull
+export type ValveSinkMessage<E> =
+  | ValveMessageComplete
+  | ValveMessageError<E>
+  | ValveMessagePull
 
 export enum ValveType {
   Source,
@@ -52,18 +52,18 @@ export enum ValveType {
   Through
 }
 
-export type ValveSourceAction<SA, P, E> = SA extends ValveActionAbort
-  ? ValveActionAbort
-  : SA extends ValveActionError<E>
-    ? ValveActionError<E>
+export type ValveSourceMessage<SA, P, E> = SA extends ValveMessageComplete
+  ? ValveMessageComplete
+  : SA extends ValveMessageError<E>
+    ? ValveMessageError<E>
     : (
-        | ValveActionAbort
-        | ValveActionData<P>
-        | ValveActionError<E>
-        | ValveActionNoop)
+        | ValveMessageComplete
+        | ValveMessageNext<P>
+        | ValveMessageError<E>
+        | ValveMessageNoop)
 
-export type ValveCallback<P, E, SA = ValveSinkAction<E>> = (
-  action: ValveSourceAction<SA, P, E>
+export type ValveCallback<P, E, SA = ValveSinkMessage<E>> = (
+  action: ValveSourceMessage<SA, P, E>
 ) => void
 
 interface ValveReturn<P, E> {
@@ -88,7 +88,7 @@ interface ValveReturn<P, E> {
 export type ValveSink<P, E> = (source: ValveSource<P, E>) => void
 
 export type ValveSource<P, E> = (
-  action: ValveSinkAction<E>,
+  action: ValveSinkMessage<E>,
   cb: ValveCallback<P, E>
 ) => void
 
@@ -126,44 +126,44 @@ export type ValveCompositeThrough<P, R, S, E> = ValveThroughFactory<P, R, S, E>
 
 // Utilities
 
-export type ValveCallbackAbort = () => void
-export type ValveCallbackData<P> = (data: P) => void
-export type ValveCallbackError<E> = (error: E) => void
-export type ValveCallbackNoop = () => void
-export type ValveCallbackPull = () => void
+export type ValveActionComplete = () => void
+export type ValveActionNext<P> = (next: P) => void
+export type ValveActionError<E> = (error: E) => void
+export type ValveActionNoop = () => void
+export type ValveActionPull = () => void
 
-export interface ValveSourceCallbacks<P, E> {
-  abort: ValveCallbackAbort
-  data: ValveCallbackData<P>
-  error: ValveCallbackError<E>
-  noop: ValveCallbackNoop
+export interface ValveSourceAction<P, E> {
+  complete: ValveActionComplete
+  next: ValveActionNext<P>
+  error: ValveActionError<E>
+  noop: ValveActionNoop
 }
 
-export interface ValveSinkCallbacks<E> {
-  abort: ValveCallbackAbort
-  error: ValveCallbackError<E>
-  pull: ValveCallbackPull
+export interface ValveSinkAction<E> {
+  complete: ValveActionComplete
+  error: ValveActionError<E>
+  pull: ValveActionPull
 }
 
 export interface ValveCreateSourceOptions<E> {
-  onAbort(): void
-  onError(error: E): void
-  onPull(): void
+  complete(): void
+  error(error: E): void
+  pull(): void
 }
 
 export interface ValveCreateSinkOptions<T, E> {
-  onAbort(): void
-  onError(error: E): void
-  onData(data: T): void
+  complete(): void
+  error(error: E): void
+  next(next: T): void
 }
 
 // Sinks
 
 export interface ValveReduceOptions<P, R> {
   accumulator?: R
-  iteratee(accumulator: R, data: P): R
+  iteratee(accumulator: R, next: P): R
 }
 
 export interface ValveFindOptions<P> {
-  predicate?(data: P): boolean
+  predicate?(next: P): boolean
 }

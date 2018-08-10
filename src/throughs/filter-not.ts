@@ -3,9 +3,9 @@ import { filter } from './filter'
 import { ValveError, ValveThroughFactory } from '../types'
 
 export function filterNot<P, E extends ValveError = ValveError>(
-  test: ((data: P) => boolean)
+  test: ((next: P) => boolean)
 ): ValveThroughFactory<P, P, {}, E> {
-  return filter<P, E>(data => {
-    return !test(data)
+  return filter<P, E>(next => {
+    return !test(next)
   })
 }

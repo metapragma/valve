@@ -3,7 +3,7 @@ import { ValveError, ValveSourceFactory } from '../types'
 import { createSource } from '../utilities'
 import { createIterator } from '../iterall'
 
-function next<P, E>(
+function iterate<P, E>(
   iterator: Iterator<P>
 ):
   | { failed: true; payload: E }
@@ -30,29 +30,29 @@ export function fromIterable<P, E extends ValveError = ValveError>(
   const iterator = createIterator(iterable)
 
   if (safe === true) {
-    return createSource<P, {}, E>(({ abort, data }) => ({
-      onPull() {
+    return createSource<P, {}, E>(({ complete, next }) => ({
+      pull() {
         const { value, done } = iterator.next()
 
         if (done) {
-          abort()
+          complete()
         } else {
-          data(value)
+          next(value)
         }
       }
     }))
   } else {
-    return createSource<P, {}, E>(({ abort, data, error }) => ({
-      onPull() {
-        const result = next<P, E>(iterator)
+    return createSource<P, {}, E>(({ complete, next, error }) => ({
+      pull() {
+        const result = iterate<P, E>(iterator)
 
         if (result.failed === true) {
           error(result.payload)
         } else {
           if (result.payload.done) {
-            abort()
+            complete()
           } else {
-            data(result.payload.value)
+            next(result.payload.value)
           }
         }
       }

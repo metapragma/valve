@@ -5,13 +5,13 @@ import { identity, includes } from 'lodash'
 // drop items you have already seen
 
 export function unique<P, K, E extends ValveError = ValveError>(
-  test: ((data: P) => K) = identity,
+  test: ((next: P) => K) = identity,
   invert: boolean = false
 ): ValveThroughFactory<P, P, {}, E> {
   const seen: K[] = []
 
-  return filter((data: P) => {
-    const key = test(data)
+  return filter((next: P) => {
+    const key = test(next)
 
     if (includes(seen, key)) {
       return !!Boolean(invert) // false, by default

@@ -6,7 +6,7 @@ import { createSource } from '../utilities'
 
 export function error<E>(err: E): ValveSourceFactory<never, {}, E> {
   return createSource<never, {}, E>(actions => ({
-    onPull() {
+    pull() {
       actions.error(err)
     }
   }))

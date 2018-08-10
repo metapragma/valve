@@ -7,12 +7,12 @@ export function count<E extends ValveError = ValveError>(
 ): ValveSourceFactory<number, {}, E> {
   let i = 0
 
-  return createSource<number, {}, E>(({ abort, data }) => ({
-    onPull() {
+  return createSource<number, {}, E>(({ complete, next }) => ({
+    pull() {
       if (i >= max) {
-        abort()
+        complete()
       } else {
-        data((i += 1))
+        next((i += 1))
       }
     }
   }))

@@ -3,11 +3,11 @@ import { ValveError, ValveThroughFactory } from '../types'
 import { createThrough } from '../utilities'
 
 export function map<P, R, E extends ValveError = ValveError>(
-  iteratee: ((data: P) => R)
+  iteratee: ((next: P) => R)
 ): ValveThroughFactory<P, R, {}, E> {
-  return createThrough(({ data }) => ({
-    onData(payload) {
-      data(iteratee(payload))
+  return createThrough(({ next }) => ({
+    next(payload) {
+      next(iteratee(payload))
     }
   }))
 }

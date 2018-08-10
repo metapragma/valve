@@ -1,10 +1,10 @@
 import { defaults, identity } from 'lodash'
 
 import {
-  ValveActionType,
   ValveCreateSinkOptions,
   ValveError,
   ValveFindOptions,
+  ValveMessageType,
   ValveSinkFactory
 } from '../types'
 
@@ -20,25 +20,25 @@ export function find<P, E extends ValveError = ValveError>(
     predicate: identity
   })
 
-  return createSink<P, {}, E>(({ abort }) => ({
-    onData(data) {
+  return createSink<P, {}, E>(({ complete }) => ({
+    next(next) {
       // tslint:disable-next-line strict-boolean-expressions
-      if (_options.predicate(data)) {
+      if (_options.predicate(next)) {
         ended = true
 
-        _options.onData(data)
+        _options.next(next)
 
-        abort()
+        complete()
       }
     },
-    onError(error) {
+    error(error) {
       if (!ended) {
-        _options.onError(error)
+        _options.error(error)
       }
     },
-    onAbort() {
+    complete() {
       if (!ended) {
-        _options.onAbort()
+        _options.complete()
       }
     }
   }))

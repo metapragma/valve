@@ -3,12 +3,12 @@ import { ValveError, ValveThroughFactory } from '../types'
 import { createThrough } from '../utilities'
 
 export function filter<P, E extends ValveError = ValveError>(
-  predicate: ((data: P) => boolean)
+  predicate: ((next: P) => boolean)
 ): ValveThroughFactory<P, P, {}, E> {
-  return createThrough<P, P, {}, E>(({ data, noop }) => ({
-    onData(payload) {
+  return createThrough<P, P, {}, E>(({ next, noop }) => ({
+    next(payload) {
       if (predicate(payload)) {
-        data(payload)
+        next(payload)
       } else {
         noop()
       }

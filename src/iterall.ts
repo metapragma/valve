@@ -16,12 +16,12 @@
 import { isArrayLike } from 'lodash'
 
 // In ES2015 environments, Symbol exists
-const SYMBOL /*: any */ = typeof Symbol === 'function' ? Symbol : void 0
+export const SYMBOL /*: any */ = typeof Symbol === 'function' ? Symbol : void 0
 
 // In ES2015 (or a polyfilled) environment, this will be Symbol.iterator
-const SYMBOL_ITERATOR = SYMBOL && SYMBOL.iterator
+export const SYMBOL_ITERATOR = SYMBOL && SYMBOL.iterator
 
-const $$iterator: symbol | string = SYMBOL_ITERATOR || '@@iterator'
+export const $$iterator: symbol | string = SYMBOL_ITERATOR || '@@iterator'
 
 export function getIterator<TValue>(
   iterable: Iterable<TValue>

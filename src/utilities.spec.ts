@@ -20,10 +20,10 @@ import { assign, isFunction, isNumber, isPlainObject, noop } from 'lodash'
 import { spy as sinonSpy } from 'sinon'
 
 import {
-  ValveActionAbort,
-  ValveActionError,
-  ValveActionType,
   ValveCallback,
+  ValveMessageComplete,
+  ValveMessageError,
+  ValveMessageType,
   ValveSource,
   ValveSourceFactory,
   ValveThrough,
@@ -44,7 +44,7 @@ function delay<A, C>() {
 
 function hang<P, E>(
   values: P[],
-  onAbort?: () => void
+  complete?: () => void
 ): ValveSourceFactory<P, {}, E> {
   let i = 0
   let _cb: ValveCallback<P, E>
@@ -52,15 +52,15 @@ function hang<P, E>(
   return assign<() => ValveSource<P, E>, { type: ValveType.Source }>(
     () => (action, cb) => {
       if (i < values.length) {
-        cb({ type: ValveActionType.Data, payload: values[i++] })
+        cb({ type: ValveMessageType.Next, payload: values[i++] })
       } else if (!hasEnded(action)) {
         _cb = cb
       } else {
         _cb(action)
         cb(action)
         // tslint:disable-next-line no-unused-expression
-        if (isFunction(onAbort)) {
-          onAbort()
+        if (isFunction(complete)) {
+          complete()
         }
       }
     },
@@ -68,11 +68,11 @@ function hang<P, E>(
   )
 }
 
-function abortable<P, E>(): ValveThroughFactory<P, P, {}, E> & {
+function completeable<P, E>(): ValveThroughFactory<P, P, {}, E> & {
   terminate: () => void
 } {
   let _read: ValveSource<P, E>
-  let ended: ValveActionError<E> | ValveActionAbort
+  let ended: ValveMessageError<E> | ValveMessageComplete
 
   return assign<
     () => ValveThrough<P, P, E>,
@@ -96,7 +96,7 @@ function abortable<P, E>(): ValveThroughFactory<P, P, {}, E> & {
     {
       terminate() {
         if (!hasEnded(ended)) {
-          _read({ type: ValveActionType.Abort }, noop)
+          _read({ type: ValveMessageType.Complete }, noop)
         }
       }
     }
@@ -112,27 +112,27 @@ function test<E>(
       done()
     })
 
-  const abortableThrough = abortable<number, E>()
+  const completeableThrough = completeable<number, E>()
 
   const sink = createSink<number, {}, E>(() => ({
-    onData(data) {
-      if (data === 3) {
+    next(next) {
+      if (next === 3) {
         setImmediate(() => {
-          abortableThrough.terminate()
+          completeableThrough.terminate()
         })
       }
     }
   }))
 
-  valve<E>()(source(), trx, abortableThrough, sink)
+  valve<E>()(source(), trx, completeableThrough, sink)
 }
 
 describe('utilities', () => {
   it('hasEnded', () => {
-    assert.equal(hasEnded({ type: ValveActionType.Abort }), true)
-    assert.equal(hasEnded({ type: ValveActionType.Error, payload: {} }), true)
-    assert.equal(hasEnded({ type: ValveActionType.Pull }), false)
-    assert.equal(hasEnded({ type: ValveActionType.Data, payload: {} }), false)
+    assert.equal(hasEnded({ type: ValveMessageType.Complete }), true)
+    assert.equal(hasEnded({ type: ValveMessageType.Error, payload: {} }), true)
+    assert.equal(hasEnded({ type: ValveMessageType.Pull }), false)
+    assert.equal(hasEnded({ type: ValveMessageType.Next, payload: {} }), false)
     assert.equal(hasEnded(undefined), false)
   })
 })
@@ -145,10 +145,10 @@ describe('createSource', () => {
     assert(isFunction(source))
     assert.equal(source.type, ValveType.Source)
 
-    source()({ type: ValveActionType.Pull }, action => {
+    source()({ type: ValveMessageType.Pull }, action => {
       assert(isPlainObject(action))
 
-      if (action.type === ValveActionType.Abort) {
+      if (action.type === ValveMessageType.Complete) {
         done()
       } else {
         done(new Error('Action type mismatch'))
@@ -156,17 +156,17 @@ describe('createSource', () => {
     })
   })
 
-  it('createSource onPull', done => {
+  it('createSource pull', done => {
     const spy = sinonSpy()
 
-    const source = createSource<string>(({ abort, data, error, noop }) => ({
-      onPull() {
+    const source = createSource<string>(({ complete, next, error, noop }) => ({
+      pull() {
         spy()
-        assert(isFunction(abort))
-        assert(isFunction(data))
+        assert(isFunction(complete))
+        assert(isFunction(next))
         assert(isFunction(error))
         assert(isFunction(noop))
-        data('data')
+        next('next')
       }
     }))
 
@@ -177,21 +177,21 @@ describe('createSource', () => {
 
     assert(isFunction(instance))
 
-    instance({ type: ValveActionType.Pull }, action => {
+    instance({ type: ValveMessageType.Pull }, action => {
       assert(isPlainObject(action))
 
-      if (action.type === ValveActionType.Data) {
-        assert.equal(action.payload, 'data')
+      if (action.type === ValveMessageType.Next) {
+        assert.equal(action.payload, 'next')
         assert.equal(spy.callCount, 1)
       } else {
         done(new Error('Action type mismatch'))
       }
 
-      instance({ type: ValveActionType.Pull }, _action => {
+      instance({ type: ValveMessageType.Pull }, _action => {
         assert(isPlainObject(_action))
 
-        if (_action.type === ValveActionType.Data) {
-          assert.equal(_action.payload, 'data')
+        if (_action.type === ValveMessageType.Next) {
+          assert.equal(_action.payload, 'next')
           assert.equal(spy.callCount, 2)
           done()
         } else {
@@ -201,14 +201,14 @@ describe('createSource', () => {
     })
   })
 
-  it('createSource onAbort', done => {
+  it('createSource complete', done => {
     const spy = sinonSpy()
 
-    const source = createSource<string>(({ abort }) => ({
-      onAbort() {
+    const source = createSource<string>(({ complete }) => ({
+      complete() {
         spy()
-        assert(isFunction(abort))
-        abort()
+        assert(isFunction(complete))
+        complete()
       }
     }))
 
@@ -219,14 +219,14 @@ describe('createSource', () => {
 
     assert(isFunction(instance))
 
-    instance({ type: ValveActionType.Pull }, action => {
+    instance({ type: ValveMessageType.Pull }, action => {
       assert(isPlainObject(action))
-      assert.equal(action.type, ValveActionType.Abort)
+      assert.equal(action.type, ValveMessageType.Complete)
 
-      instance({ type: ValveActionType.Abort }, _action => {
+      instance({ type: ValveMessageType.Complete }, _action => {
         assert(isPlainObject(action))
 
-        if (_action.type === ValveActionType.Abort) {
+        if (_action.type === ValveMessageType.Complete) {
           assert.equal(spy.callCount, 1)
           done()
         } else {
@@ -236,12 +236,12 @@ describe('createSource', () => {
     })
   })
 
-  it('createSource onError', done => {
+  it('createSource error', done => {
     const spy = sinonSpy()
     const ERR = new Error('Error')
 
     const source = createSource<string, {}, typeof ERR>(({ error }) => ({
-      onError(err) {
+      error(err) {
         spy()
         assert.equal(err, ERR)
         error(err)
@@ -255,14 +255,14 @@ describe('createSource', () => {
 
     assert(isFunction(instance))
 
-    instance({ type: ValveActionType.Pull }, action => {
+    instance({ type: ValveMessageType.Pull }, action => {
       assert(isPlainObject(action))
-      assert.equal(action.type, ValveActionType.Abort)
+      assert.equal(action.type, ValveMessageType.Complete)
 
-      instance({ type: ValveActionType.Error, payload: ERR }, _action => {
+      instance({ type: ValveMessageType.Error, payload: ERR }, _action => {
         assert(isPlainObject(action))
 
-        if (_action.type === ValveActionType.Error) {
+        if (_action.type === ValveMessageType.Error) {
           assert.equal(_action.payload, ERR)
           assert.equal(spy.callCount, 1)
           done()
@@ -278,15 +278,15 @@ describe('createSink', () => {
   it('...', done => {
     const spy = sinonSpy()
 
-    const drain = createSink(({ abort, error }) => ({
-      onData(data) {
+    const drain = createSink(({ complete, error }) => ({
+      next(next) {
         spy()
-        assert(isNumber(data))
+        assert(isNumber(next))
       },
-      onAbort() {
+      complete() {
         assert.equal(spy.callCount, 4)
         assert(isFunction(error))
-        assert(isFunction(abort))
+        assert(isFunction(complete))
         done()
       }
     }))
@@ -300,20 +300,20 @@ describe('createSink', () => {
     valve()(fromIterable([1, 2, 3, 4]), drain)
   })
 
-  it('createSink abort', done => {
+  it('createSink complete', done => {
     const spy = sinonSpy()
     let c = 100
 
-    const drain = createSink(({ abort }) => ({
-      onData(data) {
+    const drain = createSink(({ complete }) => ({
+      next(next) {
         spy()
 
-        assert(isNumber(data))
-        if (c < 0) throw new Error('stream should have aborted')
+        assert(isNumber(next))
+        if (c < 0) throw new Error('stream should have completeed')
         // tslint:disable-next-line no-increment-decrement
-        if (!--c) abort()
+        if (!--c) complete()
       },
-      onAbort() {
+      complete() {
         assert.equal(spy.callCount, 100)
         done()
       }
@@ -328,15 +328,15 @@ describe('createSink', () => {
     let c = 100
 
     const drain = createSink(({ error }) => ({
-      onData(data) {
+      next(next) {
         spy()
 
-        assert(isNumber(data))
-        if (c < 0) throw new Error('stream should have aborted')
+        assert(isNumber(next))
+        if (c < 0) throw new Error('stream should have completeed')
         // tslint:disable-next-line no-increment-decrement
         if (!--c) error(ERR)
       },
-      onError(err) {
+      error(err) {
         assert.equal(err, ERR)
         assert.equal(spy.callCount, 100)
         done()
@@ -346,20 +346,20 @@ describe('createSink', () => {
     valve()(infinite(), drain)
   })
 
-  it('createSink abort', done => {
+  it('createSink complete', done => {
     const spy = sinonSpy()
     let c = 100
 
-    const drain = createSink(({ abort }) => ({
-      onData(data) {
+    const drain = createSink(({ complete }) => ({
+      next(next) {
         spy()
 
-        assert(isNumber(data))
-        if (c < 0) throw new Error('stream should have aborted')
+        assert(isNumber(next))
+        if (c < 0) throw new Error('stream should have completeed')
         // tslint:disable-next-line no-increment-decrement
-        if (!--c) abort()
+        if (!--c) complete()
       },
-      onAbort() {
+      complete() {
         assert.equal(spy.callCount, 100)
         done()
       }
@@ -377,15 +377,15 @@ describe('createSink', () => {
       infinite(),
       delay(),
       createSink(({ error }) => ({
-        onData(data) {
+        next(next) {
           spy()
 
-          assert(isNumber(data))
-          if (c < 0) throw new Error('stream should have aborted')
+          assert(isNumber(next))
+          if (c < 0) throw new Error('stream should have completeed')
           // tslint:disable-next-line no-increment-decrement
           if (!--c) error(ERR)
         },
-        onError(err) {
+        error(err) {
           assert.equal(err, ERR)
           assert.equal(spy.callCount, 100)
 
@@ -395,20 +395,20 @@ describe('createSink', () => {
     )
   })
 
-  // it('createSink instant abort', done => {
+  // it('createSink instant complete', done => {
   //   const spy = sinonSpy()
   //
   //   const drain = createSink(() => ({
-  //     onData() {
+  //     next() {
   //       spy()
   //     },
-  //     onAbort() {
+  //     complete() {
   //       assert.equal(spy.callCount, 0)
   //       done()
   //     }
   //   }))
   //
-  //   drain.terminate({ type: ValveActionType.Abort })
+  //   drain.terminate({ type: ValveMessageType.Complete })
   //
   //   valve(infinite(), drain)
   // })
@@ -418,18 +418,18 @@ describe('createSink', () => {
   //   const err = new Error('Error')
   //
   //   const drain = createSink({
-  //     onData() {
+  //     next() {
   //       spy()
   //     },
-  //     onError(action) {
-  //       assert.equal(action.type, ValveActionType.Error)
+  //     error(action) {
+  //       assert.equal(action.type, ValveMessageType.Error)
   //       assert.equal(action.payload, err)
   //       assert.equal(spy.callCount, 0)
   //       done()
   //     }
   //   })
   //
-  //   drain.terminate({ type: ValveActionType.Error, payload: err })
+  //   drain.terminate({ type: ValveMessageType.Error, payload: err })
   //
   //   valve(infinite(), drain)
   // })
@@ -438,10 +438,10 @@ describe('createSink', () => {
     const spy = sinonSpy()
 
     const drain = createSink(() => ({
-      onData() {
+      next() {
         spy()
       },
-      onAbort() {
+      complete() {
         assert.equal(spy.callCount, 0)
         done()
       }
@@ -457,10 +457,10 @@ describe('createSink', () => {
     valve<typeof ERR>()(
       error(ERR),
       createSink(() => ({
-        onData() {
+        next() {
           spy()
         },
-        onError(err) {
+        error(err) {
           assert.equal(err, ERR)
           assert.equal(spy.callCount, 0)
           done()
@@ -484,37 +484,37 @@ describe('createSource', () => {
       count(5),
       createThrough(),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [1, 2, 3, 4, 5])
+        next(next) {
+          assert.deepEqual(next, [1, 2, 3, 4, 5])
           done()
         }
       })
     )
   })
 
-  it('source onData', done => {
+  it('source next', done => {
     const spy = sinonSpy()
     const spyTwo = sinonSpy()
 
     valve()(
       count(5),
-      createThrough(({ data, abort }) => ({
-        onData(n) {
+      createThrough(({ next, complete }) => ({
+        next(n) {
           spy()
           assert(isNumber(n))
-          assert(isFunction(data))
+          assert(isFunction(next))
 
-          data(n)
+          next(n)
         },
-        onAbort() {
+        complete() {
           spyTwo()
-          assert(isFunction(abort))
+          assert(isFunction(complete))
 
-          abort()
+          complete()
         }
       })),
       collect({
-        onData(payload) {
+        next(payload) {
           assert.deepEqual(payload, [1, 2, 3, 4, 5])
           assert.equal(spy.callCount, 5)
           assert.equal(spyTwo.callCount, 1)
@@ -524,21 +524,21 @@ describe('createSource', () => {
     )
   })
 
-  it('source onError', done => {
+  it('source error', done => {
     const spy = sinonSpy()
     const spyTwo = sinonSpy()
     const ERR = new Error('err')
 
     valve<typeof ERR>()(
       error(ERR),
-      createThrough(({ data, error }) => ({
-        onData(n) {
+      createThrough(({ next, error }) => ({
+        next(n) {
           spy()
-          assert(isFunction(data))
+          assert(isFunction(next))
 
-          data(n)
+          next(n)
         },
-        onError(err) {
+        error(err) {
           spyTwo()
           assert.equal(err, ERR)
           assert(isFunction(error))
@@ -547,7 +547,7 @@ describe('createSource', () => {
         }
       })),
       collect({
-        onError(err) {
+        error(err) {
           assert.equal(err, ERR)
           assert.equal(spy.callCount, 0)
           assert.equal(spyTwo.callCount, 1)
@@ -557,7 +557,7 @@ describe('createSource', () => {
     )
   })
 
-  it('sink onPull/onData', done => {
+  it('sink pull/next', done => {
     const spyPull = sinonSpy()
     const spyData = sinonSpy()
     const spySourceAbort = sinonSpy()
@@ -566,35 +566,35 @@ describe('createSource', () => {
     valve()(
       count(5),
       createThrough(
-        ({ data, abort }) => ({
-          onData(n) {
+        ({ next, complete }) => ({
+          next(n) {
             spyData()
             assert(isNumber(n))
-            assert(isFunction(data))
+            assert(isFunction(next))
 
-            data(n)
+            next(n)
           },
-          onAbort() {
+          complete() {
             spySourceAbort()
-            assert(isFunction(abort))
+            assert(isFunction(complete))
 
-            abort()
+            complete()
           }
         }),
-        ({ pull, abort }) => ({
-          onPull() {
+        ({ pull, complete }) => ({
+          pull() {
             spyPull()
             pull()
           },
-          onAbort() {
+          complete() {
             spySinkAbort()
-            abort()
+            complete()
           }
         })
       ),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [1, 2, 3, 4, 5])
+        next(next) {
+          assert.deepEqual(next, [1, 2, 3, 4, 5])
           assert.equal(spyPull.callCount, 6)
           assert.equal(spyData.callCount, 5)
           assert.equal(spySourceAbort.callCount, 1)
@@ -605,7 +605,7 @@ describe('createSource', () => {
     )
   })
 
-  it('sink onPull/onError', done => {
+  it('sink pull/error', done => {
     const spyPull = sinonSpy()
     const spyData = sinonSpy()
     const spySourceError = sinonSpy()
@@ -615,15 +615,15 @@ describe('createSource', () => {
     valve<typeof ERR>()(
       error(ERR),
       createThrough(
-        ({ data, error }) => ({
-          onData(n) {
+        ({ next, error }) => ({
+          next(n) {
             spyData()
             assert(isNumber(n))
-            assert(isFunction(data))
+            assert(isFunction(next))
 
-            data(n)
+            next(n)
           },
-          onError(err) {
+          error(err) {
             spySourceError()
             assert(isFunction(error))
             assert.deepEqual(err, ERR)
@@ -632,18 +632,18 @@ describe('createSource', () => {
           }
         }),
         ({ pull, error }) => ({
-          onPull() {
+          pull() {
             spyPull()
             pull()
           },
-          onError(err) {
+          error(err) {
             spySinkError()
             error(err)
           }
         })
       ),
       collect({
-        onError(err) {
+        error(err) {
           assert.deepEqual(err, ERR)
           assert.equal(spyPull.callCount, 1)
           assert.equal(spyData.callCount, 0)
@@ -657,7 +657,7 @@ describe('createSource', () => {
   })
 })
 
-describe('abort-stalled', () => {
+describe('complete-stalled', () => {
   it('through', done => {
     test(createThrough(), done)
   })

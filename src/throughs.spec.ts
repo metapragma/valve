@@ -24,8 +24,8 @@ import 'mocha'
 import { assert } from 'chai'
 
 import {
-  ValveActionType,
   ValveError,
+  ValveMessageType,
   ValveSource,
   ValveThrough,
   ValveThroughFactory,
@@ -54,8 +54,8 @@ describe('throughs/async-map', () => {
       take(21),
       delay(50),
       collect({
-        onData(data) {
-          assert.equal(data.length, 21)
+        next(next) {
+          assert.equal(next.length, 21)
           done()
         }
       })
@@ -66,10 +66,10 @@ describe('throughs/async-map', () => {
     valve()(
       count(),
       take(21),
-      asyncMap(data => Promise.resolve(data + 1)),
+      asyncMap(next => Promise.resolve(next + 1)),
       collect({
-        onData(data) {
-          assert.equal(data.length, 21)
+        next(next) {
+          assert.equal(next.length, 21)
           done()
         }
       })
@@ -79,31 +79,31 @@ describe('throughs/async-map', () => {
   it('...', done => {
     valve()(
       fromIterable([1, 2, 3]),
-      asyncMap(data => Promise.resolve(data + 1)),
+      asyncMap(next => Promise.resolve(next + 1)),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [2, 3, 4])
+        next(next) {
+          assert.deepEqual(next, [2, 3, 4])
           done()
         }
       })
     )
   })
 
-  it('abort on error', done => {
-    const ERR = new Error('abort')
+  it('complete on error', done => {
+    const ERR = new Error('complete')
 
     valve()(
       fromIterable([1, 2, 3]),
       asyncMap(() => Promise.reject(ERR)),
       createThrough(({ error }) => ({
-        onError(err) {
+        error(err) {
           assert.equal(err, ERR)
           error(err)
           done()
         }
       })),
       collect({
-        onError(err) {
+        error(err) {
           assert.equal(err, ERR)
         }
       })
@@ -120,10 +120,10 @@ describe('throughs/filter-not', () => {
       }),
       take(100),
       collect({
-        onData(data) {
-          assert.equal(data.length, 100)
+        next(next) {
+          assert.equal(next.length, 100)
 
-          data.forEach(d => {
+          next.forEach(d => {
             assert.equal(d < 0.5, true)
             assert.equal(d <= 1, true)
           })
@@ -143,9 +143,9 @@ describe('throughs/filter-not', () => {
       filterNot(n => /^[^e]+$/i.test(n)), // no E
       take(37),
       collect({
-        onData(data) {
-          assert.equal(data.length, 37)
-          data.forEach(d => {
+        next(next) {
+          assert.equal(next.length, 37)
+          next.forEach(d => {
             assert.include(d, 'e')
           })
 
@@ -164,8 +164,8 @@ describe('throughs/filter', () => {
         return d >= 5
       }),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [5, 6, 7, 8, 9, 10])
+        next(next) {
+          assert.deepEqual(next, [5, 6, 7, 8, 9, 10])
           done()
         }
       })
@@ -180,10 +180,10 @@ describe('throughs/filter', () => {
       }),
       take(100),
       collect({
-        onData(data) {
-          assert.equal(data.length, 100)
+        next(next) {
+          assert.equal(next.length, 100)
 
-          data.forEach(d => {
+          next.forEach(d => {
             assert.isOk(d > 0.5)
             assert.isOk(d <= 1)
           })
@@ -203,9 +203,9 @@ describe('throughs/filter', () => {
       filter(n => /^[^e]+$/i.test(n)), // no E
       take(37),
       collect({
-        onData(data) {
-          assert.equal(data.length, 37)
-          data.forEach(d => {
+        next(next) {
+          assert.equal(next.length, 37)
+          next.forEach(d => {
             assert.notInclude(d, 'e')
           })
 
@@ -222,8 +222,8 @@ describe('throughs/filter', () => {
         return false
       }),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [])
+        next(next) {
+          assert.deepEqual(next, [])
           done()
         }
       })
@@ -239,7 +239,7 @@ describe('throughs/filter', () => {
         return false
       }),
       collect({
-        onError(err) {
+        error(err) {
           assert.equal(err, ERR)
           done()
         }
@@ -256,8 +256,8 @@ describe('throughs/map', () => {
         return n + 1
       }),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [2, 3, 4, 5, 6, 7])
+        next(next) {
+          assert.deepEqual(next, [2, 3, 4, 5, 6, 7])
           done()
         }
       })
@@ -295,8 +295,8 @@ describe('throughs/non-unique', () => {
       fromIterable(numbers),
       nonUnique(),
       collect({
-        onData(data) {
-          assert.deepEqual(data.sort(), [0, 1, 2, 2, 3, 4, 6])
+        next(next) {
+          assert.deepEqual(next.sort(), [0, 1, 2, 2, 3, 4, 6])
           done()
         }
       })
@@ -310,8 +310,8 @@ describe('throughs/take', () => {
       fromIterable([1]),
       take(0),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [])
+        next(next) {
+          assert.deepEqual(next, [])
           done()
         }
       })
@@ -323,8 +323,8 @@ describe('throughs/take', () => {
       fromIterable([1, 2, undefined, 4, 5, 6, 7, 8, 9, 10]),
       take(5),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [1, 2, undefined, 4, 5])
+        next(next) {
+          assert.deepEqual(next, [1, 2, undefined, 4, 5])
           done()
         }
       })
@@ -335,18 +335,18 @@ describe('throughs/take', () => {
     valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       take(5),
-      createThrough(({ abort }) => ({
-        onAbort() {
+      createThrough(({ complete }) => ({
+        complete() {
           setImmediate(() => {
             done()
           })
 
-          abort()
+          complete()
         }
       })),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [1, 2, 3, 4, 5])
+        next(next) {
+          assert.deepEqual(next, [1, 2, 3, 4, 5])
         }
       })
     )
@@ -359,7 +359,7 @@ describe('throughs/take', () => {
       error(ERR),
       take(0),
       collect({
-        onError(err) {
+        error(err) {
           assert.deepEqual(err, ERR)
           done()
         }
@@ -372,8 +372,8 @@ describe('throughs/take', () => {
       empty(),
       take(0),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [])
+        next(next) {
+          assert.deepEqual(next, [])
           done()
         }
       })
@@ -387,8 +387,8 @@ describe('throughs/take', () => {
         return n < 5
       }),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [1, 2, 3, 4])
+        next(next) {
+          assert.deepEqual(next, [1, 2, 3, 4])
           done()
         }
       })
@@ -402,8 +402,8 @@ describe('throughs/take', () => {
         return n < 5
       }, true),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [1, 2, 3, 4, 5])
+        next(next) {
+          assert.deepEqual(next, [1, 2, 3, 4, 5])
           done()
         }
       })
@@ -418,9 +418,9 @@ describe('throughs/take', () => {
       return assign<() => ValveThrough<P, P, E>, { type: ValveType.Through }>(
         () => source => (action, cb) => {
           // tslint:disable-next-line no-increment-decrement
-          if (action.type === ValveActionType.Pull) pulls()
+          if (action.type === ValveMessageType.Pull) pulls()
           source(action, _action => {
-            if (_action.type === ValveActionType.Data) pushes()
+            if (_action.type === ValveMessageType.Next) pushes()
             cb(_action)
           })
         },
@@ -433,8 +433,8 @@ describe('throughs/take', () => {
       thr(),
       take(5),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [1, 2, 3, 4, 5])
+        next(next) {
+          assert.deepEqual(next, [1, 2, 3, 4, 5])
           setImmediate(() => {
             assert.equal(pulls.callCount, 5)
             assert.equal(pushes.callCount, 5)
@@ -445,7 +445,7 @@ describe('throughs/take', () => {
     )
   })
 
-  it('abort', done => {
+  it('complete', done => {
     const ary = [1, 2, 3, 4, 5]
     let ended = false
     let i = 0
@@ -457,10 +457,10 @@ describe('throughs/take', () => {
             ended = true
             cb(action)
           } else if (i > ary.length) {
-            cb({ type: ValveActionType.Abort })
+            cb({ type: ValveMessageType.Complete })
           } else {
             cb({
-              type: ValveActionType.Data,
+              type: ValveMessageType.Next,
               // tslint:disable-next-line no-increment-decrement
               payload: ary[i++]
             })
@@ -475,14 +475,14 @@ describe('throughs/take', () => {
 
     const instance = read()
 
-    instance({ type: ValveActionType.Pull }, () => {
+    instance({ type: ValveMessageType.Pull }, () => {
       assert.notOk(ended)
-      instance({ type: ValveActionType.Pull }, () => {
+      instance({ type: ValveMessageType.Pull }, () => {
         assert.notOk(ended)
-        instance({ type: ValveActionType.Pull }, () => {
+        instance({ type: ValveMessageType.Pull }, () => {
           assert.notOk(ended)
-          instance({ type: ValveActionType.Pull }, action => {
-            assert.equal(action.type, ValveActionType.Abort)
+          instance({ type: ValveMessageType.Pull }, action => {
+            assert.equal(action.type, ValveMessageType.Complete)
             assert.isOk(ended)
             done()
           })
@@ -499,17 +499,17 @@ describe('throughs/through', () => {
     valve()(
       count(5),
       createThrough(),
-      createThrough(({ data }) => ({
-        onData(payload) {
+      createThrough(({ next }) => ({
+        next(payload) {
           assert.isNumber(payload)
           s()
-          data(payload)
+          next(payload)
         }
       })),
       collect({
-        onData(data) {
+        next(next) {
           assert.equal(s.callCount, 5)
-          assert.deepEqual(data, [1, 2, 3, 4, 5])
+          assert.deepEqual(next, [1, 2, 3, 4, 5])
           done()
         }
       })
@@ -519,9 +519,9 @@ describe('throughs/through', () => {
   it('onEnd', done => {
     valve()(
       infinite(),
-      createThrough(({ abort }) => ({
-        onAbort() {
-          abort()
+      createThrough(({ complete }) => ({
+        complete() {
+          complete()
 
           setImmediate(() => {
             done()
@@ -530,8 +530,8 @@ describe('throughs/through', () => {
       })),
       take(10),
       collect({
-        onData(data) {
-          assert.equal(data.length, 10)
+        next(next) {
+          assert.equal(next.length, 10)
         }
       })
     )
@@ -544,14 +544,14 @@ describe('throughs/through', () => {
     valve<typeof ERR>()(
       error(ERR),
       createThrough(({ error }) => ({
-        onError(err) {
+        error(err) {
           assert.deepEqual(err, ERR)
           s()
           error(err)
         }
       })),
       collect({
-        onError(err) {
+        error(err) {
           assert.equal(s.callCount, 1)
           assert.deepEqual(err, ERR)
           done()
@@ -569,8 +569,8 @@ describe('throughs/unique', () => {
       fromIterable(numbers),
       unique(),
       collect({
-        onData(data) {
-          assert.deepEqual(data.sort(), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        next(next) {
+          assert.deepEqual(next.sort(), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
           done()
         }
       })
@@ -584,8 +584,8 @@ describe('throughs/unique', () => {
       fromIterable(numbers),
       unique(Math.floor),
       collect({
-        onData(data) {
-          assert.deepEqual(data.sort(), [0.1, 1.1])
+        next(next) {
+          assert.deepEqual(next.sort(), [0.1, 1.1])
           done()
         }
       })
@@ -599,7 +599,7 @@ describe('throughs/unique', () => {
 //       fromIterable([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),
 //       flatten(),
 //       collect({
-//         onData(action) {
+//         next(action) {
 //           expect(action.payload).to.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9])
 //
 //           done()
@@ -613,7 +613,7 @@ describe('throughs/unique', () => {
 //       fromIterable([['a', 'b', 'c'], ['d', 'e', 'f']]),
 //       flatten(),
 //       collect({
-//         onData(action) {
+//         next(action) {
 //           expect(action.payload).to.deep.equal(['a', 'b', 'c', 'd', 'e', 'f'])
 //
 //           done()
@@ -627,7 +627,7 @@ describe('throughs/unique', () => {
 //       fromIterable([fromIterable([1, 2, 3]), fromIterable([4, 5, 6]), fromIterable([7, 8, 9])]),
 //       flatten(),
 //       collect({
-//         onData(action) {
+//         next(action) {
 //           expect(action.payload).to.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9])
 //
 //           done()
@@ -641,7 +641,7 @@ describe('throughs/unique', () => {
 //       fromIterable([fromIterable(['a', 'b', 'c']), fromIterable(['d', 'e', 'f'])]),
 //       flatten(),
 //       collect({
-//         onData(action) {
+//         next(action) {
 //           expect(action.payload).to.deep.equal(['a', 'b', 'c', 'd', 'e', 'f'])
 //
 //           done()
@@ -657,7 +657,7 @@ describe('throughs/unique', () => {
 //       through(),
 //       flatten(),
 //       collect({
-//         onData(action) {
+//         next(action) {
 //           expect(action.payload).to.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9])
 //
 //           done()
@@ -673,10 +673,10 @@ describe('throughs/unique', () => {
 //       fromIterable([error(err)]),
 //       flatten(),
 //       createSink({
-//         onError(action) {
+//         error(action) {
 //           expect(action.payload).to.equal(err)
 //           setImmediate(() => {
-//             expect(action.payload).to.equal(err) // should abort stream of streams
+//             expect(action.payload).to.equal(err) // should complete stream of streams
 //             done()
 //           })
 //         }
@@ -684,7 +684,7 @@ describe('throughs/unique', () => {
 //     )
 //   })
 //
-//   it('abort', done => {
+//   it('complete', done => {
 //     let s1Ended: {}
 //     let s2Ended: {}
 //     let s3Ended: {}
@@ -695,7 +695,7 @@ describe('throughs/unique', () => {
 //           valve()(
 //             fromIterable([1, 2]),
 //             through({
-//               onAbort(action) {
+//               complete(action) {
 //                 s1Ended = action
 //               }
 //             })
@@ -703,14 +703,14 @@ describe('throughs/unique', () => {
 //           valve()(
 //             fromIterable([3, 4]),
 //             through({
-//               onAbort(action) {
+//               complete(action) {
 //                 s2Ended = action
 //               }
 //             })
 //           )
 //         ]),
 //         through({
-//           onAbort(action) {
+//           complete(action) {
 //             s3Ended = action
 //           }
 //         })
@@ -718,24 +718,24 @@ describe('throughs/unique', () => {
 //       flatten()
 //     )
 //
-//     stream.source({ type: ValveActionType.Pull }, act => {
-//       if (act.type !== ValveActionType.Noop) {
+//     stream.source({ type: ValveMessageType.Pull }, act => {
+//       if (act.type !== ValveMessageType.Noop) {
 //         done(new Error('Action type mismatch'))
 //       } else {
-//         stream.source({ type: ValveActionType.Pull }, action => {
-//           if (action.type === ValveActionType.Data) {
+//         stream.source({ type: ValveMessageType.Pull }, action => {
+//           if (action.type === ValveMessageType.Next) {
 //             expect(action.payload).to.equal(1)
 //           } else {
 //             done(new Error('Action type mismatch'))
 //           }
 //
-//           stream.source({ type: ValveActionType.Abort }, _action => {
-//             expect(_action.type).to.equal(ValveActionType.Abort)
+//           stream.source({ type: ValveMessageType.Complete }, _action => {
+//             expect(_action.type).to.equal(ValveMessageType.Complete)
 //
 //             setImmediate(() => {
-//               expect(s3Ended).to.deep.equal({ type: ValveActionType.Abort }) // should abort stream of streams
-//               expect(s1Ended).to.deep.equal({ type: ValveActionType.Abort }) // should abort current nested stream
-//               expect(s2Ended).to.equal(undefined) // should not abort queued nested stream
+//               expect(s3Ended).to.deep.equal({ type: ValveMessageType.Complete }) // should complete stream of streams
+//               expect(s1Ended).to.deep.equal({ type: ValveMessageType.Complete }) // should complete current nested stream
+//               expect(s2Ended).to.equal(undefined) // should not complete queued nested stream
 //               done()
 //             })
 //           })
@@ -744,7 +744,7 @@ describe('throughs/unique', () => {
 //     })
 //   })
 //
-//   it('abort before first read', done => {
+//   it('complete before first read', done => {
 //     let sosEnded: {}
 //     let s1Ended: {}
 //
@@ -764,14 +764,14 @@ describe('throughs/unique', () => {
 //           valve()(
 //             fromIterable([1, 2]),
 //             through({
-//               onAbort(action) {
+//               complete(action) {
 //                 s1Ended = action
 //               }
 //             })
 //           )
 //         ]),
 //         through({
-//           onAbort(action) {
+//           complete(action) {
 //             sosEnded = action
 //           }
 //         })
@@ -779,12 +779,12 @@ describe('throughs/unique', () => {
 //       flatten()
 //     )
 //
-//     stream.source({ type: ValveActionType.Abort }, action => {
-//       expect(action.type).to.equal(ValveActionType.Abort)
+//     stream.source({ type: ValveMessageType.Complete }, action => {
+//       expect(action.type).to.equal(ValveMessageType.Complete)
 //
 //       setImmediate(() => {
-//         expect(sosEnded).to.deep.equal({ type: ValveActionType.Abort }) // should abort stream of streams
-//         expect(s1Ended).to.equal(undefined) // should abort current nested stream
+//         expect(sosEnded).to.deep.equal({ type: ValveMessageType.Complete }) // should complete stream of streams
+//         expect(s1Ended).to.equal(undefined) // should complete current nested stream
 //         done()
 //       })
 //     })
@@ -795,7 +795,7 @@ describe('throughs/unique', () => {
 //       fromIterable([[1, 2, 3], 4, [5, 6, 7], 8, 9, 10]),
 //       flatten(),
 //       collect({
-//         onData(action) {
+//         next(action) {
 //           expect(action.payload).to.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 //
 //           done()
@@ -809,7 +809,7 @@ describe('throughs/unique', () => {
 //       fromIterable([[1, 2, 3], 4, fromIterable([5, 6, 7]), 8, 9, 10]),
 //       flatten(),
 //       collect({
-//         onData(action) {
+//         next(action) {
 //           expect(action.payload).to.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 //
 //           done()

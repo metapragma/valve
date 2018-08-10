@@ -3,12 +3,12 @@ import { ValveError, ValveThroughFactory } from '../types'
 import { createThrough } from '../utilities'
 
 export function asyncMap<P, R, E extends ValveError = ValveError>(
-  iteratee: (data: P) => Promise<R>
+  iteratee: (next: P) => Promise<R>
 ): ValveThroughFactory<P, R, {}, E> {
-  return createThrough(({ data, error }) => ({
-    onData(payload) {
+  return createThrough(({ next, error }) => ({
+    next(payload) {
       iteratee(payload)
-        .then(data)
+        .then(next)
         .catch(error)
     }
   }))

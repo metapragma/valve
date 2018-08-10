@@ -22,8 +22,8 @@ describe('sinks/collect', () => {
     valve()(
       empty(),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [])
+        next(next) {
+          assert.deepEqual(next, [])
 
           done()
         }
@@ -35,8 +35,8 @@ describe('sinks/collect', () => {
     valve()(
       count(3),
       collect({
-        onData(data) {
-          assert.deepEqual(data, [1, 2, 3])
+        next(next) {
+          assert.deepEqual(next, [1, 2, 3])
 
           done()
         }
@@ -51,17 +51,17 @@ describe('sinks/concat', () => {
 
     valve()(
       fromIterable('hello there this is a test'.split(/([aeiou])/)),
-      createThrough(({ data }) => ({
-        onData(str) {
+      createThrough(({ next }) => ({
+        next(str) {
           // tslint:disable-next-line no-increment-decrement
           n++
 
-          data(str)
+          next(str)
         }
       })),
       concat({
-        onData(data) {
-          assert.deepEqual(data, 'hello there this is a test')
+        next(next) {
+          assert.deepEqual(next, 'hello there this is a test')
           assert.equal(n, 17)
           done()
         }
@@ -75,12 +75,12 @@ describe('sinks/find', () => {
     valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       find({
-        onData(data) {
-          assert.equal(data, 7)
+        next(next) {
+          assert.equal(next, 7)
           done()
         },
-        predicate(data) {
-          return data === 7
+        predicate(next) {
+          return next === 7
         }
       })
     )
@@ -97,12 +97,12 @@ describe('sinks/find', () => {
     valve()(
       fromIterable(f.sort()),
       find({
-        onData(data) {
-          assert.equal(data, target)
+        next(next) {
+          assert.equal(next, target)
           done()
         },
-        predicate(data) {
-          return data === target
+        predicate(next) {
+          return next === target
         }
       })
     )
@@ -116,11 +116,11 @@ describe('sinks/find', () => {
     valve()(
       fromIterable(f.sort()),
       find({
-        onAbort() {
+        complete() {
           done()
         },
-        predicate(data) {
-          return data === target
+        predicate(next) {
+          return next === target
         }
       })
     )
@@ -138,12 +138,12 @@ describe('sinks/find', () => {
   //         })
   //     ),
   //     find({
-  //       onData(data) {
+  //       next(next) {
   //         assert.equal(action.payload, 7)
   //         done()
   //       },
-  //       predicate(data) {
-  //         return data >= 7
+  //       predicate(next) {
+  //         return next >= 7
   //       }
   //     })
   //   )
@@ -153,8 +153,8 @@ describe('sinks/find', () => {
     valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       find({
-        onData(data) {
-          assert.equal(data, 1)
+        next(next) {
+          assert.equal(next, 1)
           done()
         }
       })
@@ -167,7 +167,7 @@ describe('sinks/find', () => {
     valve<typeof ERR>()(
       error(ERR),
       find({
-        onError(err) {
+        error(err) {
           assert.equal(err, ERR)
           done()
         }
@@ -179,7 +179,7 @@ describe('sinks/find', () => {
     valve()(
       empty(),
       find({
-        onAbort() {
+        complete() {
           done()
         }
       })
@@ -195,8 +195,8 @@ describe('sinks/reduce', () => {
         iteratee(a, b) {
           return a + b
         },
-        onData(data) {
-          assert.equal(data, 16)
+        next(next) {
+          assert.equal(next, 16)
           done()
         },
         accumulator: 10
@@ -211,8 +211,8 @@ describe('sinks/reduce', () => {
         iteratee(a, b) {
           return a + b
         },
-        onData(data) {
-          assert.equal(data, 6)
+        next(next) {
+          assert.equal(next, 6)
           done()
         }
       })
@@ -226,7 +226,7 @@ describe('sinks/reduce', () => {
       error(ERR),
       reduce({
         iteratee: noop,
-        onError(err) {
+        error(err) {
           assert.equal(err, ERR)
           done()
         }
@@ -242,7 +242,7 @@ describe('sinks/reduce', () => {
       reduce({
         // tslint:disable-next-line restrict-plus-operands
         iteratee: (a, b) => a + b,
-        onError(err) {
+        error(err) {
           assert.equal(err, ERR)
           done()
         },
@@ -256,7 +256,7 @@ describe('sinks/reduce', () => {
       empty(),
       reduce({
         iteratee: noop,
-        onAbort() {
+        complete() {
           done()
         }
       })
@@ -268,8 +268,8 @@ describe('sinks/reduce', () => {
   //     empty(),
   //     reduce({
   //       iteratee: () => {},
-  //       onData(data) {
-  //         assert.equal(data, 10)
+  //       next(next) {
+  //         assert.equal(next, 10)
   //         done()
   //       },
   //       accumulator: 10
