@@ -1,6 +1,8 @@
-/* tslint:disable no-unnecessary-callback-wrapper */
+/* tslint:disable no-unnecessary-callback-wrapper max-func-body-length */
 
 import {
+  Observable,
+  Observer,
   ValveActionComplete,
   ValveActionError,
   ValveCallback,
@@ -20,12 +22,23 @@ import {
   ValveSourceFactory,
   ValveSourceMessage,
   ValveState,
+  ValveStream,
   ValveThrough,
   ValveThroughFactory,
   ValveType
 } from './types'
 
-import { assign, compact, defaults, find, isUndefined, noop } from 'lodash'
+import {
+  assign,
+  compact,
+  defaults,
+  find,
+  forEach,
+  isFunction,
+  isUndefined,
+  noop,
+  pull
+} from 'lodash'
 
 export const hasEnded = <E>(
   action:
@@ -99,13 +112,7 @@ export const createSource = <
     { type: ValveType.Source }
   )
 
-export const createSinkDefaultOptions = {
-  complete: noop,
-  error: noop,
-  next: noop
-}
-
-const scheduler = (tick: () => boolean): void => {
+const dumb = (tick: () => boolean): void => {
   let loop = true
 
   while (loop) {
@@ -125,6 +132,7 @@ const scheduler = (tick: () => boolean): void => {
 
 export const createSink = <
   T,
+  R,
   S = ValveState,
   E extends ValveError = ValveError
 >(
@@ -132,12 +140,51 @@ export const createSink = <
     actions: {
       complete: ValveActionComplete
       error: ValveActionError<E>
+      observer: Required<Observer<R, E>>
     }
-  ) => Partial<ValveCreateSinkOptions<T, E>> = () => createSinkDefaultOptions
-): ValveSinkFactory<T, S, E> =>
-  assign<() => ValveSink<T, E>, { type: ValveType.Sink }>(
+  ) => Partial<ValveCreateSinkOptions<T, E>> = () => ({})
+): ValveSinkFactory<T, R, S, E> =>
+  assign<() => ValveSink<T, R, E>, { type: ValveType.Sink }>(
     () => {
       let ended: ValveSinkMessage<E> | undefined
+      let source: ValveSource<T, E>
+      let scheduler: (tick: () => boolean) => void
+      const observers: Array<Observer<R, E>> = []
+      // TODO: do not subscribe if no observers
+
+      const fanOut: Required<Observer<R, E>> = {
+        // TODO: inneficient
+        next(value) {
+          forEach(
+            observers,
+            observer => {
+              if (isFunction(observer.next)) {
+                observer.next(value)
+              }
+            }
+          )
+        },
+        complete() {
+          forEach(
+            observers,
+            observer => {
+              if (isFunction(observer.complete)) {
+                observer.complete()
+              }
+            }
+          )
+        },
+        error(value) {
+          forEach(
+            observers,
+            observer => {
+              if (isFunction(observer.error)) {
+                observer.error(value)
+              }
+            }
+          )
+        }
+      }
 
       const actions = {
         complete() {
@@ -148,78 +195,125 @@ export const createSink = <
             type: ValveMessageType.Error,
             payload: error
           })
-        }
+        },
+        observer: fanOut
       }
 
       const options: ValveCreateSinkOptions<T, E> = defaults(
         {},
         handler(actions),
-        createSinkDefaultOptions
+        {
+          complete() {
+            fanOut.complete()
+          },
+          error(value: E) {
+            fanOut.error(value)
+          },
+          next(value: R) {
+            fanOut.next(value)
+          }
+        }
       )
 
-      return source => {
+      const next = (): void => {
         // this function is much simpler to write if you just use recursion,
         // but by using a while loop we do not blow the stack if the stream
         // happens to be sync.
 
-        const next = (): void => {
-          let loop = true
-          let hasResponded = false
+        let loop = true
+        let hasResponded = false
 
-          const tick = () => {
-            hasResponded = false
+        const tick = () => {
+          hasResponded = false
 
-            source(
-              isUndefined(ended) ? { type: ValveMessageType.Pull } : ended,
-              action => {
-                hasResponded = true
+          source(
+            isUndefined(ended) ? { type: ValveMessageType.Pull } : ended,
+            action => {
+              hasResponded = true
 
-                switch (action.type) {
-                  case ValveMessageType.Complete: {
-                    loop = false
+              switch (action.type) {
+                case ValveMessageType.Complete: {
+                  loop = false
 
-                    actions.complete()
+                  actions.complete()
 
-                    options.complete()
+                  options.complete()
 
-                    break
-                  }
-                  case ValveMessageType.Error: {
-                    loop = false
+                  break
+                }
+                case ValveMessageType.Error: {
+                  loop = false
 
-                    actions.error(action.payload)
+                  actions.error(action.payload)
 
-                    options.error(action.payload)
+                  options.error(action.payload)
 
-                    break
-                  }
-                  case ValveMessageType.Noop: {
-                    break
-                  }
-                  case ValveMessageType.Next: {
-                    options.next(action.payload)
+                  break
+                }
+                case ValveMessageType.Noop: {
+                  break
+                }
+                case ValveMessageType.Next: {
+                  options.next(action.payload)
 
-                    if (!loop) {
-                      next()
-                    }
+                  if (!loop) {
+                    next()
                   }
                 }
               }
-            )
-
-            if (!hasResponded) {
-              loop = false
-
-              return loop
             }
+          )
+
+          if (!hasResponded) {
+            loop = false
 
             return loop
           }
 
-          scheduler(tick)
+          return loop
         }
 
-        next()
+        if (!isUndefined(scheduler)) {
+          scheduler(tick)
+        }
+      }
+
+      const observable: Observable<R, E> = {
+        // tslint:disable-next-line function-name
+        [Symbol.observable]() {
+          return this
+        },
+        subscribe(observer) {
+          observers.push(observer)
+
+          return {
+            unsubscribe() {
+              if (observers.length !== 0) {
+                pull(observers, observer)
+              }
+            }
+          }
+        }
+      }
+
+      return _source => {
+        source = _source
+
+        return assign<
+          { schedule(scheduler: (tick: () => boolean) => void): void },
+          Observable<R, E>
+        >(
+          {
+            schedule(_scheduler = dumb) {
+              if (isUndefined(scheduler)) {
+                scheduler = _scheduler
+
+                next()
+              }
+            }
+          },
+          observable
+        )
       }
     },
     { type: ValveType.Sink }

@@ -25,6 +25,7 @@ function iterate<P, E>(
 
 export function fromIterable<P, E extends ValveError = ValveError>(
   iterable: Iterable<P> | ArrayLike<P>,
+  // TODO: compose this
   safe: boolean = true
 ): ValveSourceFactory<P, {}, E> {
   const iterator = createIterator(iterable)

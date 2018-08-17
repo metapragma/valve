@@ -1,45 +1,42 @@
 import {
-  ValveCreateSinkOptions,
   ValveError,
-  ValveReduceOptions,
   ValveSinkFactory
 } from '../types'
 
 import { defaults, isUndefined } from 'lodash'
 
-import { createSink, createSinkDefaultOptions } from '../utilities'
+import { createSink } from '../utilities'
 
 export function reduce<P, R = P, E extends ValveError = ValveError>(
-  options: ValveReduceOptions<P, R> & Partial<ValveCreateSinkOptions<R, E>>
-): ValveSinkFactory<P, {}, E> {
+  iteratee: (accumulator: R, next: P) => R,
+  accumulator?: R
+): ValveSinkFactory<P, R, {}, E> {
   let first = true
   // tslint:disable-next-line no-any
-  let acc: any
+  let acc: any = accumulator
 
-  const _options = defaults({}, options, createSinkDefaultOptions)
-
-  if (!isUndefined(_options.accumulator)) {
-    acc = _options.accumulator
-  }
-
-  return createSink<P, {}, E>(() => ({
-    next(next) {
-      if (first && isUndefined(_options.accumulator)) {
-        acc = next
+  return createSink<P, R, {}, E>(({ observer }) => ({
+    next(value) {
+      if (first && isUndefined(accumulator)) {
+        acc = value
       } else {
         // tslint:disable-next-line no-unsafe-any
-        acc = _options.iteratee(acc, next)
+        acc = iteratee(acc, value)
       }
 
       first = false
     },
     complete() {
-      if (first && isUndefined(_options.accumulator)) {
-        _options.complete()
+      if (first && isUndefined(accumulator)) {
+        observer.complete()
       } else {
-        _options.next(acc)
+        // tslint:disable-next-line no-unsafe-any
+        observer.next(acc)
+        observer.complete()
       }
     },
-    error: _options.error
+    error(value) {
+      observer.error(value)
+    }
   }))
 }

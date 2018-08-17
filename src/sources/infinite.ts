@@ -2,6 +2,7 @@ import { ValveError, ValveSourceFactory } from '../types'
 
 import { createSource } from '../utilities'
 
+// TODO: better random
 export function infinite<
   P,
   E extends ValveError = ValveError

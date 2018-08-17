@@ -12,36 +12,46 @@ import {
 import { ValveMessageType, ValveType } from './types'
 import { spy } from 'sinon'
 
+import { simpleScheduler } from './schedulers/simple'
+
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
 import { assert } from 'chai'
 
 describe('pull', () => {
   it('source -> sink', done => {
-    valve()(
-      count(4),
+    const pipe = valve()
+
+    const stream = pipe(
+      count(6),
       createThrough(({ next }) => ({
-        next(payload) {
+        next(value) {
           // console.log('through', action)
-          next(payload + 1)
+          next(value + 1)
         }
       })),
-      collect({
-        next(next) {
-          assert.deepEqual(next, [2, 3, 4, 5])
-          done()
-        }
-      })
+      collect()
     )
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [2, 3, 4, 5, 6, 7])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('(source -> through) -> sink', done => {
     const source = valve()(
       count(4),
       createThrough(({ next }) => ({
-        next(payload) {
+        next(value) {
           // console.log('through', action)
-          next(payload + 1)
+          next(value + 1)
         }
       }))
     )
@@ -49,29 +59,32 @@ describe('pull', () => {
     assert.equal(source.type, ValveType.Source)
     assert.isFunction(source)
 
-    valve()(
-      source,
-      collect({
-        next(next) {
-          assert.deepEqual(next, [2, 3, 4, 5])
-          done()
-        }
-      })
-    )
+    const stream = valve()(source, collect())
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [2, 3, 4, 5])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('source -> (through -> through) -> sink', done => {
     const through = valve()(
       createThrough<number>(({ next }) => ({
-        next(payload) {
+        next(value) {
           // console.log('through', action)
-          next(payload + 1)
+          next(value + 1)
         }
       })),
       createThrough<number>(({ next }) => ({
-        next(payload) {
+        next(value) {
           // console.log('through', action)
-          next(payload + 1)
+          next(value + 1)
         }
       }))
     )
@@ -79,52 +92,60 @@ describe('pull', () => {
     assert.equal(through.type, ValveType.Through)
     assert.isFunction(through)
 
-    valve()(
-      count(4),
-      through,
-      collect({
-        next(payload) {
-          assert.deepEqual(payload, [3, 4, 5, 6])
-          done()
-        }
-      })
-    )
+    const stream = valve()(count(4), through, collect())
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [3, 4, 5, 6])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('source -> (through -> sink)', done => {
     const sink = valve()(
       createThrough<number>(({ next }) => ({
-        next(payload) {
+        next(value) {
           // console.log('through', action)
-          next(payload + 1)
+          next(value + 1)
         }
       })),
-      collect<number>({
-        next(action) {
-          assert.deepEqual(action, [2, 3, 4, 5])
-          done()
-        }
-      })
+      collect<number>()
     )
 
     assert.equal(sink.type, ValveType.Sink)
     assert.isFunction(sink)
 
-    valve()(count(4), sink)
+    const stream = valve()(count(4), sink)
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [2, 3, 4, 5])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('source -> (through -> (through -> through)) -> sink', done => {
     const through = valve()(
       createThrough<number>(({ next }) => ({
-        next(payload) {
+        next(value) {
           // console.log('through', action)
-          next(payload + 1)
+          next(value + 1)
         }
       })),
       createThrough<number>(({ next }) => ({
-        next(payload) {
+        next(value) {
           // console.log('through', action)
-          next(payload + 1)
+          next(value + 1)
         }
       }))
     )
@@ -132,9 +153,9 @@ describe('pull', () => {
     const through2 = valve()(
       through,
       createThrough<number>(({ next }) => ({
-        next(payload) {
+        next(value) {
           // console.log('through', action)
-          next(payload + 1)
+          next(value + 1)
         }
       }))
     )
@@ -142,37 +163,44 @@ describe('pull', () => {
     assert.equal(through.type, ValveType.Through)
     assert.isFunction(through)
 
-    valve()(
-      count(4),
-      through2,
-      collect({
-        next(action) {
-          assert.deepEqual(action, [4, 5, 6, 7])
-          done()
-        }
-      })
-    )
+    const stream = valve()(count(4), through2, collect())
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [4, 5, 6, 7])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('wrap pull streams into stream', done => {
-    valve()(
+    const stream = valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       map(e => e * e),
       createThrough(),
-      reduce({
-        iteratee(acc, next) {
-          return acc + next
-        },
-        next(next) {
-          assert.equal(next, 385)
-          done()
-        }
+      reduce((acc, next) => {
+        return acc + next
       })
     )
+
+    stream.subscribe({
+      next(value) {
+        assert.equal(value, 385)
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('turn pull(through,...) -> Through', done => {
-    valve()(
+    const stream = valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       valve()(
         map<number, number>(e => {
@@ -180,16 +208,21 @@ describe('pull', () => {
         }),
         createThrough<number, number>()
       ),
-      reduce({
-        iteratee(acc, next) {
-          return acc + next
-        },
-        next(next) {
-          assert.equal(next, 385)
-          done()
-        }
+      reduce((acc, next) => {
+        return acc + next
       })
     )
+
+    stream.subscribe({
+      next(value) {
+        assert.equal(value, 385)
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   // it('writable pull() should throw when called twice', () => {
@@ -232,20 +265,22 @@ describe('pull', () => {
 
     const read = valve()(fromIterable(['billy', 'joe', 'zeke']), pipeline)
 
-    valve()(
-      read,
-      collect({
-        next(payload) {
-          assert.deepEqual(payload, [
-            '*** BILLY! ***',
-            '*** JOE! ***',
-            '*** ZEKE! ***'
-          ])
+    const stream = valve()(read, collect())
 
-          done()
-        }
-      })
-    )
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [
+          '*** BILLY! ***',
+          '*** JOE! ***',
+          '*** ZEKE! ***'
+        ])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('continuable stream', done => {
@@ -254,7 +289,7 @@ describe('pull', () => {
     const sB = spy()
     const sC = spy()
 
-    const stream = valve()(
+    const source = valve()(
       count(5),
       map(item => {
         sA()
@@ -264,7 +299,7 @@ describe('pull', () => {
       createThrough()
     )
 
-    stream()({ type: ValveMessageType.Pull }, action => {
+    source()({ type: ValveMessageType.Pull }, action => {
       sB()
 
       if (action.type === ValveMessageType.Next) {
@@ -274,7 +309,7 @@ describe('pull', () => {
       }
     })
 
-    stream()({ type: ValveMessageType.Pull }, action => {
+    source()({ type: ValveMessageType.Pull }, action => {
       sC()
 
       if (action.type === ValveMessageType.Next) {
@@ -284,26 +319,29 @@ describe('pull', () => {
       }
     })
 
-    valve()(
-      stream,
-      collect({
-        next(next) {
-          assert.equal(sA.callCount, 5)
-          assert.equal(sB.callCount, 1)
-          assert.equal(sC.callCount, 1)
-          assert.deepEqual(next, [6, 8, 10])
-          done()
-        }
-      })
-    )
+    const stream = valve()(source, collect())
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [6, 8, 10])
+      },
+      complete() {
+        assert.equal(sA.callCount, 5)
+        assert.equal(sB.callCount, 1)
+        assert.equal(sC.callCount, 1)
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('continuable stream (error)', done => {
     const ERR = new Error('test')
 
-    const stream = valve<typeof ERR>()(error(ERR), createThrough())
+    const source = valve<typeof ERR>()(error(ERR), createThrough())
 
-    stream()({ type: ValveMessageType.Pull }, action => {
+    source()({ type: ValveMessageType.Pull }, action => {
       if (action.type === ValveMessageType.Error) {
         assert.deepEqual(action.payload, ERR)
       } else {
@@ -311,7 +349,7 @@ describe('pull', () => {
       }
     })
 
-    stream()({ type: ValveMessageType.Pull }, action => {
+    source()({ type: ValveMessageType.Pull }, action => {
       if (action.type === ValveMessageType.Error) {
         assert.deepEqual(action.payload, ERR)
         done()

@@ -16,29 +16,35 @@ import { assert } from 'chai'
 
 describe('sources/count', () => {
   it('...', done => {
-    valve()(
-      count(5),
-      collect({
-        next(next) {
-          assert.deepEqual(next, [1, 2, 3, 4, 5])
-          done()
-        }
-      })
-    )
+    const stream = valve()(count(5), collect())
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [1, 2, 3, 4, 5])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 })
 
 describe('sources/empty', () => {
   it('...', done => {
-    valve()(
-      empty(),
-      collect({
-        next(next) {
-          assert.deepEqual(next, [])
-          done()
-        }
-      })
-    )
+    const stream = valve()(empty(), collect())
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 })
 
@@ -46,65 +52,84 @@ describe('sources/error', () => {
   it('...', done => {
     const ee = new Error('Some error')
 
-    valve<typeof ee>()(
-      error(ee),
-      collect({
-        error(err) {
-          assert.equal(err, ee)
-          done()
-        }
-      })
-    )
+    const stream = valve<typeof ee>()(error(ee), collect())
+
+    stream.subscribe({
+      error(err) {
+        assert.equal(err, ee)
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 })
 
 describe('sources/fromIterable', () => {
   it('set', done => {
-    valve()(
-      fromIterable(new Set([1, 2, 3])),
-      collect({
-        next(next) {
-          assert.deepEqual(next, [1, 2, 3])
-          done()
-        }
-      })
-    )
+    const stream = valve()(fromIterable(new Set([1, 2, 3])), collect())
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [1, 2, 3])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('map', done => {
-    valve()(
+    const stream = valve()(
       fromIterable(new Map([['one', 1], ['two', 2]])),
-      collect({
-        next(next) {
-          assert.deepEqual(next, [['one', 1], ['two', 2]])
-          done()
-        }
-      })
+      collect()
     )
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [['one', 1], ['two', 2]])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('array', done => {
-    valve()(
-      fromIterable([1, 2, 3]),
-      collect({
-        next(next) {
-          assert.deepEqual(next, [1, 2, 3])
-          done()
-        }
-      })
-    )
+    const stream = valve()(fromIterable([1, 2, 3]), collect())
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [1, 2, 3])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('arrayLike', done => {
-    valve()(
+    const stream = valve()(
       fromIterable({ length: 2, 0: 'Alpha', 1: 'Beta' }),
-      collect({
-        next(next) {
-          assert.deepEqual(next, ['Alpha', 'Beta'])
-          done()
-        }
-      })
+      collect()
     )
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, ['Alpha', 'Beta'])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('error', done => {
@@ -116,68 +141,82 @@ describe('sources/fromIterable', () => {
       throw err
     }
 
-    valve()(
-      fromIterable(genFunc(), false),
-      collect({
-        error(_err) {
-          assert.deepEqual(_err, err)
-          done()
-        }
-      })
-    )
+    const stream = valve()(fromIterable(genFunc(), false), collect())
+
+    stream.subscribe({
+      error(_err) {
+        assert.deepEqual(_err, err)
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('object', done => {
-    valve()(
+    const stream = valve()(
       fromIterable(Object.values({ a: 1, b: 2, c: 3 })),
-      collect({
-        next(next) {
-          assert.deepEqual(next, [1, 2, 3])
-          done()
-        }
-      })
+      collect()
     )
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [1, 2, 3])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 })
 
 describe('sources/infinite', () => {
   it('default', done => {
-    valve()(
-      infinite(),
-      take(5),
-      collect({
-        next(next) {
-          assert.equal(next.length, 5)
-          done()
-        }
-      })
-    )
+    const stream = valve()(infinite(), take(5), collect())
+
+    stream.subscribe({
+      next(value) {
+        assert.equal(value.length, 5)
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('custom', done => {
-    valve()(
-      infinite(() => 's'),
-      take(3),
-      collect({
-        next(next) {
-          assert.deepEqual(next, ['s', 's', 's'])
-          done()
-        }
-      })
-    )
+    const stream = valve()(infinite(() => 's'), take(3), collect())
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, ['s', 's', 's'])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 })
 
 describe('sources/once', () => {
   it('...', done => {
-    valve()(
-      once({ a: 1, b: 2, c: 3 }),
-      collect({
-        next(next) {
-          assert.deepEqual(next, [{ a: 1, b: 2, c: 3 }])
-          done()
-        }
-      })
-    )
+    const stream = valve()(once({ a: 1, b: 2, c: 3 }), collect())
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [{ a: 1, b: 2, c: 3 }])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 })

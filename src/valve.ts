@@ -12,6 +12,7 @@ import {
   ValveSourceFactory,
   ValveState,
   ValveStateComposite,
+  ValveStream,
   ValveThrough,
   ValveThroughFactory,
   ValveType
@@ -23,36 +24,28 @@ import { assign, map, reduceRight } from 'lodash'
 export function valve<ERR = ValveError>() {
   /* Source -> Through... -> Sink */
 
-  function compose<P1, S1, S2, E extends ERR>(
+  function compose<P1, P2, S1, S2, E extends ERR>(
     A1: ValveCompositeSource<P1, S1, E>,
-    A2: ValveCompositeSink<P1, S2, E>
-  ): void
-  function compose<P1, P2, S1, S2, S3, E extends ERR>(
-    A1: ValveCompositeSource<P1, S1, E>,
-    A2: ValveCompositeThrough<P1, P2, S2, E>,
-    A3: ValveCompositeSink<P2, S3, E>
-  ): void
-  function compose<P1, P2, P3, S1, S2, S3, S4, E extends ERR>(
+    A2: ValveCompositeSink<P1, P2, S2, E>
+  ): ValveStream<P2, ValveStateComposite<[S1, S2]>, E>
+  function compose<P1, P2, P3, S1, S2, S3, E extends ERR>(
     A1: ValveCompositeSource<P1, S1, E>,
     A2: ValveCompositeThrough<P1, P2, S2, E>,
-    A3: ValveCompositeThrough<P2, P3, S3, E>,
-    A4: ValveCompositeSink<P3, S4, E>
-  ): void
-  function compose<P1, P2, P3, P4, S1, S2, S3, S4, S5, E extends ERR>(
+    A3: ValveCompositeSink<P2, P3, S3, E>
+  ): ValveStream<P3, ValveStateComposite<[S1, S2, S3]>, E>
+  function compose<P1, P2, P3, P4, S1, S2, S3, S4, E extends ERR>(
     A1: ValveCompositeSource<P1, S1, E>,
     A2: ValveCompositeThrough<P1, P2, S2, E>,
     A3: ValveCompositeThrough<P2, P3, S3, E>,
-    A4: ValveCompositeThrough<P3, P4, S4, E>,
-    A5: ValveCompositeSink<P4, S5, E>
-  ): void
-  function compose<P1, P2, P3, P4, P5, S1, S2, S3, S4, S5, S6, E extends ERR>(
+    A4: ValveCompositeSink<P3, P4, S4, E>
+  ): ValveStream<P4, ValveStateComposite<[S1, S2, S3, S4]>, E>
+  function compose<P1, P2, P3, P4, P5, S1, S2, S3, S4, S5, E extends ERR>(
     A1: ValveCompositeSource<P1, S1, E>,
     A2: ValveCompositeThrough<P1, P2, S2, E>,
     A3: ValveCompositeThrough<P2, P3, S3, E>,
     A4: ValveCompositeThrough<P3, P4, S4, E>,
-    A5: ValveCompositeThrough<P4, P5, S5, E>,
-    A6: ValveCompositeSink<P5, S6, E>
-  ): void
+    A5: ValveCompositeSink<P4, P5, S5, E>
+  ): ValveStream<P5, ValveStateComposite<[S1, S2, S3, S4, S5]>, E>
   function compose<
     P1,
     P2,
@@ -60,6 +53,29 @@ export function valve<ERR = ValveError>() {
     P4,
     P5,
     P6,
+    S1,
+    S2,
+    S3,
+    S4,
+    S5,
+    S6,
+    E extends ERR
+  >(
+    A1: ValveCompositeSource<P1, S1, E>,
+    A2: ValveCompositeThrough<P1, P2, S2, E>,
+    A3: ValveCompositeThrough<P2, P3, S3, E>,
+    A4: ValveCompositeThrough<P3, P4, S4, E>,
+    A5: ValveCompositeThrough<P4, P5, S5, E>,
+    A6: ValveCompositeSink<P5, P6, S6, E>
+  ): ValveStream<P6, ValveStateComposite<[S1, S2, S3, S4, S5, S6]>, E>
+  function compose<
+    P1,
+    P2,
+    P3,
+    P4,
+    P5,
+    P6,
+    P7,
     S1,
     S2,
     S3,
@@ -75,8 +91,8 @@ export function valve<ERR = ValveError>() {
     A4: ValveCompositeThrough<P3, P4, S4, E>,
     A5: ValveCompositeThrough<P4, P5, S5, E>,
     A6: ValveCompositeThrough<P5, P6, S6, E>,
-    A7: ValveCompositeSink<P6, S7, E>
-  ): void
+    A7: ValveCompositeSink<P6, P7, S7, E>
+  ): ValveStream<P7, ValveStateComposite<[S1, S2, S3, S4, S5, S6, S7]>, E>
   function compose<
     P1,
     P2,
@@ -85,6 +101,7 @@ export function valve<ERR = ValveError>() {
     P5,
     P6,
     P7,
+    P8,
     S1,
     S2,
     S3,
@@ -102,8 +119,8 @@ export function valve<ERR = ValveError>() {
     A5: ValveCompositeThrough<P4, P5, S5, E>,
     A6: ValveCompositeThrough<P5, P6, S6, E>,
     A7: ValveCompositeThrough<P6, P7, S7, E>,
-    A8: ValveCompositeSink<P7, S8, E>
-  ): void
+    A8: ValveCompositeSink<P7, P8, S8, E>
+  ): ValveStream<P8, ValveStateComposite<[S1, S2, S3, S4, S5, S6, S7, S8]>, E>
   function compose<
     P1,
     P2,
@@ -113,6 +130,7 @@ export function valve<ERR = ValveError>() {
     P6,
     P7,
     P8,
+    P9,
     S1,
     S2,
     S3,
@@ -132,8 +150,12 @@ export function valve<ERR = ValveError>() {
     A6: ValveCompositeThrough<P5, P6, S6, E>,
     A7: ValveCompositeThrough<P6, P7, S7, E>,
     A8: ValveCompositeThrough<P7, P8, S8, E>,
-    A9: ValveCompositeSink<P8, S9, E>
-  ): void
+    A9: ValveCompositeSink<P8, P9, S9, E>
+  ): ValveStream<
+    P9,
+    ValveStateComposite<[S1, S2, S3, S4, S5, S6, S7, S8, S9]>,
+    E
+  >
   function compose<
     P1,
     P2,
@@ -144,6 +166,7 @@ export function valve<ERR = ValveError>() {
     P7,
     P8,
     P9,
+    P10,
     S1,
     S2,
     S3,
@@ -165,8 +188,12 @@ export function valve<ERR = ValveError>() {
     A7: ValveCompositeThrough<P6, P7, S7, E>,
     A8: ValveCompositeThrough<P7, P8, S8, E>,
     A9: ValveCompositeThrough<P8, P9, S9, E>,
-    A10: ValveCompositeSink<P9, S10, E>
-  ): void
+    A10: ValveCompositeSink<P9, P10, S10, E>
+  ): ValveStream<
+    P10,
+    ValveStateComposite<[S1, S2, S3, S4, S5, S6, S7, S8, S9, S10]>,
+    E
+  >
   function compose<
     P1,
     P2,
@@ -178,6 +205,7 @@ export function valve<ERR = ValveError>() {
     P8,
     P9,
     P10,
+    P11,
     S1,
     S2,
     S3,
@@ -201,8 +229,12 @@ export function valve<ERR = ValveError>() {
     A8: ValveCompositeThrough<P7, P8, S8, E>,
     A9: ValveCompositeThrough<P8, P9, S9, E>,
     A10: ValveCompositeThrough<P9, P10, S10, E>,
-    A11: ValveCompositeSink<P10, S11, E>
-  ): void
+    A11: ValveCompositeSink<P10, P11, S11, E>
+  ): ValveStream<
+    P11,
+    ValveStateComposite<[S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11]>,
+    E
+  >
   function compose<
     P1,
     P2,
@@ -215,6 +247,7 @@ export function valve<ERR = ValveError>() {
     P9,
     P10,
     P11,
+    P12,
     S1,
     S2,
     S3,
@@ -240,8 +273,12 @@ export function valve<ERR = ValveError>() {
     A9: ValveCompositeThrough<P8, P9, S9, E>,
     A10: ValveCompositeThrough<P9, P10, S10, E>,
     A11: ValveCompositeThrough<P10, P11, S11, E>,
-    A12: ValveCompositeSink<P11, S12, E>
-  ): void
+    A12: ValveCompositeSink<P11, P12, S12, E>
+  ): ValveStream<
+    P12,
+    ValveStateComposite<[S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12]>,
+    E
+  >
   function compose<
     P1,
     P2,
@@ -255,6 +292,7 @@ export function valve<ERR = ValveError>() {
     P10,
     P11,
     P12,
+    P13,
     S1,
     S2,
     S3,
@@ -282,8 +320,14 @@ export function valve<ERR = ValveError>() {
     A10: ValveCompositeThrough<P9, P10, S10, E>,
     A11: ValveCompositeThrough<P10, P11, S11, E>,
     A12: ValveCompositeThrough<P11, P12, S12, E>,
-    A13: ValveCompositeSink<P12, S13, E>
-  ): void
+    A13: ValveCompositeSink<P12, P13, S13, E>
+  ): ValveStream<
+    P13,
+    ValveStateComposite<
+      [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13]
+    >,
+    E
+  >
   function compose<
     P1,
     P2,
@@ -298,6 +342,7 @@ export function valve<ERR = ValveError>() {
     P11,
     P12,
     P13,
+    P14,
     S1,
     S2,
     S3,
@@ -327,8 +372,14 @@ export function valve<ERR = ValveError>() {
     A11: ValveCompositeThrough<P10, P11, S11, E>,
     A12: ValveCompositeThrough<P11, P12, S12, E>,
     A13: ValveCompositeThrough<P12, P13, S13, E>,
-    A14: ValveCompositeSink<P13, S14, E>
-  ): void
+    A14: ValveCompositeSink<P13, P14, S14, E>
+  ): ValveStream<
+    P14,
+    ValveStateComposite<
+      [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14]
+    >,
+    E
+  >
   function compose<
     P1,
     P2,
@@ -344,6 +395,7 @@ export function valve<ERR = ValveError>() {
     P12,
     P13,
     P14,
+    P15,
     S1,
     S2,
     S3,
@@ -375,8 +427,14 @@ export function valve<ERR = ValveError>() {
     A12: ValveCompositeThrough<P11, P12, S12, E>,
     A13: ValveCompositeThrough<P12, P13, S13, E>,
     A14: ValveCompositeThrough<P13, P14, S14, E>,
-    A15: ValveCompositeSink<P14, S15, E>
-  ): void
+    A15: ValveCompositeSink<P14, P15, S15, E>
+  ): ValveStream<
+    P15,
+    ValveStateComposite<
+      [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15]
+    >,
+    E
+  >
   function compose<
     P1,
     P2,
@@ -393,6 +451,7 @@ export function valve<ERR = ValveError>() {
     P13,
     P14,
     P15,
+    P16,
     S1,
     S2,
     S3,
@@ -426,8 +485,14 @@ export function valve<ERR = ValveError>() {
     A13: ValveCompositeThrough<P12, P13, S13, E>,
     A14: ValveCompositeThrough<P13, P14, S14, E>,
     A15: ValveCompositeThrough<P14, P15, S15, E>,
-    A16: ValveCompositeSink<P15, S16, E>
-  ): void
+    A16: ValveCompositeSink<P15, P16, S16, E>
+  ): ValveStream<
+    P16,
+    ValveStateComposite<
+      [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16]
+    >,
+    E
+  >
   function compose<
     P1,
     P2,
@@ -445,6 +510,7 @@ export function valve<ERR = ValveError>() {
     P14,
     P15,
     P16,
+    P17,
     S1,
     S2,
     S3,
@@ -480,8 +546,32 @@ export function valve<ERR = ValveError>() {
     A14: ValveCompositeThrough<P13, P14, S14, E>,
     A15: ValveCompositeThrough<P14, P15, S15, E>,
     A16: ValveCompositeThrough<P15, P16, S16, E>,
-    A17: ValveCompositeSink<P16, S17, E>
-  ): void
+    A17: ValveCompositeSink<P16, P17, S17, E>
+  ): ValveStream<
+    P17,
+    ValveStateComposite<
+      [
+        S1,
+        S2,
+        S3,
+        S4,
+        S5,
+        S6,
+        S7,
+        S8,
+        S9,
+        S10,
+        S11,
+        S12,
+        S13,
+        S14,
+        S15,
+        S16,
+        S17
+      ]
+    >,
+    E
+  >
 
   /* Source -> Through ... */
 
@@ -1044,28 +1134,28 @@ export function valve<ERR = ValveError>() {
 
   /* Through... -> Sink */
 
-  function compose<P1, P2, S1, S2, E extends ERR>(
+  function compose<P1, P2, P3, S1, S2, E extends ERR>(
     A1: ValveCompositeThrough<P1, P2, S1, E>,
-    A2: ValveCompositeSink<P2, S2, E>
-  ): ValveSinkFactory<P2, ValveStateComposite<[S1, S2]>, E>
-  function compose<P1, P2, P3, S1, S2, S3, E extends ERR>(
+    A2: ValveCompositeSink<P2, P3, S2, E>
+  ): ValveSinkFactory<P1, P3, ValveStateComposite<[S1, S2]>, E>
+  function compose<P1, P2, P3, P4, S1, S2, S3, E extends ERR>(
     A1: ValveCompositeThrough<P1, P2, S1, E>,
     A2: ValveCompositeThrough<P2, P3, S2, E>,
-    A3: ValveCompositeSink<P3, S3, E>
-  ): ValveSinkFactory<P3, ValveStateComposite<[S1, S2, S3]>, E>
-  function compose<P1, P2, P3, P4, S1, S2, S3, S4, E extends ERR>(
+    A3: ValveCompositeSink<P3, P4, S3, E>
+  ): ValveSinkFactory<P1, P4, ValveStateComposite<[S1, S2, S3]>, E>
+  function compose<P1, P2, P3, P4, P5, S1, S2, S3, S4, E extends ERR>(
     A1: ValveCompositeThrough<P1, P2, S1, E>,
     A2: ValveCompositeThrough<P2, P3, S2, E>,
     A3: ValveCompositeThrough<P3, P4, S3, E>,
-    A4: ValveCompositeSink<P4, S4, E>
-  ): ValveSinkFactory<P4, ValveStateComposite<[S1, S2, S3, S4]>, E>
-  function compose<P1, P2, P3, P4, P5, S1, S2, S3, S4, S5, E extends ERR>(
+    A4: ValveCompositeSink<P4, P5, S4, E>
+  ): ValveSinkFactory<P1, P5, ValveStateComposite<[S1, S2, S3, S4]>, E>
+  function compose<P1, P2, P3, P4, P5, P6, S1, S2, S3, S4, S5, E extends ERR>(
     A1: ValveCompositeThrough<P1, P2, S1, E>,
     A2: ValveCompositeThrough<P2, P3, S2, E>,
     A3: ValveCompositeThrough<P3, P4, S3, E>,
     A4: ValveCompositeThrough<P4, P5, S4, E>,
-    A5: ValveCompositeSink<P5, S5, E>
-  ): ValveSinkFactory<P5, ValveStateComposite<[S1, S2, S3, S4, S5]>, E>
+    A5: ValveCompositeSink<P5, P6, S5, E>
+  ): ValveSinkFactory<P1, P6, ValveStateComposite<[S1, S2, S3, S4, S5]>, E>
   function compose<
     P1,
     P2,
@@ -1073,6 +1163,7 @@ export function valve<ERR = ValveError>() {
     P4,
     P5,
     P6,
+    P7,
     S1,
     S2,
     S3,
@@ -1086,8 +1177,8 @@ export function valve<ERR = ValveError>() {
     A3: ValveCompositeThrough<P3, P4, S3, E>,
     A4: ValveCompositeThrough<P4, P5, S4, E>,
     A5: ValveCompositeThrough<P5, P6, S5, E>,
-    A6: ValveCompositeSink<P6, S6, E>
-  ): ValveSinkFactory<P6, ValveStateComposite<[S1, S2, S3, S4, S5, S6]>, E>
+    A6: ValveCompositeSink<P6, P7, S6, E>
+  ): ValveSinkFactory<P1, P7, ValveStateComposite<[S1, S2, S3, S4, S5, S6]>, E>
   function compose<
     P1,
     P2,
@@ -1096,6 +1187,7 @@ export function valve<ERR = ValveError>() {
     P5,
     P6,
     P7,
+    P8,
     S1,
     S2,
     S3,
@@ -1111,8 +1203,13 @@ export function valve<ERR = ValveError>() {
     A4: ValveCompositeThrough<P4, P5, S4, E>,
     A5: ValveCompositeThrough<P5, P6, S5, E>,
     A6: ValveCompositeThrough<P6, P7, S6, E>,
-    A7: ValveCompositeSink<P7, S7, E>
-  ): ValveSinkFactory<P7, ValveStateComposite<[S1, S2, S3, S4, S5, S6, S7]>, E>
+    A7: ValveCompositeSink<P7, P8, S7, E>
+  ): ValveSinkFactory<
+    P1,
+    P8,
+    ValveStateComposite<[S1, S2, S3, S4, S5, S6, S7]>,
+    E
+  >
   function compose<
     P1,
     P2,
@@ -1122,6 +1219,7 @@ export function valve<ERR = ValveError>() {
     P6,
     P7,
     P8,
+    P9,
     S1,
     S2,
     S3,
@@ -1139,9 +1237,10 @@ export function valve<ERR = ValveError>() {
     A5: ValveCompositeThrough<P5, P6, S5, E>,
     A6: ValveCompositeThrough<P6, P7, S6, E>,
     A7: ValveCompositeThrough<P7, P8, S7, E>,
-    A8: ValveCompositeSink<P8, S8, E>
+    A8: ValveCompositeSink<P8, P9, S8, E>
   ): ValveSinkFactory<
-    P8,
+    P1,
+    P9,
     ValveStateComposite<[S1, S2, S3, S4, S5, S6, S7, S8]>,
     E
   >
@@ -1155,6 +1254,7 @@ export function valve<ERR = ValveError>() {
     P7,
     P8,
     P9,
+    P10,
     S1,
     S2,
     S3,
@@ -1174,9 +1274,10 @@ export function valve<ERR = ValveError>() {
     A6: ValveCompositeThrough<P6, P7, S6, E>,
     A7: ValveCompositeThrough<P7, P8, S7, E>,
     A8: ValveCompositeThrough<P8, P9, S8, E>,
-    A9: ValveCompositeSink<P9, S9, E>
+    A9: ValveCompositeSink<P9, P10, S9, E>
   ): ValveSinkFactory<
-    P9,
+    P1,
+    P10,
     ValveStateComposite<[S1, S2, S3, S4, S5, S6, S7, S8, S9]>,
     E
   >
@@ -1191,6 +1292,7 @@ export function valve<ERR = ValveError>() {
     P8,
     P9,
     P10,
+    P11,
     S1,
     S2,
     S3,
@@ -1212,9 +1314,10 @@ export function valve<ERR = ValveError>() {
     A7: ValveCompositeThrough<P7, P8, S7, E>,
     A8: ValveCompositeThrough<P8, P9, S8, E>,
     A9: ValveCompositeThrough<P9, P10, S9, E>,
-    A10: ValveCompositeSink<P10, S10, E>
+    A10: ValveCompositeSink<P10, P11, S10, E>
   ): ValveSinkFactory<
-    P10,
+    P1,
+    P11,
     ValveStateComposite<[S1, S2, S3, S4, S5, S6, S7, S8, S9, S10]>,
     E
   >
@@ -1230,6 +1333,7 @@ export function valve<ERR = ValveError>() {
     P9,
     P10,
     P11,
+    P12,
     S1,
     S2,
     S3,
@@ -1253,9 +1357,10 @@ export function valve<ERR = ValveError>() {
     A8: ValveCompositeThrough<P8, P9, S8, E>,
     A9: ValveCompositeThrough<P9, P10, S9, E>,
     A10: ValveCompositeThrough<P10, P11, S10, E>,
-    A11: ValveCompositeSink<P11, S11, E>
+    A11: ValveCompositeSink<P11, P12, S11, E>
   ): ValveSinkFactory<
-    P11,
+    P1,
+    P12,
     ValveStateComposite<[S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11]>,
     E
   >
@@ -1272,6 +1377,7 @@ export function valve<ERR = ValveError>() {
     P10,
     P11,
     P12,
+    P13,
     S1,
     S2,
     S3,
@@ -1297,9 +1403,10 @@ export function valve<ERR = ValveError>() {
     A9: ValveCompositeThrough<P9, P10, S9, E>,
     A10: ValveCompositeThrough<P10, P11, S10, E>,
     A11: ValveCompositeThrough<P11, P12, S11, E>,
-    A12: ValveCompositeSink<P12, S12, E>
+    A12: ValveCompositeSink<P12, P13, S12, E>
   ): ValveSinkFactory<
-    P12,
+    P1,
+    P13,
     ValveStateComposite<[S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12]>,
     E
   >
@@ -1317,6 +1424,7 @@ export function valve<ERR = ValveError>() {
     P11,
     P12,
     P13,
+    P14,
     S1,
     S2,
     S3,
@@ -1344,9 +1452,10 @@ export function valve<ERR = ValveError>() {
     A10: ValveCompositeThrough<P10, P11, S10, E>,
     A11: ValveCompositeThrough<P11, P12, S11, E>,
     A12: ValveCompositeThrough<P12, P13, S12, E>,
-    A13: ValveCompositeSink<P13, S13, E>
+    A13: ValveCompositeSink<P13, P14, S13, E>
   ): ValveSinkFactory<
-    P13,
+    P1,
+    P14,
     ValveStateComposite<
       [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13]
     >,
@@ -1367,6 +1476,7 @@ export function valve<ERR = ValveError>() {
     P12,
     P13,
     P14,
+    P15,
     S1,
     S2,
     S3,
@@ -1396,9 +1506,10 @@ export function valve<ERR = ValveError>() {
     A11: ValveCompositeThrough<P11, P12, S11, E>,
     A12: ValveCompositeThrough<P12, P13, S12, E>,
     A13: ValveCompositeThrough<P13, P14, S13, E>,
-    A14: ValveCompositeSink<P14, S14, E>
+    A14: ValveCompositeSink<P14, P15, S14, E>
   ): ValveSinkFactory<
-    P14,
+    P1,
+    P15,
     ValveStateComposite<
       [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14]
     >,
@@ -1420,6 +1531,7 @@ export function valve<ERR = ValveError>() {
     P13,
     P14,
     P15,
+    P16,
     S1,
     S2,
     S3,
@@ -1451,9 +1563,10 @@ export function valve<ERR = ValveError>() {
     A12: ValveCompositeThrough<P12, P13, S12, E>,
     A13: ValveCompositeThrough<P13, P14, S13, E>,
     A14: ValveCompositeThrough<P14, P15, S14, E>,
-    A15: ValveCompositeSink<P15, S15, E>
+    A15: ValveCompositeSink<P15, P16, S15, E>
   ): ValveSinkFactory<
-    P15,
+    P1,
+    P16,
     ValveStateComposite<
       [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15]
     >,
@@ -1476,6 +1589,7 @@ export function valve<ERR = ValveError>() {
     P14,
     P15,
     P16,
+    P17,
     S1,
     S2,
     S3,
@@ -1509,9 +1623,10 @@ export function valve<ERR = ValveError>() {
     A13: ValveCompositeThrough<P13, P14, S13, E>,
     A14: ValveCompositeThrough<P14, P15, S14, E>,
     A15: ValveCompositeThrough<P15, P16, S15, E>,
-    A16: ValveCompositeSink<P16, S16, E>
+    A16: ValveCompositeSink<P16, P17, S16, E>
   ): ValveSinkFactory<
-    P16,
+    P1,
+    P17,
     ValveStateComposite<
       [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16]
     >,
@@ -1535,6 +1650,7 @@ export function valve<ERR = ValveError>() {
     P15,
     P16,
     P17,
+    P18,
     S1,
     S2,
     S3,
@@ -1570,9 +1686,10 @@ export function valve<ERR = ValveError>() {
     A14: ValveCompositeThrough<P14, P15, S14, E>,
     A15: ValveCompositeThrough<P15, P16, S15, E>,
     A16: ValveCompositeThrough<P16, P17, S16, E>,
-    A17: ValveCompositeSink<P17, S17, E>
+    A17: ValveCompositeSink<P17, P18, S17, E>
   ): ValveSinkFactory<
-    P17,
+    P1,
+    P18,
     ValveStateComposite<
       [
         S1,
@@ -2111,19 +2228,20 @@ export function valve<ERR = ValveError>() {
 
   function compose(
     ...props: Array<
-      | ValveCompositeSink<any, any, any>
+      | ValveCompositeSink<any, any, any, any>
       | ValveCompositeSource<any, any, any>
       | ValveCompositeThrough<any, any, any, any>
     >
   ):
-    | void
+    | ValveStream<any, any, any>
     | ValveSourceFactory<any, any, any>
-    | ValveSinkFactory<any, any, any>
+    | ValveSinkFactory<any, any, any, any>
     | ValveThroughFactory<any, any, any, any> {
+    //
     // TODO: 0 / 1 arguments
-    if (props.length === 0) {
-      return
-    }
+    // if (props.length === 0) {
+    //   return
+    // }
 
     const first = props[0]
     const last = props[props.length - 1]
@@ -2131,9 +2249,10 @@ export function valve<ERR = ValveError>() {
     const _compose = (fns: any[]) =>
       reduceRight(fns, (f, g) => (...args: any[]) => f(g(...args)))
 
-    if (props.length === 1) {
-      return
-    } else if (first.type === ValveType.Source) {
+    // if (props.length === 1) {
+    //   return
+    // } else
+    if (first.type === ValveType.Source) {
       // last is a sink, or a through
       // source -> sink = void
       // source -> through = source
@@ -2141,7 +2260,7 @@ export function valve<ERR = ValveError>() {
       props.shift()
 
       if (last.type === ValveType.Sink) {
-        // source -> sink = void
+        // source -> sink = trap
 
         return _compose(map(props, f => f(/* configuration */)))(
           first(/* configuration */)
@@ -2167,7 +2286,7 @@ export function valve<ERR = ValveError>() {
       if (last.type === ValveType.Sink) {
         // TODO: through -> sink = sink
 
-        return assign<() => ValveSink<any, any>, { type: ValveType.Sink }>(
+        return assign<() => ValveSink<any, any, any>, { type: ValveType.Sink }>(
           () =>
             /* configuration */ _compose(
               map(props, f => f(/* configuration */))

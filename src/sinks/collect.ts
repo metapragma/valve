@@ -2,17 +2,16 @@ import { reduce } from './reduce'
 
 import { ValveCreateSinkOptions, ValveError, ValveSinkFactory } from '../types'
 
-export function collect<P, E extends ValveError = ValveError>(
-  /* istanbul ignore next */
-  options: Partial<ValveCreateSinkOptions<P[], E>> = {}
-): ValveSinkFactory<P, {}, E> {
-  return reduce<P, P[], E>({
-    iteratee(arr, item) {
+export function collect<
+  P,
+  E extends ValveError = ValveError
+>(): ValveSinkFactory<P, P[], {}, E> {
+  return reduce<P, P[], E>(
+    (arr, item) => {
       arr.push(item)
 
       return arr
     },
-    accumulator: [],
-    ...options
-  })
+    []
+  )
 }

@@ -11,6 +11,7 @@ import {
   range,
   reduce,
   slice,
+  takeRight,
   union,
   uniq
 } from 'lodash'
@@ -25,17 +26,17 @@ const options = {
 const enum ValveReturns {
   sink = 'ValveSinkFactory',
   source = 'ValveSourceFactory',
-  through = 'ValveThroughFactory',
-  none = 'void'
+  through = 'ValveThroughFactory'
 }
 
 const enum ValveArguments {
   sink = 'ValveCompositeSink',
   source = 'ValveCompositeSource',
-  through = 'ValveCompositeThrough'
+  through = 'ValveCompositeThrough',
+  stream = 'ValveStream'
 }
 
-const mapArgReturn = (t: ValveArguments | 'void') => {
+const mapArgReturn = (t: ValveArguments) => {
   switch (t) {
     case ValveArguments.sink:
       return ValveReturns.sink
@@ -60,7 +61,7 @@ const configuration = (type: ValveFlow) => (
 ): {
   mA: number
   A: number
-  returnType: ValveArguments | 'void'
+  returnType: ValveArguments
   gP: number
   gS: number
   start: ValveArguments
@@ -75,13 +76,13 @@ const configuration = (type: ValveFlow) => (
       const A = getArity(mA)
       const gS = A
 
-      const offset = -1
-      const gP = A + offset
+      // const offset = -1
+      const gP = A // + offset
 
-      // 2: 1 (S -> S)
-      // 3: 2 (S -> T - S)
-      // 4: 3 (S -> T -> T -> S )
-      // 5: 4 (S -> T -> T -> T -> S )
+      // 2: 2 (S -> S)
+      // 3: 3 (S -> T - S)
+      // 4: 4 (S -> T -> T -> S )
+      // 5: 5 (S -> T -> T -> T -> S )
 
       return {
         A,
@@ -90,7 +91,7 @@ const configuration = (type: ValveFlow) => (
         gS,
         mA,
         middle: ValveArguments.through,
-        returnType: 'void',
+        returnType: ValveArguments.stream,
         start: ValveArguments.source
       }
     }
@@ -144,13 +145,12 @@ const configuration = (type: ValveFlow) => (
     case ValveFlow.TS: {
       const mA = 2
       const A = getArity(mA)
-      const gP = A
+      const gP = A + 1
       const gS = A
-      const offset = 0
 
-      // 2: 2 (T, S)
-      // 3: 3 (T, T, S)
-      // 4: 4 (T, T, T, S)
+      // 2: 3 (T, S)
+      // 3: 4 (T, T, S)
+      // 4: 5 (T, T, T, S)
 
       return {
         A,
@@ -171,31 +171,32 @@ const configuration = (type: ValveFlow) => (
 
 function generate(type: ValveFlow) {
   return map(range(1, options.number + 1), n => {
-    const { mA, A, gP, gS, returnType, start, end, middle } = configuration(type)(n)
+    const { mA, A, gP, gS, returnType, start, end, middle } = configuration(
+      type
+    )(n)
 
     const PGenerics = map(range(1, gP + 1), a => `P${a}`)
     const SGenerics = map(range(1, gS + 1), a => `S${a}`)
     const SEnum = `ValveStateComposite<[${join(SGenerics, ', ')}]>`
-    // const mappedSGenerics = map(range(1, gS + 1), a => `S${a} = ValveState`)
 
     const getReturnGenerics = () => {
       switch (returnType) {
         case ValveArguments.sink:
-          return [last(PGenerics), SEnum]
+          return [first(PGenerics), last(PGenerics), SEnum]
         case ValveArguments.source:
           return [last(PGenerics), SEnum]
         case ValveArguments.through:
           return [first(PGenerics), last(PGenerics), SEnum]
+        case ValveArguments.stream:
+          return [last(PGenerics), SEnum]
       }
     }
 
     const popReturn = () => {
       const returnTypeString = mapArgReturn(returnType)
-
-      const returnGenerics =
-        returnType === 'void'
-          ? ''
-          : `<${join(getReturnGenerics(), ', ')}, ${options.extraArgument}>`
+      const returnGenerics = `<${join(getReturnGenerics(), ', ')}, ${
+        options.extraArgument
+      }>`
 
       return `${returnTypeString}${returnGenerics}`
     }
@@ -206,7 +207,7 @@ function generate(type: ValveFlow) {
       switch (type) {
         case ValveFlow.STS: {
           if (t !== ValveArguments.source) {
-            shift = a -1
+            shift = a - 1
           }
           break
         }
@@ -220,9 +221,16 @@ function generate(type: ValveFlow) {
 
       switch (t) {
         case ValveArguments.sink:
-          return union(slice(PGenerics, shift - 1, shift), slice(SGenerics, a - 1, a))
+          // return union(slice(PGenerics, shift - 1, shift), slice(SGenerics, a - 1, a))
+          return union(
+            slice(PGenerics, shift - 1, shift + 1),
+            slice(SGenerics, a - 1, a)
+          )
         case ValveArguments.source:
-          return union(slice(PGenerics, shift - 1, shift), slice(SGenerics, a - 1, a))
+          return union(
+            slice(PGenerics, shift - 1, shift),
+            slice(SGenerics, a - 1, a)
+          )
         case ValveArguments.through:
           return union(
             slice(PGenerics, shift - 1, shift + 1),
@@ -242,8 +250,9 @@ function generate(type: ValveFlow) {
         t = middle
       }
 
-
-      return `A${a}: ${t}<${join(popGenerics(t, a), ', ')}, ${options.extraArgument}>`
+      return `A${a}: ${t}<${join(popGenerics(t, a), ', ')}, ${
+        options.extraArgument
+      }>`
     })
 
     // console.log('here')

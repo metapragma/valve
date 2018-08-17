@@ -1,4 +1,28 @@
-export type ValveError = unknown
+/* Observable */
+
+export interface Subscription {
+  // Cancels the subscription
+  unsubscribe(): void
+
+  // // A boolean value indicating whether the subscription is closed
+  // readonly closed() : Boolean;
+}
+
+export interface Observer<P, E> {
+  next?(value: P): void
+  error?(errorValue: E): void
+  complete?(): void
+}
+
+export interface Observable<P, E> {
+  // Returns itself
+  [Symbol.observable](): Observable<P, E>
+
+  // Subscribes to the sequence with an observer
+  subscribe(observer: Observer<P, E>): Subscription
+}
+
+/* Enums */
 
 export enum ValveMessageType {
   Complete,
@@ -7,6 +31,14 @@ export enum ValveMessageType {
   Noop,
   Pull
 }
+
+export enum ValveType {
+  Source,
+  Sink,
+  Through
+}
+
+/* Messages */
 
 export interface ValveMessageGeneric {
   type: ValveMessageType
@@ -46,12 +78,6 @@ export type ValveSinkMessage<E> =
   | ValveMessageError<E>
   | ValveMessagePull
 
-export enum ValveType {
-  Source,
-  Sink,
-  Through
-}
-
 export type ValveSourceMessage<SA, P, E> = SA extends ValveMessageComplete
   ? ValveMessageComplete
   : SA extends ValveMessageError<E>
@@ -62,69 +88,7 @@ export type ValveSourceMessage<SA, P, E> = SA extends ValveMessageComplete
         | ValveMessageError<E>
         | ValveMessageNoop)
 
-export type ValveCallback<P, E, SA = ValveSinkMessage<E>> = (
-  action: ValveSourceMessage<SA, P, E>
-) => void
-
-interface ValveReturn<P, E> {
-  then<TResult1, TResult2 = E>(
-    onfulfilled?:
-      | ((value: P) => TResult1 | PromiseLike<TResult1>)
-      | undefined
-      | null,
-    onrejected?:
-      | ((reason: E) => TResult2 | PromiseLike<TResult2>)
-      | undefined
-      | null
-  ): Promise<TResult1 | TResult2>
-  catch<TResult2>(
-    onrejected?:
-      | ((reason: E) => TResult2 | PromiseLike<TResult2>)
-      | undefined
-      | null
-  ): Promise<P | TResult2>
-}
-
-export type ValveSink<P, E> = (source: ValveSource<P, E>) => void
-
-export type ValveSource<P, E> = (
-  action: ValveSinkMessage<E>,
-  cb: ValveCallback<P, E>
-) => void
-
-export type ValveThrough<P, R, E> = (
-  source: ValveSource<P, E>
-) => ValveSource<R, E>
-
-// TODO: pass configuration
-// TODO: pass back reference to internal state
-// TODO: reconstruct a global state
-// TODO: promise
-
-export type ValveStateComposite<A> = A
-// tslint:disable-next-line no-any
-export type ValveState = any
-
-export interface ValveSinkFactory<P, S, E> {
-  type: ValveType.Sink
-  (props?: S): ValveSink<P, E>
-}
-
-export interface ValveSourceFactory<P, S, E> {
-  type: ValveType.Source
-  (props?: S): ValveSource<P, E>
-}
-
-export interface ValveThroughFactory<P, R, S, E> {
-  type: ValveType.Through
-  (props?: S): ValveThrough<P, R, E>
-}
-
-export type ValveCompositeSource<P, S, E> = ValveSourceFactory<P, S, E>
-export type ValveCompositeSink<P, S, E> = ValveSinkFactory<P, S, E>
-export type ValveCompositeThrough<P, R, S, E> = ValveThroughFactory<P, R, S, E>
-
-// Utilities
+/* Actions */
 
 export type ValveActionComplete = () => void
 export type ValveActionNext<P> = (next: P) => void
@@ -145,6 +109,8 @@ export interface ValveSinkAction<E> {
   pull: ValveActionPull
 }
 
+/* Utilities */
+
 export interface ValveCreateSourceOptions<E> {
   complete(): void
   error(error: E): void
@@ -157,13 +123,67 @@ export interface ValveCreateSinkOptions<T, E> {
   next(next: T): void
 }
 
-// Sinks
+/* Primitive Abstractions */
 
-export interface ValveReduceOptions<P, R> {
-  accumulator?: R
-  iteratee(accumulator: R, next: P): R
+export type ValveError = unknown
+
+export type ValveCallback<P, E, SA = ValveSinkMessage<E>> = (
+  action: ValveSourceMessage<SA, P, E>
+) => void
+
+export interface ValvePrimitiveStream<R, E> extends Observable<R, E> {
+  schedule(scheduler?: (tick: () => boolean) => void): void
 }
 
-export interface ValveFindOptions<P> {
-  predicate?(next: P): boolean
+export type ValveSink<P, R, E> = (
+  source: ValveSource<P, E>
+) => ValvePrimitiveStream<R, E>
+
+export type ValveSource<P, E> = (
+  action: ValveSinkMessage<E>,
+  cb: ValveCallback<P, E>
+) => void
+
+export type ValveThrough<P, R, E> = (
+  source: ValveSource<P, E>
+) => ValveSource<R, E>
+
+/* Factories */
+
+export interface ValveSinkFactory<P, R, S, E> {
+  type: ValveType.Sink
+  (props?: S): ValveSink<P, R, E>
 }
+
+export interface ValveSourceFactory<P, S, E> {
+  type: ValveType.Source
+  (props?: S): ValveSource<P, E>
+}
+
+export interface ValveThroughFactory<P, R, S, E> {
+  type: ValveType.Through
+  (props?: S): ValveThrough<P, R, E>
+}
+
+export type ValveCompositeSource<P, S, E> = ValveSourceFactory<P, S, E>
+export type ValveCompositeSink<P, R, S, E> = ValveSinkFactory<P, R, S, E>
+export type ValveCompositeThrough<P, R, S, E> = ValveThroughFactory<P, R, S, E>
+
+/* Streams */
+
+// export interface ValveGenericStream<R, E> {
+//   type:
+// }
+
+export interface ValveStream<R, S, E> extends ValvePrimitiveStream<R, E> {
+  getState?: S
+}
+
+// TODO: composable instrumentation
+export type ValveScheduler = <R, S, E>(
+  stream: ValveStream<R, S, E>
+) => Observable<R, E>
+
+export type ValveStateComposite<A> = A
+// tslint:disable-next-line no-any
+export type ValveState = any

@@ -1,44 +1,40 @@
-import { defaults, identity } from 'lodash'
+import { identity } from 'lodash'
 
 import {
-  ValveCreateSinkOptions,
   ValveError,
-  ValveFindOptions,
   ValveMessageType,
   ValveSinkFactory
 } from '../types'
 
-import { createSink, createSinkDefaultOptions } from '../utilities'
+import { createSink } from '../utilities'
+
+// Sinks
 
 export function find<P, E extends ValveError = ValveError>(
-  /* istanbul ignore next */
-  options: ValveFindOptions<P> & Partial<ValveCreateSinkOptions<P, E>> = {}
-): ValveSinkFactory<P, {}, E> {
+  predicate: (next: P) => boolean = identity
+): ValveSinkFactory<P, P, {}, E> {
   let ended = false
 
-  const _options = defaults({}, options, createSinkDefaultOptions, {
-    predicate: identity
-  })
-
-  return createSink<P, {}, E>(({ complete }) => ({
-    next(next) {
+  return createSink<P, P, {}, E>(({ complete, observer }) => ({
+    next(value) {
       // tslint:disable-next-line strict-boolean-expressions
-      if (_options.predicate(next)) {
+      if (predicate(value)) {
         ended = true
 
-        _options.next(next)
+        observer.next(value)
+        observer.complete()
 
         complete()
       }
     },
-    error(error) {
+    error(value) {
       if (!ended) {
-        _options.error(error)
+        observer.error(value)
       }
     },
     complete() {
       if (!ended) {
-        _options.complete()
+        observer.complete()
       }
     }
   }))

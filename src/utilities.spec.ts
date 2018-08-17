@@ -114,7 +114,7 @@ function test<E>(
 
   const completeableThrough = completeable<number, E>()
 
-  const sink = createSink<number, {}, E>(() => ({
+  const sink = createSink<number, {}, {}, E>(() => ({
     next(next) {
       if (next === 3) {
         setImmediate(() => {
@@ -124,7 +124,7 @@ function test<E>(
     }
   }))
 
-  valve<E>()(source(), trx, completeableThrough, sink)
+  valve<E>()(source(), trx, completeableThrough, sink).schedule()
 }
 
 describe('utilities', () => {
@@ -297,7 +297,7 @@ describe('createSink', () => {
     const instance = drain()
     assert(isFunction(instance))
 
-    valve()(fromIterable([1, 2, 3, 4]), drain)
+    valve()(fromIterable([1, 2, 3, 4]), drain).schedule()
   })
 
   it('createSink complete', done => {
@@ -319,7 +319,7 @@ describe('createSink', () => {
       }
     }))
 
-    valve()(infinite(), drain)
+    valve()(infinite(), drain).schedule()
   })
 
   it('createSink error', done => {
@@ -343,10 +343,10 @@ describe('createSink', () => {
       }
     }))
 
-    valve()(infinite(), drain)
+    valve()(infinite(), drain).schedule()
   })
 
-  it('createSink complete', done => {
+  it('delayed createSink complete', done => {
     const spy = sinonSpy()
     let c = 100
 
@@ -365,7 +365,7 @@ describe('createSink', () => {
       }
     }))
 
-    valve()(infinite(), delay(), drain)
+    valve()(infinite(), delay(), drain).schedule()
   })
 
   it('delayed createSink error', done => {
@@ -392,7 +392,7 @@ describe('createSink', () => {
           done()
         }
       }))
-    )
+    ).schedule()
   })
 
   // it('createSink instant complete', done => {
@@ -447,7 +447,7 @@ describe('createSink', () => {
       }
     }))
 
-    valve()(empty(), drain)
+    valve()(empty(), drain).schedule()
   })
 
   it('createSink source error', done => {
@@ -466,13 +466,13 @@ describe('createSink', () => {
           done()
         }
       }))
-    )
+    ).schedule()
   })
 
   it('createSink deaults', () => {
     const drain = createSink()
 
-    valve()(empty(), drain)
+    valve()(empty(), drain).schedule()
   })
 })
 
@@ -480,23 +480,25 @@ describe('createSource', () => {
   it('...', done => {
     // const spy = sinonSpy()
 
-    valve()(
-      count(5),
-      createThrough(),
-      collect({
-        next(next) {
-          assert.deepEqual(next, [1, 2, 3, 4, 5])
-          done()
-        }
-      })
-    )
+    const stream = valve()(count(5), createThrough(), collect())
+
+    stream.subscribe({
+      next(next) {
+        assert.deepEqual(next, [1, 2, 3, 4, 5])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('source next', done => {
     const spy = sinonSpy()
     const spyTwo = sinonSpy()
 
-    valve()(
+    const stream = valve()(
       count(5),
       createThrough(({ next, complete }) => ({
         next(n) {
@@ -513,15 +515,21 @@ describe('createSource', () => {
           complete()
         }
       })),
-      collect({
-        next(payload) {
-          assert.deepEqual(payload, [1, 2, 3, 4, 5])
-          assert.equal(spy.callCount, 5)
-          assert.equal(spyTwo.callCount, 1)
-          done()
-        }
-      })
+      collect()
     )
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [1, 2, 3, 4, 5])
+      },
+      complete() {
+        assert.equal(spy.callCount, 5)
+        assert.equal(spyTwo.callCount, 1)
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('source error', done => {
@@ -529,7 +537,7 @@ describe('createSource', () => {
     const spyTwo = sinonSpy()
     const ERR = new Error('err')
 
-    valve<typeof ERR>()(
+    const stream = valve<typeof ERR>()(
       error(ERR),
       createThrough(({ next, error }) => ({
         next(n) {
@@ -546,15 +554,19 @@ describe('createSource', () => {
           error(err)
         }
       })),
-      collect({
-        error(err) {
-          assert.equal(err, ERR)
-          assert.equal(spy.callCount, 0)
-          assert.equal(spyTwo.callCount, 1)
-          done()
-        }
-      })
+      collect()
     )
+
+    stream.subscribe({
+      error(err) {
+        assert.equal(err, ERR)
+        assert.equal(spy.callCount, 0)
+        assert.equal(spyTwo.callCount, 1)
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('sink pull/next', done => {
@@ -563,7 +575,7 @@ describe('createSource', () => {
     const spySourceAbort = sinonSpy()
     const spySinkAbort = sinonSpy()
 
-    valve()(
+    const stream = valve()(
       count(5),
       createThrough(
         ({ next, complete }) => ({
@@ -592,17 +604,23 @@ describe('createSource', () => {
           }
         })
       ),
-      collect({
-        next(next) {
-          assert.deepEqual(next, [1, 2, 3, 4, 5])
-          assert.equal(spyPull.callCount, 6)
-          assert.equal(spyData.callCount, 5)
-          assert.equal(spySourceAbort.callCount, 1)
-          assert.equal(spySinkAbort.callCount, 0)
-          done()
-        }
-      })
+      collect()
     )
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [1, 2, 3, 4, 5])
+      },
+      complete() {
+        assert.equal(spyPull.callCount, 6)
+        assert.equal(spyData.callCount, 5)
+        assert.equal(spySourceAbort.callCount, 1)
+        assert.equal(spySinkAbort.callCount, 0)
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('sink pull/error', done => {
@@ -612,7 +630,7 @@ describe('createSource', () => {
     const spySinkError = sinonSpy()
     const ERR = new Error('err')
 
-    valve<typeof ERR>()(
+    const stream = valve<typeof ERR>()(
       error(ERR),
       createThrough(
         ({ next, error }) => ({
@@ -642,18 +660,22 @@ describe('createSource', () => {
           }
         })
       ),
-      collect({
-        error(err) {
-          assert.deepEqual(err, ERR)
-          assert.equal(spyPull.callCount, 1)
-          assert.equal(spyData.callCount, 0)
-          assert.equal(spySourceError.callCount, 1)
-          assert.equal(spySinkError.callCount, 0)
-
-          done()
-        }
-      })
+      collect()
     )
+
+    stream.subscribe({
+      error(err) {
+        assert.deepEqual(err, ERR)
+        assert.equal(spyPull.callCount, 1)
+        assert.equal(spyData.callCount, 0)
+        assert.equal(spySourceError.callCount, 1)
+        assert.equal(spySinkError.callCount, 0)
+
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 })
 

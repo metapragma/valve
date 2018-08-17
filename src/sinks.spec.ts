@@ -14,34 +14,38 @@ import {
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'
 import { assert } from 'chai'
-
+import { spy } from 'sinon'
 import { noop } from 'lodash'
 
 describe('sinks/collect', () => {
   it('...', done => {
-    valve()(
-      empty(),
-      collect({
-        next(next) {
-          assert.deepEqual(next, [])
+    const stream = valve()(empty(), collect())
 
-          done()
-        }
-      })
-    )
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('...', done => {
-    valve()(
-      count(3),
-      collect({
-        next(next) {
-          assert.deepEqual(next, [1, 2, 3])
+    const stream = valve()(count(3), collect())
 
-          done()
-        }
-      })
-    )
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, [1, 2, 3])
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 })
 
@@ -49,7 +53,7 @@ describe('sinks/concat', () => {
   it('...', done => {
     let n = 0
 
-    valve()(
+    const stream = valve()(
       fromIterable('hello there this is a test'.split(/([aeiou])/)),
       createThrough(({ next }) => ({
         next(str) {
@@ -59,31 +63,42 @@ describe('sinks/concat', () => {
           next(str)
         }
       })),
-      concat({
-        next(next) {
-          assert.deepEqual(next, 'hello there this is a test')
-          assert.equal(n, 17)
-          done()
-        }
-      })
+      concat()
     )
+
+    stream.subscribe({
+      next(value) {
+        assert.deepEqual(value, 'hello there this is a test')
+      },
+      complete() {
+        assert.equal(n, 17)
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 })
 
 describe('sinks/find', () => {
   it('...', done => {
-    valve()(
+    const stream = valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-      find({
-        next(next) {
-          assert.equal(next, 7)
-          done()
-        },
-        predicate(next) {
-          return next === 7
-        }
+      find(next => {
+        return next === 7
       })
     )
+
+    stream.subscribe({
+      next(value) {
+        assert.equal(value, 7)
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('random', done => {
@@ -94,18 +109,23 @@ describe('sinks/find', () => {
 
     f.push(target)
 
-    valve()(
+    const stream = valve()(
       fromIterable(f.sort()),
-      find({
-        next(next) {
-          assert.equal(next, target)
-          done()
-        },
-        predicate(next) {
-          return next === target
-        }
+      find(next => {
+        return next === target
       })
     )
+
+    stream.subscribe({
+      next(value) {
+        assert.equal(value, target)
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('missing', done => {
@@ -113,17 +133,23 @@ describe('sinks/find', () => {
     const target = Math.random()
     const f = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-    valve()(
+    const stream = valve()(
       fromIterable(f.sort()),
-      find({
-        complete() {
-          done()
-        },
-        predicate(next) {
-          return next === target
-        }
+      find(next => {
+        return next === target
       })
     )
+
+    stream.subscribe({
+      next(value) {
+        assert.equal(value, target)
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   // it('there can only be one', done => {
@@ -148,132 +174,146 @@ describe('sinks/find', () => {
   //     })
   //   )
   // })
-
+  //
   it('identity', done => {
-    valve()(
-      fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-      find({
-        next(next) {
-          assert.equal(next, 1)
-          done()
-        }
-      })
+    const stream = valve()(
+      fromIterable([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+      find()
     )
+
+    stream.subscribe({
+      next(value) {
+        assert.equal(value, 1)
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('error', done => {
     const ERR = new Error('test')
 
-    valve<typeof ERR>()(
-      error(ERR),
-      find({
-        error(err) {
-          assert.equal(err, ERR)
-          done()
-        }
-      })
-    )
+    const stream = valve<typeof ERR>()(error(ERR), find())
+
+    stream.subscribe({
+      error(err) {
+        assert.equal(err, ERR)
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('empty', done => {
-    valve()(
-      empty(),
-      find({
-        complete() {
-          done()
-        }
-      })
-    )
+    const stream = valve()(empty(), find())
+
+    stream.subscribe({
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 })
 
 describe('sinks/reduce', () => {
   it('with initial value', done => {
-    valve()(
-      fromIterable([1, 2, 3]),
-      reduce({
-        iteratee(a, b) {
-          return a + b
-        },
-        next(next) {
-          assert.equal(next, 16)
-          done()
-        },
-        accumulator: 10
-      })
-    )
+    const stream = valve()(fromIterable([1, 2, 3]), reduce((a, b) => a + b, 10))
+
+    stream.subscribe({
+      next(next) {
+        assert.equal(next, 16)
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('without initial value', done => {
-    valve()(
-      fromIterable([1, 2, 3]),
-      reduce({
-        iteratee(a, b) {
-          return a + b
-        },
-        next(next) {
-          assert.equal(next, 6)
-          done()
-        }
-      })
-    )
+    const stream = valve()(fromIterable([1, 2, 3]), reduce((a, b) => a + b))
+
+    stream.subscribe({
+      next(next) {
+        assert.equal(next, 6)
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('error', done => {
     const ERR = new Error('qweo')
 
-    valve()(
-      error(ERR),
-      reduce({
-        iteratee: noop,
-        error(err) {
-          assert.equal(err, ERR)
-          done()
-        }
-      })
-    )
+    const stream = valve()(error(ERR), reduce(noop))
+
+    stream.subscribe({
+      error(err) {
+        assert.equal(err, ERR)
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('error with accumulator', done => {
     const ERR = new Error('qweo')
 
-    valve()(
+    const stream = valve()(
       error(ERR),
-      reduce({
-        // tslint:disable-next-line restrict-plus-operands
-        iteratee: (a, b) => a + b,
-        error(err) {
-          assert.equal(err, ERR)
-          done()
-        },
-        accumulator: 10
-      })
+      // tslint:disable-next-line restrict-plus-operands
+      reduce((a, b) => a + b, 10)
     )
+
+    stream.subscribe({
+      error(err) {
+        assert.equal(err, ERR)
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
   it('empty', done => {
-    valve()(
-      empty(),
-      reduce({
-        iteratee: noop,
-        complete() {
-          done()
-        }
-      })
-    )
+    const stream = valve()(empty(), reduce(noop))
+
+    stream.subscribe({
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
   })
 
-  // it('empty with accumulator', done => {
-  //   valve()(
-  //     empty(),
-  //     reduce({
-  //       iteratee: () => {},
-  //       next(next) {
-  //         assert.equal(next, 10)
-  //         done()
-  //       },
-  //       accumulator: 10
-  //     })
-  //   )
-  // })
+  it('empty with accumulator', done => {
+    const s = spy()
+
+    const stream = valve()(empty(), reduce(() => ({}), 10))
+
+    stream.subscribe({
+      next(value) {
+        s()
+        assert.equal(value, 10)
+      },
+      complete() {
+        assert.equal(s.callCount, 1)
+        done()
+      }
+    })
+
+    stream.schedule()
+  })
 })
