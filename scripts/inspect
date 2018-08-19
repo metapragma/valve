@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#
+# vim: set ft=sh:
+#
+# @description generate valve function overloads
+
+main ()
+{
+    verbose true
+    strict true
+
+    TS_NODE_PROJECT="${MANAGE_REPOSITORY}/tsconfig.json" node -r \
+    ts-node/register --inspect-brk=0.0.0.0 "$1"
+}

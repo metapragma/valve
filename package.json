@@ -2,19 +2,13 @@
   "name": "valve",
   "description": "minimal pull stream",
   "version": "5.0.1",
-  "keywords": [
-    "TypeScript",
-    "stream",
-    "valve"
-  ],
+  "keywords": ["TypeScript", "stream", "valve"],
   "main": "lib/cjs/index.js",
   "module": "lib/esm/index.js",
   "browser": "lib/umd/index.js",
   "typings": "lib/types/index.d.ts",
   "sideEffects": false,
-  "files": [
-    "lib"
-  ],
+  "files": ["lib"],
   "bugs": "https://github.com/escapace/valve/issues",
   "author": "escapace <opensource@escapace.com>",
   "license": "MPL-2.0",
@@ -40,18 +34,9 @@
       "prettier --write",
       "git add"
     ],
-    "{src,test}/**/*.js": [
-      "prettier --write",
-      "git add"
-    ],
-    "**/*.json": [
-      "prettier --write",
-      "git add"
-    ],
-    "**/*.md": [
-      "prettier --write",
-      "git add"
-    ]
+    "{src,test}/**/*.js": ["prettier --write", "git add"],
+    "**/*.json": ["prettier --write", "git add"],
+    "**/*.md": ["prettier --write", "git add"]
   },
   "husky": {
     "hooks": {
@@ -61,22 +46,11 @@
   },
   "nyc": {
     "tempDirectory": "./node_modules/.cache/nyc_output",
-    "include": [
-      "src/**/*.ts"
-    ],
-    "extension": [
-      ".ts",
-      ".tsx"
-    ],
-    "exclude": [
-      "src/**/*.spec.ts"
-    ],
-    "require": [
-      "ts-node/register"
-    ],
-    "reporter": [
-      "text"
-    ],
+    "include": ["src/**/*.ts"],
+    "extension": [".ts", ".tsx"],
+    "exclude": ["src/**/*.spec.ts"],
+    "require": ["ts-node/register"],
+    "reporter": ["text"],
     "sourceMap": true,
     "instrument": true
   },
@@ -102,6 +76,7 @@
     "prettier": "1.14.2",
     "puppeteer": "1.7.0",
     "rimraf": "2.6.2",
+    "rxjs": "^6.2.2",
     "sinon": "6.1.5",
     "source-map-support": "0.5.8",
     "ts-node": "7.0.1",
@@ -111,7 +86,8 @@
     "tslint-config-standard": "7.1.0",
     "tslint-microsoft-contrib": "5.2.0",
     "typescript": "3.0.1",
-    "validate-commit": "3.4.0"
+    "validate-commit": "3.4.0",
+    "xstream": "^11.7.0"
   },
   "dependencies": {
     "lodash": "^4.17.10",

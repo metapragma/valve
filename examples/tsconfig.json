@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "sourceMap": true,
+    "declaration": false,
+    "target": "es6",
+    "module": "CommonJS",
+    "skipLibCheck": true
+  },
+  "include": ["./**/*"],
+  "exclude": ["./valve-**/*"]
+}

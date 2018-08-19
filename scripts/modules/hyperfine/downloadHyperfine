@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# @import console/die
+# @import lang/exists
+
+downloadHyperfine ()
+{
+    verbose true
+    strict true
+
+    exists curl || die "Cannot find 'gpg' in path."
+    exists bzip2 || die "Cannot find 'bzip2' in path."
+
+    [ -z "${HYPERFINE_BINARY}" ] && die "'HYPERFINE_BINARY' is not defined"
+
+    [ -z "${HYPERFINE_DIRECTORY}" ] &&
+      HYPERFINE_DIRECTORY="${MANAGE_REPOSITORY}/vendor/hyperfine"
+
+    if [ ! -f "${HYPERFINE_DIRECTORY}/hyperfine" ]
+    then
+        mkdir -p "${HYPERFINE_DIRECTORY}"
+        curl -0 -S -L --progress-bar "${HYPERFINE_BINARY}" -o "${HYPERFINE_DIRECTORY}/${HYPERFINE_BINARY##*/}"
+
+        tar -xf "${HYPERFINE_DIRECTORY}/${HYPERFINE_BINARY##*/}" -C \
+        "${HYPERFINE_DIRECTORY}" --strip 1
+
+        rm -f "${HYPERFINE_DIRECTORY}/${HYPERFINE_BINARY##*/}"
+
+        chmod +x "${HYPERFINE_DIRECTORY}/hyperfine"
+    fi
+}

@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+#
+# vim: set ft=sh:
+#
+# @description entrypoint for ci/cd
+# @import hyperfine/downloadHyperfine
+# @import lang/required
+# @import console/die
+# @import array/join
+# @import lang/executeIn
+
+main ()
+{
+    verbose true
+    strict true
+
+    local suite="${1}"
+    local iterations="${2:-10000}"
+    local hyperfine="${MANAGE_REPOSITORY}/vendor/hyperfine/hyperfine"
+    local directory
+
+    _ required "${suite}" || die "specify a suite to start"
+      # die "${suite}: No such file or directory"
+
+    declare -A suites
+
+    while read -d '' -r file
+    do
+      local suite
+      local benchmark
+      suite="$(basename "${file}")"
+      suite="${suite%.ts}"
+      benchmark="$(basename "$(dirname "${file}")")"
+
+      suites["${suite}"]+="${benchmark},"
+    done < <(find "${MANAGE_REPOSITORY}/examples" -maxdepth 2 -type f -name "${suite}.ts" -regex ".*\.\ts" -print0 2> /dev/null)
+
+    if [[ "${#suites[*]}" != 0 ]]
+    then
+      # _ downloadHyperfine
+      directory="$(mktemp -d -t markmanage-XXXXXXXX)"
+      CLEANUP_DIRECTORIES+=("${directory}")
+
+      "${MANAGE_REPOSITORY}/node_modules/.bin/tsc" -p \
+        "${MANAGE_REPOSITORY}/examples" --outDir "${directory}"
+
+      ln -s "${MANAGE_REPOSITORY}/node_modules" "${directory}/node_modules"
+      ln -s "${MANAGE_REPOSITORY}/package.json" "${directory}/package.json"
+
+      for suite in "${!suites[@]}"
+      do
+        local benchmarks
+        local arguments=()
+
+        IFS=$',' read -r -a benchmarks <<< "${suites[$suite]%,}"
+
+        for bench in "${benchmarks[@]}"
+        do
+          arguments+=("'node ${bench}/${suite}.js ${iterations}'")
+        done
+      done
+
+      # # --style basic \
+      _ executeIn "${directory}/examples" "${hyperfine} --warmup 3 --min-runs 50 $(_ join arguments " ")"
+    fi
+}
+
+onExit ()
+{
+    for directory in "${CLEANUP_DIRECTORIES[@]}"
+    do
+        [ -d "${directory}" ] && rm -rf "${directory}"
+    done
+}

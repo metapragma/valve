@@ -7,6 +7,7 @@ env:
   GIT_USER_NAME: "escapace"
   GIT_USER_EMAIL: "security@escapace.com"
   GIT_USER_SIGNINGKEY: "0xF29CCEBC83FD4525"
+  HYPERFINE_BINARY: "https://github.com/sharkdp/hyperfine/releases/download/v1.2.0/hyperfine-v1.2.0-x86_64-unknown-linux-musl.tar.gz"
 
 # Enable manage repository scripts
 enable:
