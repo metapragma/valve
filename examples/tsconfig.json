@@ -1,9 +1,10 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
+    "allowJs": true,
     "sourceMap": true,
     "declaration": false,
-    "target": "es6",
+    "target": "es2017",
     "module": "CommonJS",
     "skipLibCheck": true
   },

@@ -6,6 +6,7 @@
 # @import hyperfine/downloadHyperfine
 # @import lang/required
 # @import console/die
+# @import console/info
 # @import array/join
 # @import lang/executeIn
 
@@ -15,14 +16,22 @@ main ()
     strict true
 
     local suite="${1}"
-    local iterations="${2:-10000}"
+    local minRuns="${3:-15}"
+    local iterations="${2:-100000}"
     local hyperfine="${MANAGE_REPOSITORY}/vendor/hyperfine/hyperfine"
     local directory
+    local dirty=0
 
-    _ required "${suite}" || die "specify a suite to start"
-      # die "${suite}: No such file or directory"
+    _ required "${suite}" || _ die "specify a suite to start"
 
     declare -A suites
+
+    {
+        git diff --exit-code &&
+        git diff --cached --exit-code
+    } > /dev/null || {
+      dirty=1
+    }
 
     while read -d '' -r file
     do
@@ -30,17 +39,28 @@ main ()
       local benchmark
       suite="$(basename "${file}")"
       suite="${suite%.ts}"
+      suite="${suite%.js}"
       benchmark="$(basename "$(dirname "${file}")")"
 
       suites["${suite}"]+="${benchmark},"
-    done < <(find "${MANAGE_REPOSITORY}/examples" -maxdepth 2 -type f -name "${suite}.ts" -regex ".*\.\ts" -print0 2> /dev/null)
+    done < <(find "${MANAGE_REPOSITORY}/examples" \
+      \( -name "${suite}.ts" -or -name "${suite}.js" \) \
+      -maxdepth 2 \
+      -type f \
+      -print0 \
+      2> /dev/null)
 
     if [[ "${#suites[*]}" != 0 ]]
     then
-      # _ downloadHyperfine
+      local sha
+
+      _ downloadHyperfine
       directory="$(mktemp -d -t markmanage-XXXXXXXX)"
       CLEANUP_DIRECTORIES+=("${directory}")
 
+      sha="$(git rev-parse --short HEAD)"
+
+      _ info "Compiling the project"
       "${MANAGE_REPOSITORY}/node_modules/.bin/tsc" -p \
         "${MANAGE_REPOSITORY}/examples" --outDir "${directory}"
 
@@ -51,6 +71,16 @@ main ()
       do
         local benchmarks
         local arguments=()
+        local report="benchmark-${sha}.json"
+
+        if (( dirty != 0 ))
+        then
+          report="d-${report}"
+        fi
+
+        report="${MANAGE_REPOSITORY}/perf/data/${suite}/${report}"
+
+        mkdir -p "$(dirname "${report}")"
 
         IFS=$',' read -r -a benchmarks <<< "${suites[$suite]%,}"
 
@@ -61,7 +91,13 @@ main ()
       done
 
       # # --style basic \
-      _ executeIn "${directory}/examples" "${hyperfine} --warmup 3 --min-runs 50 $(_ join arguments " ")"
+      _ info "Running '${suite}' benchmark"
+
+      _ executeIn "${directory}/examples" "${hyperfine} \
+      --warmup 3 \
+      --min-runs "${minRuns}" \
+      --export-json ${report} \
+      $(_ join arguments " ")"
     fi
 }
 
