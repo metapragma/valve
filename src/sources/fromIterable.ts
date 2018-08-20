@@ -1,7 +1,7 @@
 import { ValveError, ValveSourceFactory } from '../types'
 
-import { createSource } from '../index'
 import { createIterator } from '../internal/iterall'
+import { createSource } from '../internal/createSource'
 
 function iterate<P, E>(
   iterator: Iterator<P>

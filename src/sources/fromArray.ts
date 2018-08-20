@@ -1,6 +1,6 @@
 import { ValveError, ValveSourceFactory } from '../types'
 
-import { createSource } from '../index'
+import { createSource } from '../internal/createSource'
 
 export function fromArray<P, E extends ValveError = ValveError>(
   array: ArrayLike<P>

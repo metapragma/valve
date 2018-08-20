@@ -1,6 +1,6 @@
 import { ValveError, ValveSourceFactory } from '../types'
 
-import { createSource } from '../index'
+import { createSource } from '../internal/createSource'
 
 // TODO: better random
 export function infinite<

@@ -2,7 +2,7 @@
 
 import { ValveError, ValveThroughFactory } from '../types'
 
-import { createThrough } from '../index'
+import { createThrough } from '../internal/createThrough'
 
 import { isNumber } from 'lodash'
 

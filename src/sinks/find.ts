@@ -2,7 +2,7 @@ import { identity } from 'lodash'
 
 import { ValveError, ValveMessageType, ValveSinkFactory } from '../types'
 
-import { createSink } from '../index'
+import { createSink } from '../internal/createSink'
 
 // Sinks
 

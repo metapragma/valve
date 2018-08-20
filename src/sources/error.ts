@@ -1,6 +1,6 @@
 import { ValveSourceFactory } from '../types'
 
-import { createSource } from '../index'
+import { createSource } from '../internal/createSource'
 
 // a stream that errors immediately.
 

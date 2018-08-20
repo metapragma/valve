@@ -1,6 +1,7 @@
 import { ValveError, ValveSourceFactory } from '../types'
 
-import { createSource } from '../index'
+import { createSource } from '../internal/createSource'
+
 // a stream that ends immediately.
 
 export function empty<

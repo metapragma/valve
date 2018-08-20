@@ -2,7 +2,7 @@ import { ValveError, ValveSinkFactory } from '../types'
 
 import { defaults, isUndefined } from 'lodash'
 
-import { createSink } from '../index'
+import { createSink } from '../internal/createSink'
 
 export function drain<P, E extends ValveError = ValveError>(): ValveSinkFactory<
   P,
