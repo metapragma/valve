@@ -3,6 +3,7 @@ import {
   concat,
   count,
   createThrough,
+  drain,
   empty,
   error,
   find,
@@ -16,6 +17,53 @@ import 'mocha'
 import { assert } from 'chai'
 import { spy } from 'sinon'
 import { noop } from 'lodash'
+
+describe('sinks/drain', () => {
+  it('...', done => {
+    const stream = valve()(empty(), drain())
+
+    stream.subscribe({
+      next() {
+        done()
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
+  })
+
+  it('...', done => {
+    const stream = valve()(count(3), drain())
+
+    stream.subscribe({
+      next(value) {
+        assert.isNumber(value)
+      },
+      complete() {
+        done()
+      }
+    })
+
+    stream.schedule()
+  })
+
+  it('error', done => {
+    const ERR = new Error('test')
+
+    const stream = valve<typeof ERR>()(error(ERR), drain())
+
+    stream.subscribe({
+      error(err) {
+        assert.equal(err, ERR)
+        done()
+      }
+    })
+
+    stream.schedule()
+  })
+})
 
 describe('sinks/collect', () => {
   it('...', done => {

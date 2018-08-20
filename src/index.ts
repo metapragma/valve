@@ -4,7 +4,7 @@ export { collect } from './sinks/collect'
 export { concat } from './sinks/concat'
 export { find } from './sinks/find'
 export { reduce } from './sinks/reduce'
-// export { drain } from './sinks/drain'
+export { drain } from './sinks/drain'
 
 export { count } from './sources/count'
 export { empty } from './sources/empty'
