@@ -80,11 +80,11 @@ export function createIterator<TValue>(
 export function createIterator(collection: any): void | Iterator<any> {
   const iterator = getIterator(collection)
 
-  if (iterator) {
-    return iterator
-  }
-
   if (isArrayLike(collection)) {
     return new ArrayLikeIterator(collection)
+  }
+
+  if (iterator) {
+    return iterator
   }
 }

@@ -1,6 +1,6 @@
 import { ValveError, ValveThroughFactory } from '../types'
 
-import { createThrough } from '../utilities'
+import { createThrough } from '../index'
 
 export function filter<P, E extends ValveError = ValveError>(
   predicate: ((next: P) => boolean)

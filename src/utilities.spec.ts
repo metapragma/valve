@@ -6,6 +6,9 @@ import {
   asyncMap,
   collect,
   count,
+  createSink,
+  createSource,
+  createThrough,
   empty,
   error,
   fromIterable,
@@ -15,9 +18,9 @@ import {
   valve
 } from './index'
 
-import { createSink, createSource, createThrough, hasEnded } from './utilities'
 import { assign, isFunction, isNumber, isPlainObject, noop } from 'lodash'
 import { spy as sinonSpy } from 'sinon'
+import { hasEnded } from './internal/hasEnded'
 
 import {
   ValveCallback,

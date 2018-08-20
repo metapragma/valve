@@ -34,7 +34,7 @@ import {
 
 import { assign } from 'lodash'
 
-import { hasEnded } from './utilities'
+import { hasEnded } from './internal/hasEnded'
 
 function delay(ms: number) {
   return asyncMap<number, number>(

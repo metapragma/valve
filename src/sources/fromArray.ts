@@ -2,18 +2,18 @@ import { ValveError, ValveSourceFactory } from '../types'
 
 import { createSource } from '../index'
 
-export function once<P, E extends ValveError = ValveError>(
-  value: P
+export function fromArray<P, E extends ValveError = ValveError>(
+  array: ArrayLike<P>
 ): ValveSourceFactory<P, {}, E> {
-  let triggered: boolean = false
+  let i = 0
 
   return createSource<P, {}, E>(({ complete, next }) => ({
     pull() {
-      if (triggered === false) {
-        triggered = true
-        next(value)
-      } else {
+      if (i >= array.length) {
         complete()
+      } else {
+        // tslint:disable-next-line no-increment-decrement
+        next(array[i++])
       }
     }
   }))

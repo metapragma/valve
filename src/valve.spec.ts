@@ -1,4 +1,3 @@
-// import { fromIterable, map, reduce, through, valve } from './index'
 import {
   collect,
   count,
@@ -9,10 +8,9 @@ import {
   reduce,
   valve
 } from './index'
+
 import { ValveMessageType, ValveType } from './types'
 import { spy } from 'sinon'
-
-import { simpleScheduler } from './schedulers/simple'
 
 // tslint:disable-next-line no-import-side-effect
 import 'mocha'

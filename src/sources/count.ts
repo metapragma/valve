@@ -1,6 +1,6 @@
 import { ValveError, ValveSourceFactory } from '../types'
 
-import { createSource } from '../utilities'
+import { createSource } from '../index'
 
 export function count<E extends ValveError = ValveError>(
   max = Infinity

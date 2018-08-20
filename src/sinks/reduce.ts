@@ -1,11 +1,8 @@
-import {
-  ValveError,
-  ValveSinkFactory
-} from '../types'
+import { ValveError, ValveSinkFactory } from '../types'
 
 import { defaults, isUndefined } from 'lodash'
 
-import { createSink } from '../utilities'
+import { createSink } from '../index'
 
 export function reduce<P, R = P, E extends ValveError = ValveError>(
   iteratee: (accumulator: R, next: P) => R,

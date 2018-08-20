@@ -3,6 +3,7 @@ import {
   count,
   empty,
   error,
+  fromArray,
   fromIterable,
   infinite,
   once,
@@ -100,7 +101,7 @@ describe('sources/fromIterable', () => {
   })
 
   it('array', done => {
-    const stream = valve()(fromIterable([1, 2, 3]), collect())
+    const stream = valve()(fromArray([1, 2, 3]), collect())
 
     stream.subscribe({
       next(value) {
