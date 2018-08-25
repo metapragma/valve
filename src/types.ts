@@ -78,7 +78,11 @@ export type ValveSinkMessage<E> =
   | ValveMessageError<E>
   | ValveMessagePull
 
-export type ValveSourceMessage<SA, P, E> = SA extends ValveMessageComplete
+export type ValveSourceMessage<
+  P,
+  E,
+  SA = ValveSinkMessage<E>
+> = SA extends ValveMessageComplete
   ? ValveMessageComplete
   : SA extends ValveMessageError<E>
     ? ValveMessageError<E>
@@ -90,37 +94,21 @@ export type ValveSourceMessage<SA, P, E> = SA extends ValveMessageComplete
 
 /* Actions */
 
-export type ValveActionComplete = () => void
-export type ValveActionNext<P> = (next: P) => void
-export type ValveActionError<E> = (error: E) => void
-export type ValveActionNoop = () => void
-export type ValveActionPull = () => void
-
-export interface ValveSourceAction<P, E> {
-  complete: ValveActionComplete
-  next: ValveActionNext<P>
-  error: ValveActionError<E>
-  noop: ValveActionNoop
-}
-
-export interface ValveSinkAction<E> {
-  complete: ValveActionComplete
-  error: ValveActionError<E>
-  pull: ValveActionPull
-}
-
-/* Utilities */
-
-export interface ValveCreateSourceOptions<E> {
+export interface ValveGenericAction<E> {
   complete(): void
-  error(error: E): void
+  error(errorValue: E): void
+}
+
+export interface ValvePullAction<E> extends ValveGenericAction<E> {
   pull(): void
 }
 
-export interface ValveCreateSinkOptions<T, E> {
-  complete(): void
-  error(error: E): void
-  next(next: T): void
+export interface ValveNextAction<T, E> extends ValveGenericAction<E> {
+  next(value: T): void
+}
+
+export interface ValveNoopAction<T, E> extends ValveNextAction<T, E> {
+  noop(): void
 }
 
 /* Primitive Abstractions */
@@ -128,7 +116,7 @@ export interface ValveCreateSinkOptions<T, E> {
 export type ValveError = unknown
 
 export type ValveCallback<P, E, SA = ValveSinkMessage<E>> = (
-  action: ValveSourceMessage<SA, P, E>
+  action: ValveSourceMessage<P, E, SA>
 ) => void
 
 export interface ValvePrimitiveStream<R, E> extends Observable<R, E> {

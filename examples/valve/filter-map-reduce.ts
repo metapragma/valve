@@ -1,6 +1,13 @@
 /* tslint:disable no-console */
 
-import { filter, fromArray, map, reduce, valve } from '../../src/index'
+import {
+  createThrough,
+  filter,
+  fromArray,
+  map,
+  reduce,
+  valve
+} from '../../src/index'
 import { range } from 'lodash'
 
 const array = range(parseInt(process.argv.slice(2)[0], 10))

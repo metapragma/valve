@@ -3,15 +3,15 @@
 import {
   Observable,
   Observer,
-  ValveActionComplete,
-  ValveActionError,
-  ValveCreateSinkOptions,
   ValveError,
+  ValveGenericAction,
   ValveMessageType,
+  ValveNextAction,
   ValveSink,
   ValveSinkFactory,
   ValveSinkMessage,
   ValveSource,
+  ValveSourceMessage,
   ValveState,
   ValveType
 } from '../types'
@@ -28,7 +28,7 @@ import {
   pull
 } from 'lodash'
 
-import { sinkDefaultOptionsFactory } from './defaultOptionsFactory'
+import { nextNextWithoutNoopFactory } from './actionFactory'
 
 const dumb = (tick: () => boolean): void => {
   let loop = true
@@ -113,67 +113,71 @@ const trampolineAbstractFactory = <T, E>(source: ValveSource<T, E>) => {
     }
   }
 
-  const trampolineFactory = (options: ValveCreateSinkOptions<T, E>) => {
+  const trampolineFactory = (options: ValveNextAction<T, E>) => {
+    let loop = true
+    let hasResponded = false
+
+    const handler = (message: ValveSourceMessage<T, E>) => {
+      hasResponded = true
+
+      switch (message.type) {
+        case ValveMessageType.Next: {
+          options.next(message.payload)
+
+          if (!loop) {
+            // tslint:disable-next-line no-use-before-declare
+            next()
+          }
+          break
+        }
+        case ValveMessageType.Noop: {
+          break
+        }
+        case ValveMessageType.Complete: {
+          loop = false
+
+          actions.complete()
+
+          options.complete()
+
+          break
+        }
+        case ValveMessageType.Error: {
+          loop = false
+
+          actions.error(message.payload)
+
+          options.error(message.payload)
+        }
+      }
+    }
+
+    const tick = () => {
+      hasResponded = false
+
+      source(
+        isUndefined(ended) ? { type: ValveMessageType.Pull } : ended,
+        handler
+      )
+
+      if (!hasResponded) {
+        loop = false
+
+        return loop
+      }
+
+      return loop
+    }
+
     const next = (): void => {
       // this function is much simpler to write if you just use recursion,
       // but by using a while loop we do not blow the stack if the stream
       // happens to be sync.
 
-      let loop = true
-      let hasResponded = false
+      loop = true
+      hasResponded = false
 
-      const tick = () => {
-        hasResponded = false
-
-        source(
-          isUndefined(ended) ? { type: ValveMessageType.Pull } : ended,
-          action => {
-            hasResponded = true
-
-            switch (action.type) {
-              case ValveMessageType.Next: {
-                options.next(action.payload)
-
-                if (!loop) {
-                  next()
-                }
-                break
-              }
-              case ValveMessageType.Noop: {
-                break
-              }
-              case ValveMessageType.Complete: {
-                loop = false
-
-                actions.complete()
-
-                options.complete()
-
-                break
-              }
-              case ValveMessageType.Error: {
-                loop = false
-
-                actions.error(action.payload)
-
-                options.error(action.payload)
-              }
-            }
-          }
-        )
-
-        if (!hasResponded) {
-          loop = false
-
-          return loop
-        }
-
-        return loop
-      }
-
-      // if (!isUndefined(scheduler)) {
       dumb(tick)
-      // }
     }
 
     return next
@@ -193,21 +197,19 @@ export const createSink = <
 >(
   handler: (
     actions: {
-      complete: ValveActionComplete
-      error: ValveActionError<E>
       observer: Required<Observer<R, E>>
-    }
-  ) => Partial<ValveCreateSinkOptions<T, E>> = () => ({})
+    } & ValveGenericAction<E>
+  ) => Partial<ValveNextAction<T, E>> = () => ({})
 ): ValveSinkFactory<T, R, S, E> =>
   assign<() => ValveSink<T, R, E>, { type: ValveType.Sink }>(
     () => source => {
       const { observer, observable } = observableFactory<R, E>()
       const { actions, trampolineFactory } = trampolineAbstractFactory(source)
 
-      const options: ValveCreateSinkOptions<T, E> = defaults(
+      const options: ValveNextAction<T, E> = defaults(
         {},
         handler(assign(actions, { observer })),
-        sinkDefaultOptionsFactory(observer)
+        nextNextWithoutNoopFactory(observer)
       )
 
       const next = trampolineFactory(options)

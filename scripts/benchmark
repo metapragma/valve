@@ -9,6 +9,7 @@
 # @import console/info
 # @import array/join
 # @import lang/executeIn
+# @import lang/truth
 
 main ()
 {
@@ -16,8 +17,8 @@ main ()
     strict true
 
     local suite="${1}"
-    local minRuns="${3:-15}"
     local iterations="${2:-100000}"
+    local minRuns="${3:-15}"
     local hyperfine="${MANAGE_REPOSITORY}/vendor/hyperfine/hyperfine"
     local directory
     local dirty=0
@@ -93,11 +94,19 @@ main ()
       # # --style basic \
       _ info "Running '${suite}' benchmark"
 
-      _ executeIn "${directory}/examples" "${hyperfine} \
-      --warmup 3 \
-      --min-runs "${minRuns}" \
-      --export-json ${report} \
-      $(_ join arguments " ")"
+      if _ truth "${EXPORT_JSON}"
+      then
+        _ executeIn "${directory}/examples" "${hyperfine} \
+        --warmup 3 \
+        --min-runs ${minRuns} \
+        --export-json ${report} \
+        $(_ join arguments " ")"
+      else
+        _ executeIn "${directory}/examples" "${hyperfine} \
+        --warmup 3 \
+        --min-runs ${minRuns} \
+        $(_ join arguments " ")"
+      fi
     fi
 }
 

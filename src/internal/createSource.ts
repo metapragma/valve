@@ -1,18 +1,18 @@
 import {
   ValveCallback,
-  ValveCreateSourceOptions,
   ValveError,
   ValveMessageType,
+  ValveNoopAction,
+  ValvePullAction,
+  ValveSinkMessage,
   ValveSource,
-  ValveSourceAction,
   ValveSourceFactory,
   ValveState,
   ValveType
 } from '../types'
 
 import { assign, defaults } from 'lodash'
-import { sourceActionFactory } from './actionFactory'
-import { sourceDefaultOptionsFactory } from './defaultOptionsFactory'
+import { pullCompleteFactory } from './actionFactory'
 
 export const createSource = <
   T,
@@ -20,34 +20,48 @@ export const createSource = <
   E extends ValveError = ValveError
 >(
   handler: (
-    actions: ValveSourceAction<T, E>
-  ) => Partial<ValveCreateSourceOptions<E>> = () => ({})
+    actions: ValveNoopAction<T, E>
+  ) => Partial<ValvePullAction<E>> = () => ({})
 ): ValveSourceFactory<T, S, E> =>
   assign<() => ValveSource<T, E>, { type: ValveType.Source }>(
     () => {
       let cb: ValveCallback<T, E>
 
-      const actions: ValveSourceAction<T, E> = sourceActionFactory(() => cb)
+      const actions: ValveNoopAction<T, E> = {
+        complete() {
+          cb({ type: ValveMessageType.Complete })
+        },
+        error(errorValue: E) {
+          cb({ type: ValveMessageType.Error, payload: errorValue })
+        },
+        noop() {
+          cb({ type: ValveMessageType.Noop })
+        },
+        next(value: T) {
+          cb({ type: ValveMessageType.Next, payload: value })
+        }
+      }
 
-      const opts: ValveCreateSourceOptions<E> = defaults(
+      const { pull, complete, error } = defaults(
         {},
         handler(actions),
-        sourceDefaultOptionsFactory(actions)
+        pullCompleteFactory(actions)
       )
 
-      return (action, _cb) => {
+      return (message, _cb) => {
         cb = _cb
 
-        switch (action.type) {
+        switch (message.type) {
           case ValveMessageType.Pull:
-            opts.pull()
+            pull()
+
             break
           case ValveMessageType.Complete:
-            opts.complete()
+            complete()
 
             break
           case ValveMessageType.Error:
-            opts.error(action.payload)
+            error(message.payload)
         }
       }
     },

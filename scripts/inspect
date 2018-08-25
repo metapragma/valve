@@ -9,6 +9,6 @@ main ()
     verbose true
     strict true
 
-    TS_NODE_PROJECT="${MANAGE_REPOSITORY}/tsconfig.json" node -r \
-    ts-node/register --inspect-brk=0.0.0.0 "$1"
+    TS_NODE_PROJECT="${MANAGE_REPOSITORY}/tsconfig-node.json" node -r \
+    ts-node/register --inspect-brk=0.0.0.0 "$@"
 }
