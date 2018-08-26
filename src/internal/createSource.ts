@@ -7,12 +7,30 @@ import {
   ValveSinkMessage,
   ValveSource,
   ValveSourceFactory,
+  ValveSourceMessage,
   ValveState,
   ValveType
 } from '../types'
 
 import { assign, defaults } from 'lodash'
 import { pullCompleteFactory } from './actionFactory'
+
+export const sourceActionFactory = <T, E>(
+  cb: ValveCallback<T, E, ValveSourceMessage>
+): ValveNoopAction<T, E> => ({
+  complete() {
+    cb(ValveMessageType.Complete)
+  },
+  error(errorValue: E) {
+    cb(ValveMessageType.Error, errorValue)
+  },
+  noop() {
+    cb(ValveMessageType.Noop)
+  },
+  next(value: T) {
+    cb(ValveMessageType.Next, value)
+  }
+})
 
 export const createSource = <
   T,
@@ -24,23 +42,8 @@ export const createSource = <
   ) => Partial<ValvePullAction<E>> = () => ({})
 ): ValveSourceFactory<T, S, E> =>
   assign<() => ValveSource<T, E>, { type: ValveType.Source }>(
-    () => {
-      let cb: ValveCallback<T, E>
-
-      const actions: ValveNoopAction<T, E> = {
-        complete() {
-          cb({ type: ValveMessageType.Complete })
-        },
-        error(errorValue: E) {
-          cb({ type: ValveMessageType.Error, payload: errorValue })
-        },
-        noop() {
-          cb({ type: ValveMessageType.Noop })
-        },
-        next(value: T) {
-          cb({ type: ValveMessageType.Next, payload: value })
-        }
-      }
+    () => cb => {
+      const actions = sourceActionFactory(cb)
 
       const { pull, complete, error } = defaults(
         {},
@@ -48,10 +51,8 @@ export const createSource = <
         pullCompleteFactory(actions)
       )
 
-      return (message, _cb) => {
-        cb = _cb
-
-        switch (message.type) {
+      return (message, value) => {
+        switch (message) {
           case ValveMessageType.Pull:
             pull()
 
@@ -61,7 +62,7 @@ export const createSource = <
 
             break
           case ValveMessageType.Error:
-            error(message.payload)
+            error(value as E)
         }
       }
     },

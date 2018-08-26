@@ -1,7 +1,6 @@
 import {
   Observer,
   ValveCallback,
-  ValveMessage,
   ValveMessageType,
   ValveNextAction,
   ValveNoopAction,
@@ -10,21 +9,6 @@ import {
   ValveSource,
   ValveSourceMessage
 } from '../types'
-
-export const sinkActionFactory = <T, E>(
-  source: ValveSource<T, E>,
-  cb: (action: ValveSourceMessage<T, E>) => void
-): ValvePullAction<E> => ({
-  complete() {
-    source({ type: ValveMessageType.Complete }, cb)
-  },
-  error(error: E) {
-    source({ type: ValveMessageType.Error, payload: error }, cb)
-  },
-  pull() {
-    source({ type: ValveMessageType.Pull }, cb)
-  }
-})
 
 const generics = <E>(
   actions:

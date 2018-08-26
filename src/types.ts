@@ -40,57 +40,22 @@ export enum ValveType {
 
 /* Messages */
 
-export interface ValveMessageGeneric {
-  type: ValveMessageType
-}
-
-export interface ValveMessagePull extends ValveMessageGeneric {
-  type: ValveMessageType.Pull
-}
-
-export interface ValveMessageNext<P> extends ValveMessageGeneric {
-  type: ValveMessageType.Next
-  payload: P
-}
-
-export interface ValveMessageError<E> extends ValveMessageGeneric {
-  type: ValveMessageType.Error
-  payload: E
-}
-
-export interface ValveMessageComplete extends ValveMessageGeneric {
-  type: ValveMessageType.Complete
-}
-
-export interface ValveMessageNoop extends ValveMessageGeneric {
-  type: ValveMessageType.Noop
-}
-
-export type ValveMessage<P, E> =
-  | ValveMessageComplete
-  | ValveMessageNext<P>
-  | ValveMessageError<E>
-  | ValveMessageNoop
-  | ValveMessagePull
-
-export type ValveSinkMessage<E> =
-  | ValveMessageComplete
-  | ValveMessageError<E>
-  | ValveMessagePull
+export type ValveSinkMessage =
+  | ValveMessageType.Complete
+  | ValveMessageType.Error
+  | ValveMessageType.Pull
 
 export type ValveSourceMessage<
-  P,
-  E,
-  SA = ValveSinkMessage<E>
-> = SA extends ValveMessageComplete
-  ? ValveMessageComplete
-  : SA extends ValveMessageError<E>
-    ? ValveMessageError<E>
+  SA = ValveSinkMessage
+> = SA extends ValveMessageType.Complete
+  ? ValveMessageType.Complete
+  : SA extends ValveMessageType.Error
+    ? ValveMessageType.Error
     : (
-        | ValveMessageComplete
-        | ValveMessageNext<P>
-        | ValveMessageError<E>
-        | ValveMessageNoop)
+        | ValveMessageType.Complete
+        | ValveMessageType.Next
+        | ValveMessageType.Error
+        | ValveMessageType.Noop)
 
 /* Actions */
 
@@ -115,8 +80,11 @@ export interface ValveNoopAction<T, E> extends ValveNextAction<T, E> {
 
 export type ValveError = unknown
 
-export type ValveCallback<P, E, SA = ValveSinkMessage<E>> = (
-  action: ValveSourceMessage<P, E, SA>
+export type ValveCallback<P, E, SA = ValveSinkMessage> = (
+  message: SA,
+  value?: SA extends ValveMessageType.Next
+    ? P
+    : SA extends ValveMessageType.Error ? E : undefined
 ) => void
 
 export interface ValvePrimitiveStream<R, E> extends Observable<R, E> {
@@ -127,9 +95,15 @@ export type ValveSink<P, R, E> = (
   source: ValveSource<P, E>
 ) => ValvePrimitiveStream<R, E>
 
-export type ValveSource<P, E> = (
-  action: ValveSinkMessage<E>,
-  cb: ValveCallback<P, E>
+export type ValveSource<
+  P,
+  E,
+  SA extends ValveSourceMessage = ValveSourceMessage
+> = (
+  cb: ValveCallback<P, E, ValveSourceMessage>
+) => (
+  message: ValveSinkMessage,
+  value: SA extends ValveMessageType.Error ? E : undefined
 ) => void
 
 export type ValveThrough<P, R, E> = (

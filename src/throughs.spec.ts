@@ -503,13 +503,14 @@ describe('throughs/take', () => {
 
     function thr<P, E>(): ValveThroughFactory<P, P, {}, E> {
       return assign<() => ValveThrough<P, P, E>, { type: ValveType.Through }>(
-        () => source => (action, cb) => {
+        () => source => cb => (message, value) => {
           // tslint:disable-next-line no-increment-decrement
-          if (action.type === ValveMessageType.Pull) pulls()
-          source(action, _action => {
-            if (_action.type === ValveMessageType.Next) pushes()
-            cb(_action)
-          })
+          if (message === ValveMessageType.Pull) pulls()
+
+          source((_message, _value) => {
+            if (_message === ValveMessageType.Next) pushes()
+            cb(_message, _value)
+          })(message, value)
         },
         { type: ValveType.Through }
       )
@@ -538,25 +539,28 @@ describe('throughs/take', () => {
     stream.schedule()
   })
 
-  it('complete', done => {
+  it('complete', () => {
     const ary = [1, 2, 3, 4, 5]
     let ended = false
     let i = 0
+    const s = spy()
 
-    const read = valve()(
+    const source = valve()(
       assign<() => ValveSource<number, {}>, { type: ValveType.Source }>(
-        () => (action, cb) => {
-          if (hasEnded(action)) {
+        () => cb => (message, value) => {
+          if (hasEnded(message)) {
             ended = true
-            cb(action)
+            cb(message, value)
           } else if (i > ary.length) {
-            cb({ type: ValveMessageType.Complete })
+            cb(ValveMessageType.Complete)
           } else {
-            cb({
-              type: ValveMessageType.Next,
-              // tslint:disable-next-line no-increment-decrement
-              payload: ary[i++]
-            })
+            // tslint:disable-next-line no-increment-decrement
+            cb(ValveMessageType.Next, ary[i++])
+            // cb({
+            //   type: ValveMessageType.Next,
+            //   // tslint:disable-next-line no-increment-decrement
+            //   payload: ary[i++]
+            // })
           }
         },
         { type: ValveType.Source }
@@ -566,22 +570,31 @@ describe('throughs/take', () => {
       }, true)
     )
 
-    const instance = read()
+    let b = 0
 
-    instance({ type: ValveMessageType.Pull }, () => {
-      assert.notOk(ended)
-      instance({ type: ValveMessageType.Pull }, () => {
+    const instance = source()((message, value) => {
+      s(message, value)
+
+      b += 1
+
+      if (b === 4) {
+        assert.ok(ended)
+      } else {
         assert.notOk(ended)
-        instance({ type: ValveMessageType.Pull }, () => {
-          assert.notOk(ended)
-          instance({ type: ValveMessageType.Pull }, action => {
-            assert.equal(action.type, ValveMessageType.Complete)
-            assert.isOk(ended)
-            done()
-          })
-        })
-      })
+      }
     })
+
+    instance(ValveMessageType.Pull, undefined)
+    instance(ValveMessageType.Pull, undefined)
+    instance(ValveMessageType.Pull, undefined)
+    instance(ValveMessageType.Pull, undefined)
+
+    assert.equal(s.callCount, 4)
+
+    assert.ok(s.firstCall.calledWith(ValveMessageType.Next, 1))
+    assert.ok(s.secondCall.calledWith(ValveMessageType.Next, 2))
+    assert.ok(s.thirdCall.calledWith(ValveMessageType.Next, 3))
+    assert.ok(s.lastCall.calledWith(ValveMessageType.Complete, undefined))
   })
 })
 

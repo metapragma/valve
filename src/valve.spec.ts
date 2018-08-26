@@ -285,7 +285,6 @@ describe('pull', () => {
     // With values:
     const sA = spy()
     const sB = spy()
-    const sC = spy()
 
     const source = valve()(
       count(5),
@@ -297,25 +296,12 @@ describe('pull', () => {
       createThrough()
     )
 
-    source()({ type: ValveMessageType.Pull }, action => {
-      sB()
-
-      if (action.type === ValveMessageType.Next) {
-        assert.equal(action.payload, 2)
-      } else {
-        done(new Error('Action type mismatch'))
-      }
+    const instance = source()((message, value) => {
+      sB(message, value)
     })
 
-    source()({ type: ValveMessageType.Pull }, action => {
-      sC()
-
-      if (action.type === ValveMessageType.Next) {
-        assert.equal(action.payload, 4)
-      } else {
-        done(new Error('Action type mismatch'))
-      }
-    })
+    instance(ValveMessageType.Pull, undefined)
+    instance(ValveMessageType.Pull, undefined)
 
     const stream = valve()(source, collect())
 
@@ -325,8 +311,9 @@ describe('pull', () => {
       },
       complete() {
         assert.equal(sA.callCount, 5)
-        assert.equal(sB.callCount, 1)
-        assert.equal(sC.callCount, 1)
+        assert.equal(sB.callCount, 2)
+        assert.ok(sB.firstCall.calledWith(ValveMessageType.Next, 2))
+        assert.ok(sB.secondCall.calledWith(ValveMessageType.Next, 4))
         done()
       }
     })
@@ -334,26 +321,22 @@ describe('pull', () => {
     stream.schedule()
   })
 
-  it('continuable stream (error)', done => {
+  it('continuable stream (error)', () => {
+    const sA = spy()
+
     const ERR = new Error('test')
 
     const source = valve<typeof ERR>()(error(ERR), createThrough())
 
-    source()({ type: ValveMessageType.Pull }, action => {
-      if (action.type === ValveMessageType.Error) {
-        assert.deepEqual(action.payload, ERR)
-      } else {
-        done(new Error('Action type mismatch'))
-      }
+    const instance = source()((message, value) => {
+      sA(message, value)
     })
 
-    source()({ type: ValveMessageType.Pull }, action => {
-      if (action.type === ValveMessageType.Error) {
-        assert.deepEqual(action.payload, ERR)
-        done()
-      } else {
-        done(new Error('Action type mismatch'))
-      }
-    })
+    instance(ValveMessageType.Pull, undefined)
+    instance(ValveMessageType.Pull, undefined)
+
+    assert.equal(sA.callCount, 2)
+    assert.ok(sA.firstCall.calledWith(ValveMessageType.Error, ERR))
+    assert.ok(sA.secondCall.calledWith(ValveMessageType.Error, ERR))
   })
 })

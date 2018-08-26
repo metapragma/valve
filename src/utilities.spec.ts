@@ -24,11 +24,11 @@ import { hasEnded } from './internal/hasEnded'
 
 import {
   ValveCallback,
-  ValveMessageComplete,
-  ValveMessageError,
   ValveMessageType,
+  ValveSinkMessage,
   ValveSource,
   ValveSourceFactory,
+  ValveSourceMessage,
   ValveThrough,
   ValveThroughFactory,
   ValveType
@@ -50,17 +50,17 @@ function hang<P, E>(
   complete?: () => void
 ): ValveSourceFactory<P, {}, E> {
   let i = 0
-  let _cb: ValveCallback<P, E>
+  let _cb: ValveCallback<P, E, ValveSourceMessage>
 
   return assign<() => ValveSource<P, E>, { type: ValveType.Source }>(
-    () => (action, cb) => {
+    () => cb => (message, value) => {
       if (i < values.length) {
-        cb({ type: ValveMessageType.Next, payload: values[i++] })
-      } else if (!hasEnded(action)) {
+        cb(ValveMessageType.Next, values[i++])
+      } else if (!hasEnded(message)) {
         _cb = cb
       } else {
-        _cb(action)
-        cb(action)
+        _cb(message, value)
+        cb(message, value)
         // tslint:disable-next-line no-unused-expression
         if (isFunction(complete)) {
           complete()
@@ -75,7 +75,8 @@ function completeable<P, E>(): ValveThroughFactory<P, P, {}, E> & {
   terminate: () => void
 } {
   let _read: ValveSource<P, E>
-  let ended: ValveMessageError<E> | ValveMessageComplete
+  let ended: ValveMessageType.Error | ValveMessageType.Complete
+  let endedValue: E | undefined
 
   return assign<
     () => ValveThrough<P, P, E>,
@@ -86,12 +87,14 @@ function completeable<P, E>(): ValveThroughFactory<P, P, {}, E> & {
       return read => {
         _read = read
 
-        return (action, cb) => {
-          if (hasEnded(action)) {
-            ended = action
+        return cb => (message, value) => {
+          if (hasEnded(message)) {
+            ended = message
+
+            endedValue = value
           }
 
-          read(action, cb)
+          read(cb)(message, value)
         }
       }
     },
@@ -99,7 +102,7 @@ function completeable<P, E>(): ValveThroughFactory<P, P, {}, E> & {
     {
       terminate() {
         if (!hasEnded(ended)) {
-          _read({ type: ValveMessageType.Complete }, noop)
+          _read(noop)(ValveMessageType.Complete, undefined)
         }
       }
     }
@@ -132,10 +135,10 @@ function test<E>(
 
 describe('utilities', () => {
   it('hasEnded', () => {
-    assert.equal(hasEnded({ type: ValveMessageType.Complete }), true)
-    assert.equal(hasEnded({ type: ValveMessageType.Error, payload: {} }), true)
-    assert.equal(hasEnded({ type: ValveMessageType.Pull }), false)
-    assert.equal(hasEnded({ type: ValveMessageType.Next, payload: {} }), false)
+    assert.equal(hasEnded(ValveMessageType.Complete), true)
+    assert.equal(hasEnded(ValveMessageType.Error), true)
+    assert.equal(hasEnded(ValveMessageType.Pull), false)
+    assert.equal(hasEnded(ValveMessageType.Next), false)
     assert.equal(hasEnded(undefined), false)
   })
 })
@@ -148,23 +151,27 @@ describe('createSource', () => {
     assert(isFunction(source))
     assert.equal(source.type, ValveType.Source)
 
-    source()({ type: ValveMessageType.Pull }, action => {
-      assert(isPlainObject(action))
+    const instance = source()
 
-      if (action.type === ValveMessageType.Complete) {
-        done()
-      } else {
-        done(new Error('Action type mismatch'))
-      }
+    assert(isFunction(instance))
+
+    const cb = instance(message => {
+      assert(isNumber(message))
+      assert.equal(message, ValveMessageType.Complete)
+
+      done()
     })
+
+    cb(ValveMessageType.Pull, undefined)
   })
 
-  it('createSource pull', done => {
-    const spy = sinonSpy()
+  it('createSource pull', () => {
+    const spyOne = sinonSpy()
+    const spyTwo = sinonSpy()
 
     const source = createSource<string>(({ complete, next, error, noop }) => ({
       pull() {
-        spy()
+        spyOne()
         assert(isFunction(complete))
         assert(isFunction(next))
         assert(isFunction(error))
@@ -176,40 +183,31 @@ describe('createSource', () => {
     assert(isFunction(source))
     assert.equal(source.type, ValveType.Source)
 
-    const instance = source()
-
-    assert(isFunction(instance))
-
-    instance({ type: ValveMessageType.Pull }, action => {
-      assert(isPlainObject(action))
-
-      if (action.type === ValveMessageType.Next) {
-        assert.equal(action.payload, 'next')
-        assert.equal(spy.callCount, 1)
-      } else {
-        done(new Error('Action type mismatch'))
-      }
-
-      instance({ type: ValveMessageType.Pull }, _action => {
-        assert(isPlainObject(_action))
-
-        if (_action.type === ValveMessageType.Next) {
-          assert.equal(_action.payload, 'next')
-          assert.equal(spy.callCount, 2)
-          done()
-        } else {
-          done(new Error('Action type mismatch'))
-        }
-      })
+    const instance = source()((message, value) => {
+      spyTwo(message, value)
     })
+
+    instance(ValveMessageType.Pull, undefined)
+    instance(ValveMessageType.Pull, undefined)
+
+    assert.equal(spyTwo.callCount, 2)
+    assert.equal(spyOne.callCount, 2)
+    assert.ok(spyTwo.firstCall.calledWith(ValveMessageType.Next, 'next'))
+    assert.ok(spyTwo.secondCall.calledWith(ValveMessageType.Next, 'next'))
   })
 
-  it('createSource complete', done => {
-    const spy = sinonSpy()
+  it('createSource complete', () => {
+    const spyOne = sinonSpy()
+    const spyTwo = sinonSpy()
 
-    const source = createSource<string>(({ complete }) => ({
+    const source = createSource<string>(({ complete, next }) => ({
+      pull() {
+        spyOne()
+        assert(isFunction(next))
+        next('next')
+      },
       complete() {
-        spy()
+        spyOne()
         assert(isFunction(complete))
         complete()
       }
@@ -218,34 +216,34 @@ describe('createSource', () => {
     assert(isFunction(source))
     assert.equal(source.type, ValveType.Source)
 
-    const instance = source()
-
-    assert(isFunction(instance))
-
-    instance({ type: ValveMessageType.Pull }, action => {
-      assert(isPlainObject(action))
-      assert.equal(action.type, ValveMessageType.Complete)
-
-      instance({ type: ValveMessageType.Complete }, _action => {
-        assert(isPlainObject(action))
-
-        if (_action.type === ValveMessageType.Complete) {
-          assert.equal(spy.callCount, 1)
-          done()
-        } else {
-          done(new Error('Action type mismatch'))
-        }
-      })
+    const instance = source()((message, value) => {
+      spyTwo(message, value)
     })
+
+    instance(ValveMessageType.Pull, undefined)
+    instance(ValveMessageType.Complete, undefined)
+
+    assert.equal(spyOne.callCount, 2)
+    assert.equal(spyTwo.callCount, 2)
+    assert.ok(spyTwo.firstCall.calledWith(ValveMessageType.Next, 'next'))
+    assert.ok(
+      spyTwo.secondCall.calledWith(ValveMessageType.Complete, undefined)
+    )
   })
 
-  it('createSource error', done => {
-    const spy = sinonSpy()
+  it('createSource error', () => {
+    const spyOne = sinonSpy()
+    const spyTwo = sinonSpy()
+
     const ERR = new Error('Error')
 
-    const source = createSource<string, {}, typeof ERR>(({ error }) => ({
+    const source = createSource<string, {}, typeof ERR>(({ next, error }) => ({
+      pull() {
+        spyOne()
+        next('next')
+      },
       error(err) {
-        spy()
+        spyOne()
         assert.equal(err, ERR)
         error(err)
       }
@@ -254,26 +252,17 @@ describe('createSource', () => {
     assert(isFunction(source))
     assert.equal(source.type, ValveType.Source)
 
-    const instance = source()
-
-    assert(isFunction(instance))
-
-    instance({ type: ValveMessageType.Pull }, action => {
-      assert(isPlainObject(action))
-      assert.equal(action.type, ValveMessageType.Complete)
-
-      instance({ type: ValveMessageType.Error, payload: ERR }, _action => {
-        assert(isPlainObject(action))
-
-        if (_action.type === ValveMessageType.Error) {
-          assert.equal(_action.payload, ERR)
-          assert.equal(spy.callCount, 1)
-          done()
-        } else {
-          done(new Error('Action type mismatch'))
-        }
-      })
+    const instance = source()((message, value) => {
+      spyTwo(message, value)
     })
+
+    instance(ValveMessageType.Pull, undefined)
+    instance(ValveMessageType.Error, ERR)
+
+    assert.equal(spyOne.callCount, 2)
+    assert.equal(spyTwo.callCount, 2)
+    assert.ok(spyTwo.firstCall.calledWith(ValveMessageType.Next, 'next'))
+    assert.ok(spyTwo.secondCall.calledWith(ValveMessageType.Error, ERR))
   })
 })
 
@@ -331,10 +320,10 @@ describe('createSink', () => {
     let c = 100
 
     const drain = createSink(({ error }) => ({
-      next(next) {
+      next(value) {
         spy()
 
-        assert(isNumber(next))
+        assert(isNumber(value))
         if (c < 0) throw new Error('stream should have completeed')
         // tslint:disable-next-line no-increment-decrement
         if (!--c) error(ERR)
@@ -342,6 +331,7 @@ describe('createSink', () => {
       error(err) {
         assert.equal(err, ERR)
         assert.equal(spy.callCount, 100)
+
         done()
       }
     }))

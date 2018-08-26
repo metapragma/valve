@@ -16,7 +16,7 @@ import {
   ValveType
 } from '../types'
 
-import { findEnded } from './findEnded'
+import { hasEnded } from './hasEnded'
 
 import {
   assign,
@@ -99,17 +99,19 @@ const observableFactory = <T, E>() => {
 }
 
 const trampolineAbstractFactory = <T, E>(source: ValveSource<T, E>) => {
-  let ended: ValveSinkMessage<E> | undefined
+  let ended: ValveSinkMessage | undefined
+  let endedValue: E
 
   const actions = {
     complete() {
-      ended = findEnded<T, E>(ended, { type: ValveMessageType.Complete })
+      ended = hasEnded(ended) ? ended : ValveMessageType.Complete
     },
     error(error: E) {
-      ended = findEnded<T, E>(ended, {
-        type: ValveMessageType.Error,
-        payload: error
-      })
+      ended = hasEnded(ended) ? ended : ValveMessageType.Error
+
+      if (isUndefined(endedValue)) {
+        endedValue = error
+      }
     }
   }
 
@@ -117,17 +119,20 @@ const trampolineAbstractFactory = <T, E>(source: ValveSource<T, E>) => {
     let loop = true
     let hasResponded = false
 
-    const handler = (message: ValveSourceMessage<T, E>) => {
+    const { next, complete, error } = options
+
+    const callback = source((message, value) => {
       hasResponded = true
 
-      switch (message.type) {
+      switch (message) {
         case ValveMessageType.Next: {
-          options.next(message.payload)
+          next(value as T)
 
           if (!loop) {
             // tslint:disable-next-line no-use-before-declare
-            next()
+            nextTick()
           }
+
           break
         }
         case ValveMessageType.Noop: {
@@ -138,27 +143,24 @@ const trampolineAbstractFactory = <T, E>(source: ValveSource<T, E>) => {
 
           actions.complete()
 
-          options.complete()
+          complete()
 
           break
         }
         case ValveMessageType.Error: {
           loop = false
 
-          actions.error(message.payload)
+          actions.error(value as E)
 
-          options.error(message.payload)
+          error(value as E)
         }
       }
-    }
+    })
 
     const tick = () => {
       hasResponded = false
 
-      source(
-        isUndefined(ended) ? { type: ValveMessageType.Pull } : ended,
-        handler
-      )
+      callback(isUndefined(ended) ? ValveMessageType.Pull : ended, endedValue)
 
       if (!hasResponded) {
         loop = false
@@ -169,7 +171,7 @@ const trampolineAbstractFactory = <T, E>(source: ValveSource<T, E>) => {
       return loop
     }
 
-    const next = (): void => {
+    const nextTick = (): void => {
       // this function is much simpler to write if you just use recursion,
       // but by using a while loop we do not blow the stack if the stream
       // happens to be sync.
@@ -180,7 +182,7 @@ const trampolineAbstractFactory = <T, E>(source: ValveSource<T, E>) => {
       dumb(tick)
     }
 
-    return next
+    return nextTick
   }
 
   return {
