@@ -1,6 +1,6 @@
 import { reduce } from './reduce'
 
-import { ValveError, ValveNextAction, ValveSinkFactory } from '../types'
+import { ValveError, ValveSinkFactory } from '../types'
 
 export function concat<E extends ValveError = ValveError>(): ValveSinkFactory<
   string,

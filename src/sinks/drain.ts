@@ -1,7 +1,5 @@
 import { ValveError, ValveSinkFactory } from '../types'
 
-import { defaults, isUndefined } from 'lodash'
-
 import { createSink } from '../internal/createSink'
 
 export function drain<P, E extends ValveError = ValveError>(): ValveSinkFactory<
@@ -10,15 +8,15 @@ export function drain<P, E extends ValveError = ValveError>(): ValveSinkFactory<
   {},
   E
 > {
-  return createSink<P, P, {}, E>(({ observer }) => ({
+  return createSink<P, P, {}, E>(({ next, complete, error }) => ({
     next(value) {
-      observer.next(value)
+      next(value)
     },
     complete() {
-      observer.complete()
+      complete()
     },
     error(value) {
-      observer.error(value)
+      error(value)
     }
   }))
 }

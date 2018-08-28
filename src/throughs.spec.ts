@@ -23,16 +23,7 @@ import {
 import 'mocha'
 import { assert } from 'chai'
 
-import {
-  ValveError,
-  ValveMessageType,
-  ValveSource,
-  ValveThrough,
-  ValveThroughFactory,
-  ValveType
-} from './types'
-
-import { assign } from 'lodash'
+import { ValveMessageType, ValveThroughFactory, ValveType } from './types'
 
 import { hasEnded } from './internal/hasEnded'
 
@@ -502,18 +493,20 @@ describe('throughs/take', () => {
     const pushes = spy()
 
     function thr<P, E>(): ValveThroughFactory<P, P, {}, E> {
-      return assign<() => ValveThrough<P, P, E>, { type: ValveType.Through }>(
-        () => source => cb => (message, value) => {
-          // tslint:disable-next-line no-increment-decrement
-          if (message === ValveMessageType.Pull) pulls()
+      return {
+        pipe() {
+          return source => cb => (message, value) => {
+            // tslint:disable-next-line no-increment-decrement
+            if (message === ValveMessageType.Pull) pulls()
 
-          source((_message, _value) => {
-            if (_message === ValveMessageType.Next) pushes()
-            cb(_message, _value)
-          })(message, value)
+            source((_message, _value) => {
+              if (_message === ValveMessageType.Next) pushes()
+              cb(_message, _value)
+            })(message, value)
+          }
         },
-        { type: ValveType.Through }
-      )
+        type: ValveType.Through
+      }
     }
 
     const stream = valve()(
@@ -546,25 +539,27 @@ describe('throughs/take', () => {
     const s = spy()
 
     const source = valve()(
-      assign<() => ValveSource<number, {}>, { type: ValveType.Source }>(
-        () => cb => (message, value) => {
-          if (hasEnded(message)) {
-            ended = true
-            cb(message, value)
-          } else if (i > ary.length) {
-            cb(ValveMessageType.Complete)
-          } else {
-            // tslint:disable-next-line no-increment-decrement
-            cb(ValveMessageType.Next, ary[i++])
-            // cb({
-            //   type: ValveMessageType.Next,
-            //   // tslint:disable-next-line no-increment-decrement
-            //   payload: ary[i++]
-            // })
+      {
+        pipe() {
+          return cb => (message, value) => {
+            if (hasEnded(message)) {
+              ended = true
+              cb(message, value)
+            } else if (i > ary.length) {
+              cb(ValveMessageType.Complete)
+            } else {
+              // tslint:disable-next-line no-increment-decrement
+              cb(ValveMessageType.Next, ary[i++])
+              // cb({
+              //   type: ValveMessageType.Next,
+              //   // tslint:disable-next-line no-increment-decrement
+              //   payload: ary[i++]
+              // })
+            }
           }
         },
-        { type: ValveType.Source }
-      ),
+        type: ValveType.Source
+      },
       take(d => {
         return d < 3
       }, true)
@@ -572,7 +567,7 @@ describe('throughs/take', () => {
 
     let b = 0
 
-    const instance = source()((message, value) => {
+    const instance = source.pipe()((message, value) => {
       s(message, value)
 
       b += 1

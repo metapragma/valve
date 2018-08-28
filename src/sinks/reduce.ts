@@ -1,39 +1,31 @@
 import { ValveError, ValveSinkFactory } from '../types'
-
-import { defaults, isUndefined } from 'lodash'
-
 import { createSink } from '../internal/createSink'
 
-export function reduce<P, R = P, E extends ValveError = ValveError>(
+export const reduce = <P, R = P, E extends ValveError = ValveError>(
   iteratee: (accumulator: R, next: P) => R,
   accumulator?: R
-): ValveSinkFactory<P, R, {}, E> {
-  let first = true
-  // tslint:disable-next-line no-any
-  let acc: any = accumulator
+): ValveSinkFactory<P, R, {}, E> =>
+  createSink<P, R, {}, E>(({ next, complete, error }) => {
+    // tslint:disable-next-line no-any
+    let acc: any = accumulator
+    let initAccum: boolean = acc === undefined
 
-  return createSink<P, R, {}, E>(({ observer }) => ({
-    next(value) {
-      if (first && isUndefined(accumulator)) {
-        acc = value
-      } else {
-        // tslint:disable-next-line no-unsafe-any
-        acc = iteratee(acc, value)
+    return {
+      next(value) {
+        // tslint:disable-next-line ban-comma-operator no-unsafe-any
+        acc = initAccum ? ((initAccum = false), value) : iteratee(acc, value)
+      },
+      complete() {
+        if (!initAccum) {
+          // tslint:disable-next-line no-unsafe-any
+          next(acc)
+          complete()
+        } else {
+          complete()
+        }
+      },
+      error(value) {
+        error(value)
       }
-
-      first = false
-    },
-    complete() {
-      if (first && isUndefined(accumulator)) {
-        observer.complete()
-      } else {
-        // tslint:disable-next-line no-unsafe-any
-        observer.next(acc)
-        observer.complete()
-      }
-    },
-    error(value) {
-      observer.error(value)
     }
-  }))
-}
+  })

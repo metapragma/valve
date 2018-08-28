@@ -6,6 +6,7 @@ import {
   fromArray,
   fromIterable,
   infinite,
+  map,
   once,
   take,
   valve
@@ -175,7 +176,7 @@ describe('sources/fromIterable', () => {
 
 describe('sources/infinite', () => {
   it('default', done => {
-    const stream = valve()(infinite(), take(5), collect())
+    const stream = valve()(infinite(), map(n => `${n}`), take(5), collect())
 
     stream.subscribe({
       next(value) {

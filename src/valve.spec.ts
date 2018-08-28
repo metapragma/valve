@@ -55,7 +55,7 @@ describe('pull', () => {
     )
 
     assert.equal(source.type, ValveType.Source)
-    assert.isFunction(source)
+    assert.isFunction(source.pipe)
 
     const stream = valve()(source, collect())
 
@@ -88,7 +88,7 @@ describe('pull', () => {
     )
 
     assert.equal(through.type, ValveType.Through)
-    assert.isFunction(through)
+    assert.isFunction(through.pipe)
 
     const stream = valve()(count(4), through, collect())
 
@@ -116,7 +116,7 @@ describe('pull', () => {
     )
 
     assert.equal(sink.type, ValveType.Sink)
-    assert.isFunction(sink)
+    assert.isFunction(sink.pipe)
 
     const stream = valve()(count(4), sink)
 
@@ -159,7 +159,7 @@ describe('pull', () => {
     )
 
     assert.equal(through.type, ValveType.Through)
-    assert.isFunction(through)
+    assert.isFunction(through.pipe)
 
     const stream = valve()(count(4), through2, collect())
 
@@ -296,7 +296,7 @@ describe('pull', () => {
       createThrough()
     )
 
-    const instance = source()((message, value) => {
+    const instance = source.pipe()((message, value) => {
       sB(message, value)
     })
 
@@ -328,7 +328,7 @@ describe('pull', () => {
 
     const source = valve<typeof ERR>()(error(ERR), createThrough())
 
-    const instance = source()((message, value) => {
+    const instance = source.pipe()((message, value) => {
       sA(message, value)
     })
 

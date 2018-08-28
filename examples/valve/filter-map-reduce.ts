@@ -1,7 +1,6 @@
 /* tslint:disable no-console */
 
 import {
-  createThrough,
   filter,
   fromArray,
   map,
@@ -19,6 +18,8 @@ const stream = compose(
   map(i => i + 1),
   reduce((x, y) => x + y, 0)
 )
+
+// const stream = reduce<number, number>((x, y) => x + y, 0).pipe()(fromArray(array).pipe())
 
 stream.subscribe({
   next: i => console.log(i),

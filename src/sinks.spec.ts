@@ -49,6 +49,31 @@ describe('sinks/drain', () => {
     stream.schedule()
   })
 
+  it('two subscribers', done => {
+    const s1 = spy()
+    const s2 = spy()
+
+    const stream = valve()(count(10), drain())
+
+    stream.subscribe({
+      next(value) {
+        s1(value)
+      }
+    })
+
+    stream.subscribe({
+      next(value) {
+        s2(value)
+      }
+    })
+
+    stream.schedule()
+
+    assert.equal(s1.callCount, 10)
+    assert.equal(s2.callCount, 10)
+    done()
+  })
+
   it('error', done => {
     const ERR = new Error('test')
 

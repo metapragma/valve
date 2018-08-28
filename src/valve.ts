@@ -6,19 +6,18 @@ import {
   ValveCompositeSource,
   ValveCompositeThrough,
   ValveError,
-  ValveSink,
   ValveSinkFactory,
-  ValveSource,
   ValveSourceFactory,
-  ValveState,
   ValveStateComposite,
   ValveStream,
-  ValveThrough,
   ValveThroughFactory,
   ValveType
 } from './types'
 
-import { assign, map, reduceRight } from 'lodash'
+import { map, reduceRight } from 'lodash'
+
+const _compose = (fns: any[]) =>
+  reduceRight(fns, (f, g) => (...args: any[]) => f(g(...args)))
 
 // tslint:disable-next-line max-func-body-length
 export function valve<ERR = ValveError>() {
@@ -2246,9 +2245,6 @@ export function valve<ERR = ValveError>() {
     const first = props[0]
     const last = props[props.length - 1]
 
-    const _compose = (fns: any[]) =>
-      reduceRight(fns, (f, g) => (...args: any[]) => f(g(...args)))
-
     // if (props.length === 1) {
     //   return
     // } else
@@ -2262,19 +2258,20 @@ export function valve<ERR = ValveError>() {
       if (last.type === ValveType.Sink) {
         // source -> sink = trap
 
-        return _compose(map(props, f => f(/* configuration */)))(
-          first(/* configuration */)
+        return _compose(map(props, f => f.pipe(/* configuration */)))(
+          first.pipe(/* configuration */)
         )
       } else {
         // TODO: source -> through = source
 
-        return assign<() => ValveSource<any, any>, { type: ValveType.Source }>(
-          () =>
-            /* configuration */ _compose(
-              map(props, f => f(/* configuration */))
-            )(first(/* configuration */)),
-          { type: ValveType.Source }
-        )
+        return {
+          pipe(/* configuration */) {
+            return _compose(map(props, f => f.pipe(/* configuration */)))(
+              first.pipe(/* configuration */)
+            )
+          },
+          type: ValveType.Source
+        }
       }
     } else {
       // first is a sink, or a through
@@ -2286,26 +2283,25 @@ export function valve<ERR = ValveError>() {
       if (last.type === ValveType.Sink) {
         // TODO: through -> sink = sink
 
-        return assign<() => ValveSink<any, any, any>, { type: ValveType.Sink }>(
-          () =>
-            /* configuration */ _compose(
-              map(props, f => f(/* configuration */))
-            ),
-          { type: ValveType.Sink }
-        )
+        return {
+          pipe() {
+            return /* configuration */ _compose(
+              map(props, f => f.pipe(/* configuration */))
+            )
+          },
+          type: last.type
+        }
       } else {
         // through -> through = through
 
-        return assign<
-          () => ValveThrough<any, any, any>,
-          { type: ValveType.Through }
-        >(
-          () =>
-            /* configuration */ _compose(
-              map(props, f => f(/* configuration */))
-            ),
-          { type: ValveType.Through }
-        )
+        return {
+          pipe() {
+            return /* configuration */ _compose(
+              map(props, f => f.pipe(/* configuration */))
+            )
+          },
+          type: ValveType.Through
+        }
       }
     }
   }

@@ -18,18 +18,16 @@ import {
   valve
 } from './index'
 
-import { assign, isFunction, isNumber, isPlainObject, noop } from 'lodash'
+import { isFunction, isNumber, noop } from 'lodash'
 import { spy as sinonSpy } from 'sinon'
 import { hasEnded } from './internal/hasEnded'
 
 import {
   ValveCallback,
   ValveMessageType,
-  ValveSinkMessage,
   ValveSource,
   ValveSourceFactory,
   ValveSourceMessage,
-  ValveThrough,
   ValveThroughFactory,
   ValveType
 } from './types'
@@ -52,23 +50,25 @@ function hang<P, E>(
   let i = 0
   let _cb: ValveCallback<P, E, ValveSourceMessage>
 
-  return assign<() => ValveSource<P, E>, { type: ValveType.Source }>(
-    () => cb => (message, value) => {
-      if (i < values.length) {
-        cb(ValveMessageType.Next, values[i++])
-      } else if (!hasEnded(message)) {
-        _cb = cb
-      } else {
-        _cb(message, value)
-        cb(message, value)
-        // tslint:disable-next-line no-unused-expression
-        if (isFunction(complete)) {
-          complete()
+  return {
+    pipe() {
+      return cb => (message, value) => {
+        if (i < values.length) {
+          cb(ValveMessageType.Next, values[i++])
+        } else if (!hasEnded(message)) {
+          _cb = cb
+        } else {
+          _cb(message, value)
+          cb(message, value)
+          // tslint:disable-next-line no-unused-expression
+          if (isFunction(complete)) {
+            complete()
+          }
         }
       }
     },
-    { type: ValveType.Source }
-  )
+    type: ValveType.Source
+  }
 }
 
 function completeable<P, E>(): ValveThroughFactory<P, P, {}, E> & {
@@ -76,14 +76,10 @@ function completeable<P, E>(): ValveThroughFactory<P, P, {}, E> & {
 } {
   let _read: ValveSource<P, E>
   let ended: ValveMessageType.Error | ValveMessageType.Complete
-  let endedValue: E | undefined
+  // let endedValue: E | undefined
 
-  return assign<
-    () => ValveThrough<P, P, E>,
-    { type: ValveType.Through },
-    { terminate: () => void }
-  >(
-    () => {
+  return {
+    pipe() {
       return read => {
         _read = read
 
@@ -91,22 +87,21 @@ function completeable<P, E>(): ValveThroughFactory<P, P, {}, E> & {
           if (hasEnded(message)) {
             ended = message
 
-            endedValue = value
+            // TODO: wah?
+            // endedValue = value
           }
 
           read(cb)(message, value)
         }
       }
     },
-    { type: ValveType.Through },
-    {
-      terminate() {
-        if (!hasEnded(ended)) {
-          _read(noop)(ValveMessageType.Complete, undefined)
-        }
+    terminate() {
+      if (!hasEnded(ended)) {
+        _read(noop)(ValveMessageType.Complete, undefined)
       }
-    }
-  )
+    },
+    type: ValveType.Through
+  }
 }
 
 function test<E>(
@@ -148,10 +143,10 @@ describe('createSource', () => {
     const source = createSource()
 
     assert(isFunction(createSource))
-    assert(isFunction(source))
+    assert(isFunction(source.pipe))
     assert.equal(source.type, ValveType.Source)
 
-    const instance = source()
+    const instance = source.pipe()
 
     assert(isFunction(instance))
 
@@ -180,10 +175,9 @@ describe('createSource', () => {
       }
     }))
 
-    assert(isFunction(source))
     assert.equal(source.type, ValveType.Source)
 
-    const instance = source()((message, value) => {
+    const instance = source.pipe()((message, value) => {
       spyTwo(message, value)
     })
 
@@ -213,10 +207,9 @@ describe('createSource', () => {
       }
     }))
 
-    assert(isFunction(source))
     assert.equal(source.type, ValveType.Source)
 
-    const instance = source()((message, value) => {
+    const instance = source.pipe()((message, value) => {
       spyTwo(message, value)
     })
 
@@ -249,10 +242,9 @@ describe('createSource', () => {
       }
     }))
 
-    assert(isFunction(source))
     assert.equal(source.type, ValveType.Source)
 
-    const instance = source()((message, value) => {
+    const instance = source.pipe()((message, value) => {
       spyTwo(message, value)
     })
 
@@ -283,10 +275,10 @@ describe('createSink', () => {
       }
     }))
 
-    assert(isFunction(drain))
+    assert(isFunction(drain.pipe))
     assert.equal(drain.type, ValveType.Sink)
 
-    const instance = drain()
+    const instance = drain.pipe()
     assert(isFunction(instance))
 
     valve()(fromIterable([1, 2, 3, 4]), drain).schedule()
@@ -296,7 +288,7 @@ describe('createSink', () => {
     const spy = sinonSpy()
     let c = 100
 
-    const drain = createSink(({ complete }) => ({
+    const drain = createSink((_, { complete }) => ({
       next(next) {
         spy()
 
@@ -319,7 +311,7 @@ describe('createSink', () => {
     const ERR = new Error('Error')
     let c = 100
 
-    const drain = createSink(({ error }) => ({
+    const drain = createSink((_, { error }) => ({
       next(value) {
         spy()
 
@@ -343,7 +335,7 @@ describe('createSink', () => {
     const spy = sinonSpy()
     let c = 100
 
-    const drain = createSink(({ complete }) => ({
+    const drain = createSink((_, { complete }) => ({
       next(next) {
         spy()
 
@@ -369,7 +361,7 @@ describe('createSink', () => {
     valve()(
       infinite(),
       delay(),
-      createSink(({ error }) => ({
+      createSink((_, { error }) => ({
         next(next) {
           spy()
 

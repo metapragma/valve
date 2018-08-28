@@ -1,3 +1,8 @@
+// export interface Morphism<A, B> {
+//   f: (_: A) => B
+//   left: <C>(f: Morphism<C, A>) => Morphism<C, B>
+//   right: <C>(f: Morphism<B, C>) => Morphism<A, C>
+// }
 /* Observable */
 
 export interface Subscription {
@@ -25,11 +30,11 @@ export interface Observable<P, E> {
 /* Enums */
 
 export enum ValveMessageType {
-  Complete,
-  Next,
-  Error,
-  Noop,
-  Pull
+  Pull = 1,
+  Next = 2,
+  Noop = 3,
+  Complete = 4,
+  Error = 5
 }
 
 export enum ValveType {
@@ -59,20 +64,20 @@ export type ValveSourceMessage<
 
 /* Actions */
 
-export interface ValveGenericAction<E> {
+export interface ValveActionGeneric<E> {
   complete(): void
   error(errorValue: E): void
 }
 
-export interface ValvePullAction<E> extends ValveGenericAction<E> {
+export interface ValveActionPull<E> extends ValveActionGeneric<E> {
   pull(): void
 }
 
-export interface ValveNextAction<T, E> extends ValveGenericAction<E> {
+export interface ValveActionNext<T, E> extends ValveActionGeneric<E> {
   next(value: T): void
 }
 
-export interface ValveNoopAction<T, E> extends ValveNextAction<T, E> {
+export interface ValveActionNoop<T, E> extends ValveActionNext<T, E> {
   noop(): void
 }
 
@@ -114,17 +119,17 @@ export type ValveThrough<P, R, E> = (
 
 export interface ValveSinkFactory<P, R, S, E> {
   type: ValveType.Sink
-  (props?: S): ValveSink<P, R, E>
+  pipe(props?: S): ValveSink<P, R, E>
 }
 
 export interface ValveSourceFactory<P, S, E> {
   type: ValveType.Source
-  (props?: S): ValveSource<P, E>
+  pipe(props?: S): ValveSource<P, E>
 }
 
 export interface ValveThroughFactory<P, R, S, E> {
   type: ValveType.Through
-  (props?: S): ValveThrough<P, R, E>
+  pipe(props?: S): ValveThrough<P, R, E>
 }
 
 export type ValveCompositeSource<P, S, E> = ValveSourceFactory<P, S, E>
@@ -149,3 +154,20 @@ export type ValveScheduler = <R, S, E>(
 export type ValveStateComposite<A> = A
 // tslint:disable-next-line no-any
 export type ValveState = any
+
+export type ValveHandlerNoopPull<T, E> = (
+  actions: ValveActionNoop<T, E>
+) => Partial<ValveActionPull<E>>
+
+export type ValveHandlerNoopNoop<T, R, E> = (
+  actions: ValveActionNoop<R, E>
+) => Partial<ValveActionNoop<T, E>>
+
+export type ValveHandlerPullPull<E> = (
+  actions: ValveActionPull<E>
+) => Partial<ValveActionPull<E>>
+
+export type ValveHandlerNextNext<T, R, E> = (
+  actions: ValveActionNext<R, E>,
+  terminate: ValveActionGeneric<E>
+) => Partial<ValveActionNext<T, E>>

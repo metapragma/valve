@@ -3,28 +3,49 @@
 import {
   ValveCallback,
   ValveError,
-  ValveMessageType,
-  ValveNextAction,
-  ValveNoopAction,
-  ValvePullAction,
-  ValveSinkMessage,
+  ValveHandlerNoopNoop,
+  ValveHandlerPullPull,
   ValveSource,
   ValveSourceMessage,
   ValveState,
-  ValveThrough,
   ValveThroughFactory,
   ValveType
 } from '../types'
 
-import { assign, defaults } from 'lodash'
-
 import {
-  nextNextFactory,
-  pullCompleteFactory,
-  pullPullFactory
-} from './actionFactory'
+  normalizeNoopNoop,
+  normalizePullPull,
+  sinkActionFactory,
+  sourceActionsFactory
+} from './interface'
 
-import { createSource, sourceActionFactory } from './createSource'
+import { sinkOperator, sourceOperator } from './operator'
+
+const sourceMiddlewareFactory = <T, E>(
+  sinkHandler?: ValveHandlerPullPull<E>
+) => (cb: ValveCallback<T, E>): ValveCallback<T, E> => {
+  if (sinkHandler === undefined) {
+    return cb
+  } else {
+    return sourceOperator(normalizePullPull(sinkHandler, sinkActionFactory(cb)))
+  }
+}
+
+const sinkMiddlewareFactory = <T, R, E>(
+  sourceHandler?: ValveHandlerNoopNoop<T, R, E>
+) => (middleware: (cb: ValveCallback<T, E>) => ValveCallback<T, E>) => (
+  source: ValveSource<T, E>
+) => (cb: ValveCallback<R, E, ValveSourceMessage>) => {
+  if (sourceHandler !== undefined) {
+    const operator = sinkOperator(
+      normalizeNoopNoop(sourceHandler, sourceActionsFactory(cb))
+    )
+
+    return middleware(source(operator))
+  }
+
+  return middleware(source(cb as any))
+}
 
 // tslint:disable-next-line max-func-body-length
 export const createThrough = <
@@ -33,109 +54,20 @@ export const createThrough = <
   S = ValveState,
   E extends ValveError = ValveError
 >(
-  sourceHandler?: (
-    actions: ValveNoopAction<R, E>
-  ) => Partial<ValveNoopAction<T, E>>,
-  sinkHandler?: (actions: ValvePullAction<E>) => Partial<ValvePullAction<E>>
+  sourceHandler?: ValveHandlerNoopNoop<T, R, E>,
+  sinkHandler?: ValveHandlerPullPull<E>
 ): ValveThroughFactory<T, R, S, E> => {
-  const sourceMiddleware = (
-    cb: ValveCallback<T, E>
-  ): ((message: ValveSinkMessage, value: T | E | undefined) => void) => {
-    if (sinkHandler === undefined) {
-      return (message, value) => {
-        cb(message, value as any)
-      }
-    } else {
-      const sinkActions: ValvePullAction<E> = {
-        complete() {
-          cb(ValveMessageType.Complete, undefined)
-        },
-        error(errorValue: E) {
-          cb(ValveMessageType.Error, errorValue)
-        },
-        pull() {
-          cb(ValveMessageType.Pull, undefined)
-        }
-      }
+  const sourceMiddleware = sourceMiddlewareFactory<T, E>(sinkHandler)
+  const sinkMiddleware = sinkMiddlewareFactory<T, R, E>(sourceHandler)
 
-      const { pull, complete, error } = defaults(
-        {},
-        sinkHandler(sinkActions),
-        pullPullFactory(sinkActions)
-      )
-
-      return (message, value) => {
-        switch (message) {
-          case ValveMessageType.Pull: {
-            pull()
-            break
-          }
-          case ValveMessageType.Complete: {
-            complete()
-            break
-          }
-          case ValveMessageType.Error: {
-            error(value as E)
-          }
-        }
-      }
-    }
-  }
-
-  const sinkMiddleware = (middleware: typeof sourceMiddleware) => (
-    source: ValveSource<T, E>
-  ) => (cb: ValveCallback<R, E, ValveSourceMessage>) => {
-    if (sourceHandler !== undefined) {
-      const sourceActions: ValveNoopAction<R, E> = sourceActionFactory(cb)
-
-      const { next, noop, complete, error } = defaults(
-        {},
-        sourceHandler(sourceActions),
-        nextNextFactory(sourceActions)
-      )
-
-      return middleware(
-        source((message, value) => {
-          switch (message) {
-            case ValveMessageType.Next: {
-              // tslint:disable-next-line no-unsafe-any
-              next(value as any)
-
-              break
-            }
-            case ValveMessageType.Noop: {
-              noop()
-
-              break
-            }
-            case ValveMessageType.Complete: {
-              complete()
-              break
-            }
-            case ValveMessageType.Error: {
-              error(value as E)
-            }
-          }
-        })
-      )
-    }
-
-    return middleware(
-      source((message, value) => {
-        cb(message, value as R | E | undefined)
-      })
-    )
-  }
-
-  return assign<() => ValveThrough<T, R, E>, { type: ValveType.Through }>(
-    // tslint:disable-next-line max-func-body-length
-    () => source => {
+  return {
+    pipe() {
       if (sourceHandler === undefined && sinkHandler === undefined) {
-        return source as ValveSource<R, E>
+        return source => source as ValveSource<R, E>
       }
 
-      return sinkMiddleware(sourceMiddleware)(source)
+      return sinkMiddleware(sourceMiddleware)
     },
-    { type: ValveType.Through }
-  )
+    type: ValveType.Through
+  }
 }

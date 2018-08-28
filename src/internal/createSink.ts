@@ -1,137 +1,76 @@
 /* tslint:disable max-func-body-length */
 
 import {
-  Observable,
-  Observer,
+  ValveActionGeneric,
+  ValveActionNext,
+  ValveCallback,
   ValveError,
-  ValveGenericAction,
+  ValveHandlerNextNext,
   ValveMessageType,
-  ValveNextAction,
   ValveSink,
   ValveSinkFactory,
   ValveSinkMessage,
   ValveSource,
-  ValveSourceMessage,
   ValveState,
   ValveType
 } from '../types'
 
 import { hasEnded } from './hasEnded'
 
-import {
-  assign,
-  defaults,
-  forEach,
-  isFunction,
-  isUndefined,
-  noop,
-  pull
-} from 'lodash'
+import { normalizeNextNext } from './interface'
+import { observableFactory } from './observable'
+// import { sinkOperator } from './operator'
 
-import { nextNextWithoutNoopFactory } from './actionFactory'
+// type RecursiveFunction = () => RecursiveFunction | false
 
-const dumb = (tick: () => boolean): void => {
-  let loop = true
+// const dumb = (fn: RecursiveFunction): void => {
+//   while (fn() !== false) {}
+// }
 
-  while (loop) {
-    loop = tick()
-  }
+// const fanOutFactory = <T>(args: Array<T>) => (fn: (prop: T) => void) => {
+//   switch (args.length) {
+//     case 1: fn(args[0]) ; break
+//     case 2: (fn(args[0]), fn(args[1])); break
+//     case 3: (fn(args[0]), fn(args[1]), fn(args[2])); break
+//     default:
+//       forEach(args, fn)
+//   }
+// }
 
-  // const next = () => process.nextTick(() => {
-  //   if (loop) {
-  //     loop = tick()
-  //
-  //     next()
-  //   }
-  // })
+// tslint:disable-next-line completed-docs
+class Dispatcher<T, E> {
+  private actions: ValveActionNext<T, E>
+  private callback: ValveCallback<T, E>
+  private control: ValveActionGeneric<E>
+  private hasResponded = false
+  private loop = true
+  private message: ValveSinkMessage = ValveMessageType.Pull
+  private messageValue: E | undefined
 
-  // next()
-}
-
-const observableFactory = <T, E>() => {
-  const observers: Array<Required<Observer<T, E>>> = []
-  // TODO: gc on complete/error
-
-  const observer: Required<Observer<T, E>> = {
-    next(value) {
-      forEach(observers, ({ next }) => {
-        next(value)
-      })
-    },
-    complete() {
-      forEach(observers, ({ complete }) => {
-        complete()
-      })
-    },
-    error(value) {
-      forEach(observers, ({ error }) => {
-        error(value)
-      })
-    }
-  }
-
-  const observable: Observable<T, E> = {
-    // tslint:disable-next-line function-name
-    [Symbol.observable]() {
-      return this
-    },
-    subscribe(o) {
-      observers.push({
-        next: isUndefined(o.next) ? noop : o.next,
-        error: isUndefined(o.error) ? noop : o.error,
-        complete: isUndefined(o.complete) ? noop : o.complete
-      })
-
-      return {
-        unsubscribe() {
-          if (observers.length !== 0) {
-            pull(observers, o)
-          }
+  constructor(
+    source: ValveSource<T, E>,
+    normalize: (actions: ValveActionGeneric<E>) => ValveActionNext<T, E>
+  ) {
+    this.control = {
+      complete: () => {
+        this.message = hasEnded(this.message)
+          ? this.message
+          : ValveMessageType.Complete
+      },
+      error: (error: E) => {
+        if (!hasEnded(this.message)) {
+          this.message = ValveMessageType.Error
+          this.messageValue = error
         }
       }
     }
-  }
-
-  return {
-    observer,
-    observable
-  }
-}
-
-const trampolineAbstractFactory = <T, E>(source: ValveSource<T, E>) => {
-  let ended: ValveSinkMessage | undefined
-  let endedValue: E
-
-  const actions = {
-    complete() {
-      ended = hasEnded(ended) ? ended : ValveMessageType.Complete
-    },
-    error(error: E) {
-      ended = hasEnded(ended) ? ended : ValveMessageType.Error
-
-      if (isUndefined(endedValue)) {
-        endedValue = error
-      }
-    }
-  }
-
-  const trampolineFactory = (options: ValveNextAction<T, E>) => {
-    let loop = true
-    let hasResponded = false
-
-    const { next, complete, error } = options
-
-    const callback = source((message, value) => {
-      hasResponded = true
+    this.actions = normalize(this.control)
+    this.callback = source((message, value) => {
+      this.hasResponded = true
 
       switch (message) {
         case ValveMessageType.Next: {
-          next(value as T)
-
-          if (!loop) {
-            // tslint:disable-next-line no-use-before-declare
-            nextTick()
-          }
+          this.next(value as T)
 
           break
         }
@@ -139,55 +78,84 @@ const trampolineAbstractFactory = <T, E>(source: ValveSource<T, E>) => {
           break
         }
         case ValveMessageType.Complete: {
-          loop = false
-
-          actions.complete()
-
-          complete()
+          this.complete()
 
           break
         }
         case ValveMessageType.Error: {
-          loop = false
-
-          actions.error(value as E)
-
-          error(value as E)
+          this.error(value as E)
         }
       }
     })
-
-    const tick = () => {
-      hasResponded = false
-
-      callback(isUndefined(ended) ? ValveMessageType.Pull : ended, endedValue)
-
-      if (!hasResponded) {
-        loop = false
-
-        return loop
-      }
-
-      return loop
-    }
-
-    const nextTick = (): void => {
-      // this function is much simpler to write if you just use recursion,
-      // but by using a while loop we do not blow the stack if the stream
-      // happens to be sync.
-
-      loop = true
-      hasResponded = false
-
-      dumb(tick)
-    }
-
-    return nextTick
   }
 
-  return {
-    actions,
-    trampolineFactory
+  public nextTick() {
+    // this function is much simpler to write if you just use recursion,
+    // but by using a while loop we do not blow the stack if the stream
+    // happens to be sync.
+
+    this.loop = true
+    this.hasResponded = false
+
+    // tslint:disable-next-line no-empty
+    while (this.tick() !== false) {}
+  }
+
+  public error(errorValue: E) {
+    // this.hasResponded = true
+    this.loop = false
+
+    this.actions.error(errorValue)
+    this.control.error(errorValue)
+  }
+
+  public complete() {
+    // this.hasResponded = true
+    this.loop = false
+
+    this.actions.complete()
+    this.control.complete()
+  }
+
+  public next(value: T) {
+    // this.hasResponded = true
+    this.actions.next(value)
+
+    if (!this.loop) {
+      // tslint:disable-next-line no-use-before-declare
+      this.nextTick()
+    }
+  }
+
+  private tick() {
+    this.hasResponded = false
+
+    this.callback(this.message, this.messageValue)
+
+    // loop = hasResponded
+    if (!this.hasResponded) {
+      this.loop = false
+    }
+
+    return this.loop ? this.tick : false
+  }
+}
+
+const createSinkPipeline = <T, R, E>(
+  handler: ValveHandlerNextNext<T, R, E>
+): ValveSink<T, R, E> => {
+  const { observer, observable } = observableFactory<R, E>()
+  const normalize = normalizeNextNext(handler, observer)
+
+  return source => {
+    const dispatcher = new Dispatcher(source, normalize)
+
+    return {
+      schedule() {
+        dispatcher.nextTick()
+      },
+      ...observable
+    }
   }
 }
 
@@ -197,33 +165,12 @@ export const createSink = <
   S = ValveState,
   E extends ValveError = ValveError
 >(
-  handler: (
-    actions: {
-      observer: Required<Observer<R, E>>
-    } & ValveGenericAction<E>
-  ) => Partial<ValveNextAction<T, E>> = () => ({})
-): ValveSinkFactory<T, R, S, E> =>
-  assign<() => ValveSink<T, R, E>, { type: ValveType.Sink }>(
-    () => source => {
-      const { observer, observable } = observableFactory<R, E>()
-      const { actions, trampolineFactory } = trampolineAbstractFactory(source)
-
-      const options: ValveNextAction<T, E> = defaults(
-        {},
-        handler(assign(actions, { observer })),
-        nextNextWithoutNoopFactory(observer)
-      )
-
-      const next = trampolineFactory(options)
-
-      return assign(
-        {
-          schedule() {
-            next()
-          }
-        },
-        observable
-      )
+  handler: ValveHandlerNextNext<T, R, E> = () => ({})
+): ValveSinkFactory<T, R, S, E> => {
+  return {
+    pipe() {
+      return createSinkPipeline(handler)
     },
-    { type: ValveType.Sink }
-  )
+    type: ValveType.Sink
+  }
+}
