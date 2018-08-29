@@ -12,8 +12,6 @@ import {
   valve
 } from './index'
 
-// tslint:disable-next-line no-import-side-effect
-import 'mocha'
 import { assert } from 'chai'
 import { spy } from 'sinon'
 import { noop } from 'lodash'

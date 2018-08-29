@@ -12,8 +12,6 @@ import {
 import { ValveMessageType, ValveType } from './types'
 import { spy } from 'sinon'
 
-// tslint:disable-next-line no-import-side-effect
-import 'mocha'
 import { assert } from 'chai'
 
 describe('pull', () => {

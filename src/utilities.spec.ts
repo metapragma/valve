@@ -1,6 +1,5 @@
-/* tslint:disable no-import-side-effect strict-boolean-expressions no-shadowed-variable no-increment-decrement */
+/* tslint:disable strict-boolean-expressions no-shadowed-variable no-increment-decrement */
 
-import 'mocha'
 import { assert } from 'chai'
 import {
   asyncMap,
