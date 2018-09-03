@@ -118,24 +118,24 @@ export type ValveThrough<P, R, E> = (
 
 /* Factories */
 
-export interface ValveSinkFactory<P, R, S, E> {
+export interface ValveSinkFactory<P, R, E> {
   type: ValveType.Sink
-  pipe(props?: S): ValveSink<P, R, E>
+  pipe(): ValveSink<P, R, E>
 }
 
-export interface ValveSourceFactory<P, S, E> {
+export interface ValveSourceFactory<P, E> {
   type: ValveType.Source
-  pipe(props?: S): ValveSource<P, E>
+  pipe(): ValveSource<P, E>
 }
 
-export interface ValveThroughFactory<P, R, S, E> {
+export interface ValveThroughFactory<P, R, E> {
   type: ValveType.Through
-  pipe(props?: S): ValveThrough<P, R, E>
+  pipe(): ValveThrough<P, R, E>
 }
 
-export type ValveCompositeSource<P, S, E> = ValveSourceFactory<P, S, E>
-export type ValveCompositeSink<P, R, S, E> = ValveSinkFactory<P, R, S, E>
-export type ValveCompositeThrough<P, R, S, E> = ValveThroughFactory<P, R, S, E>
+export type ValveCompositeSource<P, E> = ValveSourceFactory<P, E>
+export type ValveCompositeSink<P, R, E> = ValveSinkFactory<P, R, E>
+export type ValveCompositeThrough<P, R, E> = ValveThroughFactory<P, R, E>
 
 /* Streams */
 
@@ -143,18 +143,16 @@ export type ValveCompositeThrough<P, R, S, E> = ValveThroughFactory<P, R, S, E>
 //   type:
 // }
 
-export interface ValveStream<R, S, E> extends ValvePrimitiveStream<R, E> {
-  getState?: S
-}
+export interface ValveStream<R, E> extends ValvePrimitiveStream<R, E> {}
 
 // TODO: composable instrumentation
-export type ValveScheduler = <R, S, E>(
-  stream: ValveStream<R, S, E>
+export type ValveScheduler = <R, E>(
+  stream: ValveStream<R, E>
 ) => Observable<R, E>
 
-export type ValveStateComposite<A> = A
-// tslint:disable-next-line no-any
-export type ValveState = any
+// export type ValveStateComposite<A> = A
+// // tslint:disable-next-line no-any
+// export type ValveState = any
 
 export type ValveHandlerNoopPull<T, E> = (
   actions: ValveActionNoop<T, E>

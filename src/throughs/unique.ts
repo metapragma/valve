@@ -1,13 +1,14 @@
 import { filter } from './filter'
-import { ValveError, ValveThroughFactory } from '../types'
+import { ValveError } from '../types'
 import { identity, includes } from 'lodash'
+import { Through } from '../internal/Through'
 
 // drop items you have already seen
 
 export function unique<P, K, E extends ValveError = ValveError>(
   test: ((next: P) => K) = identity,
   invert: boolean = false
-): ValveThroughFactory<P, P, {}, E> {
+): Through<P, P, E> {
   const seen: K[] = []
 
   return filter((next: P) => {

@@ -1,6 +1,6 @@
 // tslint:disable no-conditional-assignment no-shadowed-variable
 
-import { ValveError, ValveThroughFactory } from '../types'
+import { ValveError } from '../types'
 
 import { Through } from '../internal/Through'
 
@@ -10,7 +10,7 @@ import { isNumber } from 'lodash'
 export function take<P, E extends ValveError = ValveError>(
   predicate: number | ((next: P) => boolean),
   last: boolean = false
-): ValveThroughFactory<P, P, {}, E> {
+): Through<P, P, E> {
   let _last: boolean = last
   // let ended: ValveMessage<P, E>
   let tester: (next: P) => boolean
@@ -38,7 +38,7 @@ export function take<P, E extends ValveError = ValveError>(
 
   let ended: boolean = false
 
-  return Through.of<P, P, {}, E>(
+  return Through.create<P, P, E>(
     ({ next, complete }) => ({
       next(payload) {
         ended = ended || !tester(payload)

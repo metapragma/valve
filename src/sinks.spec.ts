@@ -126,7 +126,7 @@ describe('sinks/concat', () => {
 
     const stream = valve()(
       fromIterable('hello there this is a test'.split(/([aeiou])/)),
-      Through.of(({ next }) => ({
+      Through.create(({ next }) => ({
         next(str) {
           // tslint:disable-next-line no-increment-decrement
           n++

@@ -1,11 +1,13 @@
 import { reduce } from './reduce'
+import { Sink } from '../internal/Sink'
 
-import { ValveError, ValveSinkFactory } from '../types'
+import { ValveError } from '../types'
 
-export function collect<
+export function collect<P, E extends ValveError = ValveError>(): Sink<
   P,
-  E extends ValveError = ValveError
->(): ValveSinkFactory<P, P[], {}, E> {
+  P[],
+  E
+> {
   return reduce<P, P[], E>((arr, item) => {
     arr.push(item)
 

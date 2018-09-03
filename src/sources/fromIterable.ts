@@ -1,4 +1,4 @@
-import { ValveError, ValveSourceFactory } from '../types'
+import { ValveError } from '../types'
 
 import { createIterator } from '../internal/iterall'
 import { Source } from '../internal/Source'
@@ -27,11 +27,11 @@ export function fromIterable<P, E extends ValveError = ValveError>(
   iterable: Iterable<P> | ArrayLike<P>,
   // TODO: compose this
   safe: boolean = true
-): ValveSourceFactory<P, {}, E> {
+): Source<P, E> {
   const iterator = createIterator(iterable)
 
   if (safe === true) {
-    return Source.of<P, {}, E>(({ complete, next }) => ({
+    return Source.create<P, E>(({ complete, next }) => ({
       pull() {
         const { value, done } = iterator.next()
 
@@ -43,7 +43,7 @@ export function fromIterable<P, E extends ValveError = ValveError>(
       }
     }))
   } else {
-    return Source.of<P, {}, E>(({ complete, next, error }) => ({
+    return Source.create<P, E>(({ complete, next, error }) => ({
       pull() {
         const result = iterate<P, E>(iterator)
 

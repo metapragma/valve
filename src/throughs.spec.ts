@@ -97,7 +97,7 @@ describe('throughs/async-map', () => {
     const stream = valve()(
       fromIterable([1, 2, 3]),
       asyncMap(() => Promise.reject(ERR)),
-      Through.of(({ error }) => ({
+      Through.create(({ error }) => ({
         error(err) {
           assert.equal(err, ERR)
           error(err)
@@ -315,7 +315,7 @@ describe('throughs/map', () => {
   it('error', () => {
     const err = new Error('unwholesome number')
 
-    const sink = Sink.of()
+    const sink = Sink.create()
     assert.throws(
       () =>
         valve()(
@@ -393,7 +393,7 @@ describe('throughs/take', () => {
     const stream = valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       take(5),
-      Through.of(({ complete }) => ({
+      Through.create(({ complete }) => ({
         complete() {
           setImmediate(() => {
             done()
@@ -490,7 +490,7 @@ describe('throughs/take', () => {
     const pulls = spy()
     const pushes = spy()
 
-    function thr<P, E>(): ValveThroughFactory<P, P, {}, E> {
+    function thr<P, E>(): ValveThroughFactory<P, P, E> {
       return {
         pipe() {
           return source => cb => (message, value) => {
@@ -597,8 +597,8 @@ describe('throughs/through', () => {
 
     const stream = valve()(
       count(5),
-      Through.of(),
-      Through.of(({ next }) => ({
+      Through.create(),
+      Through.create(({ next }) => ({
         next(payload) {
           assert.isNumber(payload)
           s()
@@ -624,7 +624,7 @@ describe('throughs/through', () => {
   it('onEnd', done => {
     const stream = valve()(
       infinite(),
-      Through.of(({ complete }) => ({
+      Through.create(({ complete }) => ({
         complete() {
           complete()
 
@@ -652,7 +652,7 @@ describe('throughs/through', () => {
 
     const stream = valve<typeof ERR>()(
       error(ERR),
-      Through.of(({ error }) => ({
+      Through.create(({ error }) => ({
         error(err) {
           assert.deepEqual(err, ERR)
           s()

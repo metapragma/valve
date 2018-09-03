@@ -7,7 +7,6 @@ import {
   ValveHandlerPullPull,
   ValveSource,
   ValveSourceMessage,
-  ValveState,
   ValveThrough,
   ValveThroughFactory,
   ValveType
@@ -48,43 +47,39 @@ const sinkMiddlewareFactory = <T, R, E>(
   return middleware(source(cb as any))
 }
 
-export class Through<
-  T,
-  R = T,
-  S = ValveState,
-  E extends ValveError = ValveError
-> implements ValveThroughFactory<T, R, S, E> {
+export class Through<T, R = T, E extends ValveError = ValveError>
+  implements ValveThroughFactory<T, R, E> {
   public type: ValveType.Through = ValveType.Through
 
   private value: ValveThrough<T, R, E>
 
   // tslint:disable-next-line function-name
-  public static of<
-    _T,
-    _R = _T,
-    _S = ValveState,
-    _E extends ValveError = ValveError
-  >(
+  public static create<_T, _R = _T, _E extends ValveError = ValveError>(
     sourceHandler?: ValveHandlerNoopNoop<_T, _R, _E>,
     sinkHandler?: ValveHandlerPullPull<_E>
   ) {
     if (sourceHandler === undefined && sinkHandler === undefined) {
-      return new Through<_T, _R, _S, _E>(
-        source => source as ValveSource<_R, _E>
-      )
+      return new Through<_T, _R, _E>(source => source as ValveSource<_R, _E>)
     } else {
       const sourceMiddleware = sourceMiddlewareFactory<_T, _E>(sinkHandler)
       const sinkMiddleware = sinkMiddlewareFactory<_T, _R, _E>(sourceHandler)
 
-      return new Through<_T, _R, _S, _E>(sinkMiddleware(sourceMiddleware))
+      return Through.of<_T, _R, _E>(sinkMiddleware(sourceMiddleware))
     }
+  }
+
+  // tslint:disable-next-line function-name
+  public static of<_T, _R = _T, _E extends ValveError = ValveError>(
+    value: ValveThrough<_T, _R, _E>
+  ) {
+    return new Through<_T, _R, _E>(value)
   }
 
   constructor(value: ValveThrough<T, R, E>) {
     this.value = value
   }
 
-  public pipe(_?: S) {
+  public pipe() {
     return this.value
   }
 }

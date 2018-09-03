@@ -1,14 +1,15 @@
 import { reduce } from './reduce'
 
-import { ValveError, ValveSinkFactory } from '../types'
+import { ValveError } from '../types'
 
-export function concat<E extends ValveError = ValveError>(): ValveSinkFactory<
+import { Sink } from '../internal/Sink'
+
+export function concat<E extends ValveError = ValveError>(): Sink<
   string,
   string,
-  {},
   E
 > {
-  return reduce<string, string, E>((a, b) => {
+  return reduce((a, b) => {
     return a + b
   }, '')
 }

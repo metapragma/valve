@@ -11,7 +11,6 @@ import {
   ValveSinkFactory,
   ValveSinkMessage,
   ValveSource,
-  ValveState,
   ValveType
 } from '../types'
 
@@ -159,24 +158,31 @@ export const sinkPipeline = <T, R, E>(
   }
 }
 
-export class Sink<T, R, S = ValveState, E extends ValveError = ValveError>
-  implements ValveSinkFactory<T, R, S, E> {
+export class Sink<T, R, E extends ValveError = ValveError>
+  implements ValveSinkFactory<T, R, E> {
   public type: ValveType.Sink = ValveType.Sink
 
   private value: ValveSink<T, R, E>
 
   // tslint:disable-next-line function-name
-  public static of<_T, _R, _S = ValveState, _E extends ValveError = ValveError>(
+  public static create<_T, _R, _E extends ValveError = ValveError>(
     handler?: ValveHandlerNextNext<_T, _R, _E>
   ) {
-    return new Sink<_T, _R, _S, _E>(sinkPipeline(handler))
+    return Sink.of<_T, _R, _E>(sinkPipeline(handler))
+  }
+
+  // tslint:disable-next-line function-name
+  public static of<_T, _R, _E extends ValveError = ValveError>(
+    value: ValveSink<_T, _R, _E>
+  ) {
+    return new Sink<_T, _R, _E>(value)
   }
 
   constructor(value: ValveSink<T, R, E>) {
     this.value = value
   }
 
-  public pipe(_?: S) {
+  public pipe() {
     return this.value
   }
 }

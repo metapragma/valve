@@ -1,13 +1,13 @@
-import { ValveError, ValveSourceFactory } from '../types'
+import { ValveError } from '../types'
 
 import { Source } from '../internal/Source'
 
 export function once<P, E extends ValveError = ValveError>(
   value: P
-): ValveSourceFactory<P, {}, E> {
+): Source<P, E> {
   let triggered: boolean = false
 
-  return Source.of<P, {}, E>(({ complete, next }) => ({
+  return Source.create<P, E>(({ complete, next }) => ({
     pull() {
       if (triggered === false) {
         triggered = true

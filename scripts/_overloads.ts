@@ -176,19 +176,19 @@ function generate(type: ValveFlow) {
     )(n)
 
     const PGenerics = map(range(1, gP + 1), a => `P${a}`)
-    const SGenerics = map(range(1, gS + 1), a => `S${a}`)
-    const SEnum = `ValveStateComposite<[${join(SGenerics, ', ')}]>`
+    // const SGenerics = map(range(1, gS + 1), a => `S${a}`)
+    // const SEnum = `ValveStateComposite<[${join(SGenerics, ', ')}]>`
 
     const getReturnGenerics = () => {
       switch (returnType) {
         case ValveArguments.sink:
-          return [first(PGenerics), last(PGenerics), SEnum]
+          return [first(PGenerics), last(PGenerics)]
         case ValveArguments.source:
-          return [last(PGenerics), SEnum]
+          return [last(PGenerics)]
         case ValveArguments.through:
-          return [first(PGenerics), last(PGenerics), SEnum]
+          return [first(PGenerics), last(PGenerics)]
         case ValveArguments.stream:
-          return [last(PGenerics), SEnum]
+          return [last(PGenerics)]
       }
     }
 
@@ -224,17 +224,17 @@ function generate(type: ValveFlow) {
           // return union(slice(PGenerics, shift - 1, shift), slice(SGenerics, a - 1, a))
           return union(
             slice(PGenerics, shift - 1, shift + 1),
-            slice(SGenerics, a - 1, a)
+            // slice(SGenerics, a - 1, a)
           )
         case ValveArguments.source:
           return union(
             slice(PGenerics, shift - 1, shift),
-            slice(SGenerics, a - 1, a)
+            // slice(SGenerics, a - 1, a)
           )
         case ValveArguments.through:
           return union(
             slice(PGenerics, shift - 1, shift + 1),
-            slice(SGenerics, a - 1, a)
+            // slice(SGenerics, a - 1, a)
           )
       }
     }
@@ -258,7 +258,7 @@ function generate(type: ValveFlow) {
     // console.log('here')
     // return popReturn()
     return `function ${options.functionName}<${join(
-      union(PGenerics, SGenerics),
+      union(PGenerics),
       ', '
     )}, ${options.extra}>(${join(args, ', ')}): ${popReturn()}`
   })
