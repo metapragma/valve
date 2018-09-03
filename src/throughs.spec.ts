@@ -1,11 +1,11 @@
 /* tslint:disable no-shadowed-variable */
 import { spy } from 'sinon'
 import {
+  Sink,
+  Through,
   asyncMap,
   collect,
   count,
-  createSink,
-  createThrough,
   empty,
   error,
   filter,
@@ -97,7 +97,7 @@ describe('throughs/async-map', () => {
     const stream = valve()(
       fromIterable([1, 2, 3]),
       asyncMap(() => Promise.reject(ERR)),
-      createThrough(({ error }) => ({
+      Through.of(({ error }) => ({
         error(err) {
           assert.equal(err, ERR)
           error(err)
@@ -315,7 +315,7 @@ describe('throughs/map', () => {
   it('error', () => {
     const err = new Error('unwholesome number')
 
-    const sink = createSink()
+    const sink = Sink.of()
     assert.throws(
       () =>
         valve()(
@@ -393,7 +393,7 @@ describe('throughs/take', () => {
     const stream = valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       take(5),
-      createThrough(({ complete }) => ({
+      Through.of(({ complete }) => ({
         complete() {
           setImmediate(() => {
             done()
@@ -597,8 +597,8 @@ describe('throughs/through', () => {
 
     const stream = valve()(
       count(5),
-      createThrough(),
-      createThrough(({ next }) => ({
+      Through.of(),
+      Through.of(({ next }) => ({
         next(payload) {
           assert.isNumber(payload)
           s()
@@ -624,7 +624,7 @@ describe('throughs/through', () => {
   it('onEnd', done => {
     const stream = valve()(
       infinite(),
-      createThrough(({ complete }) => ({
+      Through.of(({ complete }) => ({
         complete() {
           complete()
 
@@ -652,7 +652,7 @@ describe('throughs/through', () => {
 
     const stream = valve<typeof ERR>()(
       error(ERR),
-      createThrough(({ error }) => ({
+      Through.of(({ error }) => ({
         error(err) {
           assert.deepEqual(err, ERR)
           s()
@@ -789,7 +789,7 @@ describe('throughs/unique', () => {
 // //     valve()(
 // //       fromIterable([error(err)]),
 // //       flatten(),
-// //       createSink({
+// //       Sink({
 // //         error(action) {
 // //           expect(action.payload).to.equal(err)
 // //           setImmediate(() => {

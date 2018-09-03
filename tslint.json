@@ -1,6 +1,7 @@
 {
   "extends": ["tslint-config-escapace"],
   "rules": {
+    "completed-docs": false,
     "promise-function-async": false,
     "type-literal-delimiter": false,
     "no-void-expression": false,

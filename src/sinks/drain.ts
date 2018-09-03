@@ -1,6 +1,6 @@
 import { ValveError, ValveSinkFactory } from '../types'
 
-import { createSink } from '../internal/createSink'
+import { Sink } from '../internal/Sink'
 
 export function drain<P, E extends ValveError = ValveError>(): ValveSinkFactory<
   P,
@@ -8,7 +8,7 @@ export function drain<P, E extends ValveError = ValveError>(): ValveSinkFactory<
   {},
   E
 > {
-  return createSink<P, P, {}, E>(({ next, complete, error }) => ({
+  return Sink.of<P, P, {}, E>(({ next, complete, error }) => ({
     next(value) {
       next(value)
     },

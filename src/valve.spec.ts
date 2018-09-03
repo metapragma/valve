@@ -1,7 +1,7 @@
 import {
+  Through,
   collect,
   count,
-  createThrough,
   error,
   fromIterable,
   map,
@@ -20,7 +20,7 @@ describe('pull', () => {
 
     const stream = pipe(
       count(6),
-      createThrough(({ next }) => ({
+      Through.of(({ next }) => ({
         next(value) {
           // console.log('through', action)
           next(value + 1)
@@ -44,7 +44,7 @@ describe('pull', () => {
   it('(source -> through) -> sink', done => {
     const source = valve()(
       count(4),
-      createThrough(({ next }) => ({
+      Through.of(({ next }) => ({
         next(value) {
           // console.log('through', action)
           next(value + 1)
@@ -71,13 +71,13 @@ describe('pull', () => {
 
   it('source -> (through -> through) -> sink', done => {
     const through = valve()(
-      createThrough<number>(({ next }) => ({
+      Through.of<number>(({ next }) => ({
         next(value) {
           // console.log('through', action)
           next(value + 1)
         }
       })),
-      createThrough<number>(({ next }) => ({
+      Through.of<number>(({ next }) => ({
         next(value) {
           // console.log('through', action)
           next(value + 1)
@@ -104,7 +104,7 @@ describe('pull', () => {
 
   it('source -> (through -> sink)', done => {
     const sink = valve()(
-      createThrough<number>(({ next }) => ({
+      Through.of<number>(({ next }) => ({
         next(value) {
           // console.log('through', action)
           next(value + 1)
@@ -132,13 +132,13 @@ describe('pull', () => {
 
   it('source -> (through -> (through -> through)) -> sink', done => {
     const through = valve()(
-      createThrough<number>(({ next }) => ({
+      Through.of<number>(({ next }) => ({
         next(value) {
           // console.log('through', action)
           next(value + 1)
         }
       })),
-      createThrough<number>(({ next }) => ({
+      Through.of<number>(({ next }) => ({
         next(value) {
           // console.log('through', action)
           next(value + 1)
@@ -148,7 +148,7 @@ describe('pull', () => {
 
     const through2 = valve()(
       through,
-      createThrough<number>(({ next }) => ({
+      Through.of<number>(({ next }) => ({
         next(value) {
           // console.log('through', action)
           next(value + 1)
@@ -177,7 +177,7 @@ describe('pull', () => {
     const stream = valve()(
       fromIterable([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       map(e => e * e),
-      createThrough(),
+      Through.of(),
       reduce((acc, next) => {
         return acc + next
       })
@@ -202,7 +202,7 @@ describe('pull', () => {
         map<number, number>(e => {
           return e * e
         }),
-        createThrough<number, number>()
+        Through.of<number, number>()
       ),
       reduce((acc, next) => {
         return acc + next
@@ -291,7 +291,7 @@ describe('pull', () => {
 
         return item * 2
       }),
-      createThrough()
+      Through.of()
     )
 
     const instance = source.pipe()((message, value) => {
@@ -324,7 +324,7 @@ describe('pull', () => {
 
     const ERR = new Error('test')
 
-    const source = valve<typeof ERR>()(error(ERR), createThrough())
+    const source = valve<typeof ERR>()(error(ERR), Through.of())
 
     const instance = source.pipe()((message, value) => {
       sA(message, value)

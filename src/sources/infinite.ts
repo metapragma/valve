@@ -1,6 +1,6 @@
 import { ValveError, ValveSourceFactory } from '../types'
 
-import { createSource } from '../internal/createSource'
+import { Source } from '../internal/Source'
 
 // TODO: better random
 export function infinite<
@@ -19,7 +19,7 @@ export function infinite<P = number, E extends ValveError = ValveError>(
         Math.random
       : generate
 
-  return createSource<P | number, {}, E>(({ next }) => ({
+  return Source.of<P | number, {}, E>(({ next }) => ({
     pull() {
       next(f())
     }

@@ -2,7 +2,7 @@
 
 import { ValveError, ValveThroughFactory } from '../types'
 
-import { createThrough } from '../internal/createThrough'
+import { Through } from '../internal/Through'
 
 import { isNumber } from 'lodash'
 
@@ -38,7 +38,7 @@ export function take<P, E extends ValveError = ValveError>(
 
   let ended: boolean = false
 
-  return createThrough<P, P, {}, E>(
+  return Through.of<P, P, {}, E>(
     ({ next, complete }) => ({
       next(payload) {
         ended = ended || !tester(payload)

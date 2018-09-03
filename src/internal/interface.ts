@@ -71,7 +71,7 @@ class DefaultNoopNoop<T, E>
 
 // noop-pull
 export const normalizeNoopPull = <T, E>(
-  handler: ValveHandlerNoopPull<T, E>,
+  handler: ValveHandlerNoopPull<T, E> = () => ({}),
   actions: ValveActionNoop<T, E>
 ): ValveActionPull<E> =>
   defaults(handler(actions), new DefaultNoopPull(actions))
@@ -92,7 +92,7 @@ export const normalizeNoopNoop = <T, R, E>(
 
 // next-next
 export const normalizeNextNext = <T, R, E>(
-  handler: ValveHandlerNextNext<T, R, E>,
+  handler: ValveHandlerNextNext<T, R, E> = () => ({}),
   observer: Required<Observer<R, E>>
 ) => (actions: ValveActionGeneric<E>): ValveActionNext<T, E> =>
   defaults(handler(observer, actions), new DefaultNextNext(observer))

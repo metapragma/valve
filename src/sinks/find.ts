@@ -2,7 +2,7 @@ import { identity } from 'lodash'
 
 import { ValveError, ValveSinkFactory } from '../types'
 
-import { createSink } from '../internal/createSink'
+import { Sink } from '../internal/Sink'
 
 // Sinks
 
@@ -11,7 +11,7 @@ export function find<P, E extends ValveError = ValveError>(
 ): ValveSinkFactory<P, P, {}, E> {
   let ended = false
 
-  return createSink<P, P, {}, E>(({ next, complete, error }, terminate) => ({
+  return Sink.of<P, P, {}, E>(({ next, complete, error }, terminate) => ({
     next(value) {
       // tslint:disable-next-line strict-boolean-expressions
       if (predicate(value)) {

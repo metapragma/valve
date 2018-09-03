@@ -1,11 +1,11 @@
 import { ValveError, ValveSourceFactory } from '../types'
 
-import { createSource } from '../internal/createSource'
+import { Source } from '../internal/Source'
 
 export const fromArray = <P, E extends ValveError = ValveError>(
   array: Array<P>
 ): ValveSourceFactory<P, {}, E> =>
-  createSource<P, {}, E>(({ complete, next }) => {
+  Source.of<P, {}, E>(({ complete, next }) => {
     let i = 0
     const length = array.length
 

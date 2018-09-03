@@ -40,7 +40,8 @@ export enum ValveMessageType {
 export enum ValveType {
   Source,
   Sink,
-  Through
+  Through,
+  Stream
 }
 
 /* Messages */

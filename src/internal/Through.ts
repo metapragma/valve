@@ -8,6 +8,7 @@ import {
   ValveSource,
   ValveSourceMessage,
   ValveState,
+  ValveThrough,
   ValveThroughFactory,
   ValveType
 } from '../types'
@@ -47,27 +48,43 @@ const sinkMiddlewareFactory = <T, R, E>(
   return middleware(source(cb as any))
 }
 
-// tslint:disable-next-line max-func-body-length
-export const createThrough = <
+export class Through<
   T,
   R = T,
   S = ValveState,
   E extends ValveError = ValveError
->(
-  sourceHandler?: ValveHandlerNoopNoop<T, R, E>,
-  sinkHandler?: ValveHandlerPullPull<E>
-): ValveThroughFactory<T, R, S, E> => {
-  const sourceMiddleware = sourceMiddlewareFactory<T, E>(sinkHandler)
-  const sinkMiddleware = sinkMiddlewareFactory<T, R, E>(sourceHandler)
+> implements ValveThroughFactory<T, R, S, E> {
+  public type: ValveType.Through = ValveType.Through
 
-  return {
-    pipe() {
-      if (sourceHandler === undefined && sinkHandler === undefined) {
-        return source => source as ValveSource<R, E>
-      }
+  private value: ValveThrough<T, R, E>
 
-      return sinkMiddleware(sourceMiddleware)
-    },
-    type: ValveType.Through
+  // tslint:disable-next-line function-name
+  public static of<
+    _T,
+    _R = _T,
+    _S = ValveState,
+    _E extends ValveError = ValveError
+  >(
+    sourceHandler?: ValveHandlerNoopNoop<_T, _R, _E>,
+    sinkHandler?: ValveHandlerPullPull<_E>
+  ) {
+    if (sourceHandler === undefined && sinkHandler === undefined) {
+      return new Through<_T, _R, _S, _E>(
+        source => source as ValveSource<_R, _E>
+      )
+    } else {
+      const sourceMiddleware = sourceMiddlewareFactory<_T, _E>(sinkHandler)
+      const sinkMiddleware = sinkMiddlewareFactory<_T, _R, _E>(sourceHandler)
+
+      return new Through<_T, _R, _S, _E>(sinkMiddleware(sourceMiddleware))
+    }
+  }
+
+  constructor(value: ValveThrough<T, R, E>) {
+    this.value = value
+  }
+
+  public pipe(_?: S) {
+    return this.value
   }
 }

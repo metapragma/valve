@@ -2,12 +2,12 @@
 
 import { assert } from 'chai'
 import {
+  Sink,
+  Source,
+  Through,
   asyncMap,
   collect,
   count,
-  createSink,
-  createSource,
-  createThrough,
   empty,
   error,
   fromIterable,
@@ -114,7 +114,7 @@ function test<E>(
 
   const completeableThrough = completeable<number, E>()
 
-  const sink = createSink<number, {}, {}, E>(() => ({
+  const sink = Sink.of<number, {}, {}, E>(() => ({
     next(next) {
       if (next === 3) {
         setImmediate(() => {
@@ -137,11 +137,11 @@ describe('utilities', () => {
   })
 })
 
-describe('createSource', () => {
+describe('Source', () => {
   it('defaults', done => {
-    const source = createSource()
+    const source = Source.of()
 
-    assert(isFunction(createSource))
+    assert(isFunction(Source))
     assert(isFunction(source.pipe))
     assert.equal(source.type, ValveType.Source)
 
@@ -159,11 +159,11 @@ describe('createSource', () => {
     cb(ValveMessageType.Pull, undefined)
   })
 
-  it('createSource pull', () => {
+  it('Source pull', () => {
     const spyOne = sinonSpy()
     const spyTwo = sinonSpy()
 
-    const source = createSource<string>(({ complete, next, error, noop }) => ({
+    const source = Source.of<string>(({ complete, next, error, noop }) => ({
       pull() {
         spyOne()
         assert(isFunction(complete))
@@ -189,11 +189,11 @@ describe('createSource', () => {
     assert.ok(spyTwo.secondCall.calledWith(ValveMessageType.Next, 'next'))
   })
 
-  it('createSource complete', () => {
+  it('Source complete', () => {
     const spyOne = sinonSpy()
     const spyTwo = sinonSpy()
 
-    const source = createSource<string>(({ complete, next }) => ({
+    const source = Source.of<string>(({ complete, next }) => ({
       pull() {
         spyOne()
         assert(isFunction(next))
@@ -223,13 +223,13 @@ describe('createSource', () => {
     )
   })
 
-  it('createSource error', () => {
+  it('Source error', () => {
     const spyOne = sinonSpy()
     const spyTwo = sinonSpy()
 
     const ERR = new Error('Error')
 
-    const source = createSource<string, {}, typeof ERR>(({ next, error }) => ({
+    const source = Source.of<string, {}, typeof ERR>(({ next, error }) => ({
       pull() {
         spyOne()
         next('next')
@@ -257,11 +257,11 @@ describe('createSource', () => {
   })
 })
 
-describe('createSink', () => {
+describe('Sink', () => {
   it('...', done => {
     const spy = sinonSpy()
 
-    const drain = createSink(({ complete, error }) => ({
+    const drain = Sink.of(({ complete, error }) => ({
       next(next) {
         spy()
         assert(isNumber(next))
@@ -283,11 +283,11 @@ describe('createSink', () => {
     valve()(fromIterable([1, 2, 3, 4]), drain).schedule()
   })
 
-  it('createSink complete', done => {
+  it('Sink complete', done => {
     const spy = sinonSpy()
     let c = 100
 
-    const drain = createSink((_, { complete }) => ({
+    const drain = Sink.of((_, { complete }) => ({
       next(next) {
         spy()
 
@@ -305,12 +305,12 @@ describe('createSink', () => {
     valve()(infinite(), drain).schedule()
   })
 
-  it('createSink error', done => {
+  it('Sink error', done => {
     const spy = sinonSpy()
     const ERR = new Error('Error')
     let c = 100
 
-    const drain = createSink((_, { error }) => ({
+    const drain = Sink.of((_, { error }) => ({
       next(value) {
         spy()
 
@@ -330,11 +330,11 @@ describe('createSink', () => {
     valve()(infinite(), drain).schedule()
   })
 
-  it('delayed createSink complete', done => {
+  it('delayed Sink complete', done => {
     const spy = sinonSpy()
     let c = 100
 
-    const drain = createSink((_, { complete }) => ({
+    const drain = Sink.of((_, { complete }) => ({
       next(next) {
         spy()
 
@@ -352,7 +352,7 @@ describe('createSink', () => {
     valve()(infinite(), delay(), drain).schedule()
   })
 
-  it('delayed createSink error', done => {
+  it('delayed Sink error', done => {
     const spy = sinonSpy()
     const ERR = new Error('Error')
     let c = 100
@@ -360,7 +360,7 @@ describe('createSink', () => {
     valve()(
       infinite(),
       delay(),
-      createSink((_, { error }) => ({
+      Sink.of((_, { error }) => ({
         next(next) {
           spy()
 
@@ -379,10 +379,10 @@ describe('createSink', () => {
     ).schedule()
   })
 
-  // it('createSink instant complete', done => {
+  // it('Sink instant complete', done => {
   //   const spy = sinonSpy()
   //
-  //   const drain = createSink(() => ({
+  //   const drain = Sink(() => ({
   //     next() {
   //       spy()
   //     },
@@ -397,11 +397,11 @@ describe('createSink', () => {
   //   valve(infinite(), drain)
   // })
   //
-  // it('createSink instant error', done => {
+  // it('Sink instant error', done => {
   //   const spy = sinonSpy()
   //   const err = new Error('Error')
   //
-  //   const drain = createSink({
+  //   const drain = Sink({
   //     next() {
   //       spy()
   //     },
@@ -418,10 +418,10 @@ describe('createSink', () => {
   //   valve(infinite(), drain)
   // })
 
-  it('createSink empty source', done => {
+  it('Sink empty source', done => {
     const spy = sinonSpy()
 
-    const drain = createSink(() => ({
+    const drain = Sink.of(() => ({
       next() {
         spy()
       },
@@ -434,13 +434,13 @@ describe('createSink', () => {
     valve()(empty(), drain).schedule()
   })
 
-  it('createSink source error', done => {
+  it('Sink source error', done => {
     const spy = sinonSpy()
     const ERR = new Error('Error')
 
     valve<typeof ERR>()(
       error(ERR),
-      createSink(() => ({
+      Sink.of(() => ({
         next() {
           spy()
         },
@@ -453,18 +453,18 @@ describe('createSink', () => {
     ).schedule()
   })
 
-  it('createSink deaults', () => {
-    const drain = createSink()
+  it('Sink deaults', () => {
+    const drain = Sink.of()
 
     valve()(empty(), drain).schedule()
   })
 })
 
-describe('createSource', () => {
+describe('Source', () => {
   it('...', done => {
     // const spy = sinonSpy()
 
-    const stream = valve()(count(5), createThrough(), collect())
+    const stream = valve()(count(5), Through.of(), collect())
 
     stream.subscribe({
       next(next) {
@@ -484,7 +484,7 @@ describe('createSource', () => {
 
     const stream = valve()(
       count(5),
-      createThrough(({ next, complete }) => ({
+      Through.of(({ next, complete }) => ({
         next(n) {
           spy()
           assert(isNumber(n))
@@ -523,7 +523,7 @@ describe('createSource', () => {
 
     const stream = valve<typeof ERR>()(
       error(ERR),
-      createThrough(({ next, error }) => ({
+      Through.of(({ next, error }) => ({
         next(n) {
           spy()
           assert(isFunction(next))
@@ -561,7 +561,7 @@ describe('createSource', () => {
 
     const stream = valve()(
       count(5),
-      createThrough(
+      Through.of(
         ({ next, complete }) => ({
           next(n) {
             spyData()
@@ -616,7 +616,7 @@ describe('createSource', () => {
 
     const stream = valve<typeof ERR>()(
       error(ERR),
-      createThrough(
+      Through.of(
         ({ next, error }) => ({
           next(n) {
             spyData()
@@ -665,7 +665,7 @@ describe('createSource', () => {
 
 describe('complete-stalled', () => {
   it('through', done => {
-    test(createThrough(), done)
+    test(Through.of(), done)
   })
 
   it('map', done => {

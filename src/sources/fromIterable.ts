@@ -1,7 +1,7 @@
 import { ValveError, ValveSourceFactory } from '../types'
 
 import { createIterator } from '../internal/iterall'
-import { createSource } from '../internal/createSource'
+import { Source } from '../internal/Source'
 
 function iterate<P, E>(
   iterator: Iterator<P>
@@ -31,7 +31,7 @@ export function fromIterable<P, E extends ValveError = ValveError>(
   const iterator = createIterator(iterable)
 
   if (safe === true) {
-    return createSource<P, {}, E>(({ complete, next }) => ({
+    return Source.of<P, {}, E>(({ complete, next }) => ({
       pull() {
         const { value, done } = iterator.next()
 
@@ -43,7 +43,7 @@ export function fromIterable<P, E extends ValveError = ValveError>(
       }
     }))
   } else {
-    return createSource<P, {}, E>(({ complete, next, error }) => ({
+    return Source.of<P, {}, E>(({ complete, next, error }) => ({
       pull() {
         const result = iterate<P, E>(iterator)
 

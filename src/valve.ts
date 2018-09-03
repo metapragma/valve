@@ -14,7 +14,29 @@ import {
   ValveType
 } from './types'
 
+import { Source } from './internal/Source'
+
+import { Through } from './internal/Through'
+
+import { Sink } from './internal/Sink'
+
 import { map, reduceRight } from 'lodash'
+
+const composition = (f: ValveType, l: ValveType): ValveType | null => {
+  if (f === ValveType.Source) {
+    if (l === ValveType.Sink) {
+      return ValveType.Stream
+    } else {
+      return ValveType.Source
+    }
+  } else if (l === ValveType.Sink) {
+    return ValveType.Sink
+  } else if (l === ValveType.Through) {
+    return ValveType.Through
+  }
+
+  return null
+}
 
 const _compose = (fns: any[]) =>
   reduceRight(fns, (f, g) => (...args: any[]) => f(g(...args)))
@@ -2245,63 +2267,37 @@ export function valve<ERR = ValveError>() {
     const first = props[0]
     const last = props[props.length - 1]
 
-    // if (props.length === 1) {
-    //   return
-    // } else
-    if (first.type === ValveType.Source) {
-      // last is a sink, or a through
-      // source -> sink = void
-      // source -> through = source
-      // source -> source = never
-      props.shift()
-
-      if (last.type === ValveType.Sink) {
-        // source -> sink = trap
+    switch (composition(first.type, last.type)) {
+      case ValveType.Stream: {
+        props.shift()
 
         return _compose(map(props, f => f.pipe(/* configuration */)))(
           first.pipe(/* configuration */)
         )
-      } else {
-        // TODO: source -> through = source
-
-        return {
-          pipe(/* configuration */) {
-            return _compose(map(props, f => f.pipe(/* configuration */)))(
-              first.pipe(/* configuration */)
-            )
-          },
-          type: ValveType.Source
-        }
       }
-    } else {
-      // first is a sink, or a through
-      // sink -> through = never
-      // sink -> sink = never
-      // through -> sink = sink
-      // through -> through = through
 
-      if (last.type === ValveType.Sink) {
-        // TODO: through -> sink = sink
+      case ValveType.Source: {
+        props.shift()
 
-        return {
-          pipe() {
-            return /* configuration */ _compose(
-              map(props, f => f.pipe(/* configuration */))
-            )
-          },
-          type: last.type
-        }
-      } else {
-        // through -> through = through
+        return new Source(
+          _compose(map(props, f => f.pipe(/* configuration */)))(
+            first.pipe(/* configuration */)
+          )
+        )
+      }
 
-        return {
-          pipe() {
-            return /* configuration */ _compose(
-              map(props, f => f.pipe(/* configuration */))
-            )
-          },
-          type: ValveType.Through
-        }
+      case ValveType.Sink: {
+        return new Sink(_compose(map(props, f => f.pipe(/* configuration */))))
+      }
+
+      case ValveType.Through: {
+        return new Through(
+          _compose(map(props, f => f.pipe(/* configuration */)))
+        )
+      }
+
+      default: {
+        throw new Error('Invalid')
       }
     }
   }

@@ -141,8 +141,8 @@ class Dispatcher<T, E> {
   }
 }
 
-const createSinkPipeline = <T, R, E>(
-  handler: ValveHandlerNextNext<T, R, E>
+export const sinkPipeline = <T, R, E>(
+  handler?: ValveHandlerNextNext<T, R, E>
 ): ValveSink<T, R, E> => {
   const { observer, observable } = observableFactory<R, E>()
   const normalize = normalizeNextNext(handler, observer)
@@ -159,18 +159,24 @@ const createSinkPipeline = <T, R, E>(
   }
 }
 
-export const createSink = <
-  T,
-  R,
-  S = ValveState,
-  E extends ValveError = ValveError
->(
-  handler: ValveHandlerNextNext<T, R, E> = () => ({})
-): ValveSinkFactory<T, R, S, E> => {
-  return {
-    pipe() {
-      return createSinkPipeline(handler)
-    },
-    type: ValveType.Sink
+export class Sink<T, R, S = ValveState, E extends ValveError = ValveError>
+  implements ValveSinkFactory<T, R, S, E> {
+  public type: ValveType.Sink = ValveType.Sink
+
+  private value: ValveSink<T, R, E>
+
+  // tslint:disable-next-line function-name
+  public static of<_T, _R, _S = ValveState, _E extends ValveError = ValveError>(
+    handler?: ValveHandlerNextNext<_T, _R, _E>
+  ) {
+    return new Sink<_T, _R, _S, _E>(sinkPipeline(handler))
+  }
+
+  constructor(value: ValveSink<T, R, E>) {
+    this.value = value
+  }
+
+  public pipe(_?: S) {
+    return this.value
   }
 }

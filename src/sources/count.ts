@@ -1,13 +1,13 @@
 import { ValveError, ValveSourceFactory } from '../types'
 
-import { createSource } from '../internal/createSource'
+import { Source } from '../internal/Source'
 
 export function count<E extends ValveError = ValveError>(
   max = Infinity
 ): ValveSourceFactory<number, {}, E> {
   let i = 0
 
-  return createSource<number, {}, E>(({ complete, next }) => ({
+  return Source.of<number, {}, E>(({ complete, next }) => ({
     pull() {
       if (i >= max) {
         complete()
