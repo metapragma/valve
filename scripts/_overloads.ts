@@ -18,7 +18,7 @@ import {
 
 const options = {
   functionName: 'compose',
-  number: 16,
+  number: 3,
   extra: 'E extends ERR',
   extraArgument: 'E'
 }

@@ -2,13 +2,13 @@
  * no-object-literal-type-assertion */
 
 import {
+  Stream,
   ValveCompositeSink,
   ValveCompositeSource,
   ValveCompositeThrough,
   ValveError,
   ValveSinkFactory,
   ValveSourceFactory,
-  ValveStream,
   ValveThroughFactory,
   ValveType
 } from './types'
@@ -20,22 +20,7 @@ import { Through } from './internal/Through'
 import { Sink } from './internal/Sink'
 
 import { map, reduceRight } from 'lodash'
-
-const composition = (f: ValveType, l: ValveType): ValveType | null => {
-  if (f === ValveType.Source) {
-    if (l === ValveType.Sink) {
-      return ValveType.Stream
-    } else {
-      return ValveType.Source
-    }
-  } else if (l === ValveType.Sink) {
-    return ValveType.Sink
-  } else if (l === ValveType.Through) {
-    return ValveType.Through
-  }
-
-  return null
-}
+import { composition } from './internal/composition'
 
 const _compose = (fns: any[]) =>
   reduceRight(fns, (f, g) => (...args: any[]) => f(g(...args)))
@@ -47,25 +32,25 @@ export function valve<ERR = ValveError>() {
   function compose<P1, P2, E extends ERR>(
     A1: ValveCompositeSource<P1, E>,
     A2: ValveCompositeSink<P1, P2, E>
-  ): ValveStream<P2, E>
+  ): Stream<P2, E>
   function compose<P1, P2, P3, E extends ERR>(
     A1: ValveCompositeSource<P1, E>,
     A2: ValveCompositeThrough<P1, P2, E>,
     A3: ValveCompositeSink<P2, P3, E>
-  ): ValveStream<P3, E>
+  ): Stream<P3, E>
   function compose<P1, P2, P3, P4, E extends ERR>(
     A1: ValveCompositeSource<P1, E>,
     A2: ValveCompositeThrough<P1, P2, E>,
     A3: ValveCompositeThrough<P2, P3, E>,
     A4: ValveCompositeSink<P3, P4, E>
-  ): ValveStream<P4, E>
+  ): Stream<P4, E>
   function compose<P1, P2, P3, P4, P5, E extends ERR>(
     A1: ValveCompositeSource<P1, E>,
     A2: ValveCompositeThrough<P1, P2, E>,
     A3: ValveCompositeThrough<P2, P3, E>,
     A4: ValveCompositeThrough<P3, P4, E>,
     A5: ValveCompositeSink<P4, P5, E>
-  ): ValveStream<P5, E>
+  ): Stream<P5, E>
   function compose<P1, P2, P3, P4, P5, P6, E extends ERR>(
     A1: ValveCompositeSource<P1, E>,
     A2: ValveCompositeThrough<P1, P2, E>,
@@ -73,7 +58,7 @@ export function valve<ERR = ValveError>() {
     A4: ValveCompositeThrough<P3, P4, E>,
     A5: ValveCompositeThrough<P4, P5, E>,
     A6: ValveCompositeSink<P5, P6, E>
-  ): ValveStream<P6, E>
+  ): Stream<P6, E>
   function compose<P1, P2, P3, P4, P5, P6, P7, E extends ERR>(
     A1: ValveCompositeSource<P1, E>,
     A2: ValveCompositeThrough<P1, P2, E>,
@@ -82,7 +67,7 @@ export function valve<ERR = ValveError>() {
     A5: ValveCompositeThrough<P4, P5, E>,
     A6: ValveCompositeThrough<P5, P6, E>,
     A7: ValveCompositeSink<P6, P7, E>
-  ): ValveStream<P7, E>
+  ): Stream<P7, E>
   function compose<P1, P2, P3, P4, P5, P6, P7, P8, E extends ERR>(
     A1: ValveCompositeSource<P1, E>,
     A2: ValveCompositeThrough<P1, P2, E>,
@@ -92,7 +77,7 @@ export function valve<ERR = ValveError>() {
     A6: ValveCompositeThrough<P5, P6, E>,
     A7: ValveCompositeThrough<P6, P7, E>,
     A8: ValveCompositeSink<P7, P8, E>
-  ): ValveStream<P8, E>
+  ): Stream<P8, E>
   function compose<P1, P2, P3, P4, P5, P6, P7, P8, P9, E extends ERR>(
     A1: ValveCompositeSource<P1, E>,
     A2: ValveCompositeThrough<P1, P2, E>,
@@ -103,7 +88,7 @@ export function valve<ERR = ValveError>() {
     A7: ValveCompositeThrough<P6, P7, E>,
     A8: ValveCompositeThrough<P7, P8, E>,
     A9: ValveCompositeSink<P8, P9, E>
-  ): ValveStream<P9, E>
+  ): Stream<P9, E>
   function compose<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, E extends ERR>(
     A1: ValveCompositeSource<P1, E>,
     A2: ValveCompositeThrough<P1, P2, E>,
@@ -115,7 +100,7 @@ export function valve<ERR = ValveError>() {
     A8: ValveCompositeThrough<P7, P8, E>,
     A9: ValveCompositeThrough<P8, P9, E>,
     A10: ValveCompositeSink<P9, P10, E>
-  ): ValveStream<P10, E>
+  ): Stream<P10, E>
   function compose<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, E extends ERR>(
     A1: ValveCompositeSource<P1, E>,
     A2: ValveCompositeThrough<P1, P2, E>,
@@ -128,7 +113,7 @@ export function valve<ERR = ValveError>() {
     A9: ValveCompositeThrough<P8, P9, E>,
     A10: ValveCompositeThrough<P9, P10, E>,
     A11: ValveCompositeSink<P10, P11, E>
-  ): ValveStream<P11, E>
+  ): Stream<P11, E>
   function compose<
     P1,
     P2,
@@ -156,7 +141,7 @@ export function valve<ERR = ValveError>() {
     A10: ValveCompositeThrough<P9, P10, E>,
     A11: ValveCompositeThrough<P10, P11, E>,
     A12: ValveCompositeSink<P11, P12, E>
-  ): ValveStream<P12, E>
+  ): Stream<P12, E>
   function compose<
     P1,
     P2,
@@ -186,7 +171,7 @@ export function valve<ERR = ValveError>() {
     A11: ValveCompositeThrough<P10, P11, E>,
     A12: ValveCompositeThrough<P11, P12, E>,
     A13: ValveCompositeSink<P12, P13, E>
-  ): ValveStream<P13, E>
+  ): Stream<P13, E>
   function compose<
     P1,
     P2,
@@ -218,7 +203,7 @@ export function valve<ERR = ValveError>() {
     A12: ValveCompositeThrough<P11, P12, E>,
     A13: ValveCompositeThrough<P12, P13, E>,
     A14: ValveCompositeSink<P13, P14, E>
-  ): ValveStream<P14, E>
+  ): Stream<P14, E>
   function compose<
     P1,
     P2,
@@ -252,7 +237,7 @@ export function valve<ERR = ValveError>() {
     A13: ValveCompositeThrough<P12, P13, E>,
     A14: ValveCompositeThrough<P13, P14, E>,
     A15: ValveCompositeSink<P14, P15, E>
-  ): ValveStream<P15, E>
+  ): Stream<P15, E>
   function compose<
     P1,
     P2,
@@ -288,7 +273,7 @@ export function valve<ERR = ValveError>() {
     A14: ValveCompositeThrough<P13, P14, E>,
     A15: ValveCompositeThrough<P14, P15, E>,
     A16: ValveCompositeSink<P15, P16, E>
-  ): ValveStream<P16, E>
+  ): Stream<P16, E>
   function compose<
     P1,
     P2,
@@ -326,7 +311,7 @@ export function valve<ERR = ValveError>() {
     A15: ValveCompositeThrough<P14, P15, E>,
     A16: ValveCompositeThrough<P15, P16, E>,
     A17: ValveCompositeSink<P16, P17, E>
-  ): ValveStream<P17, E>
+  ): Stream<P17, E>
 
   /* Source -> Through ... */
 
@@ -1200,7 +1185,7 @@ export function valve<ERR = ValveError>() {
       | ValveCompositeThrough<any, any, any>
     >
   ):
-    | ValveStream<any, any>
+    | Stream<any, any>
     | ValveSourceFactory<any, any>
     | ValveSinkFactory<any, any, any>
     | ValveThroughFactory<any, any, any> {

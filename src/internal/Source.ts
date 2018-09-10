@@ -1,4 +1,7 @@
+/* tslint:disable no-circular-imports */
+
 import {
+  Stream,
   ValveError,
   ValveHandlerNoopPull,
   ValveSource,
@@ -8,6 +11,9 @@ import {
 
 import { normalizeNoopPull, sourceActionsFactory } from './interface'
 import { sourceOperator } from './operator'
+import { Through } from './Through'
+import { Sink } from './Sink'
+
 // import { Functor } from '../../tmp/hkts/static-land'
 
 // export interface Morphism<A, B> {
@@ -46,7 +52,25 @@ export class Source<T, E extends ValveError = ValveError>
     return this.value
   }
 
-  // public map <_R>(fn: (value: ValveSource<T, E>) => ValveSource<_R, E>)) {
-  //   return
-  // }
+  public map<_R>(
+    fn: (value: ValveSource<T, E>) => ValveSource<_R, E>
+  ): Source<_R, E> {
+    return Source.of(fn(this.value))
+  }
+
+  public ap<_X>(value: Sink<T, _X, E>): Stream<_X, E>
+  public ap<_X>(value: Through<T, _X, E>): Source<_X, E>
+  public ap<_X>(
+    value: Through<T, _X, E> | Sink<T, _X, E>
+  ): Source<_X, E> | Stream<_X, E> {
+    switch (value.type) {
+      case ValveType.Through: {
+        return value.ap(this)
+      }
+
+      case ValveType.Sink: {
+        return value.pipe()(this.pipe())
+      }
+    }
+  }
 }

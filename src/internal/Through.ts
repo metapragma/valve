@@ -1,4 +1,4 @@
-/* tslint:disable no-any */
+/* tslint:disable no-circular-imports */
 
 import {
   ValveCallback,
@@ -18,6 +18,9 @@ import {
   sinkActionFactory,
   sourceActionsFactory
 } from './interface'
+
+import { Source } from './Source'
+import { Sink } from './Sink'
 
 import { sinkOperator, sourceOperator } from './operator'
 
@@ -44,7 +47,7 @@ const sinkMiddlewareFactory = <T, R, E>(
     return middleware(source(operator))
   }
 
-  return middleware(source(cb as any))
+  return middleware(source(cb as ValveCallback<T, E, ValveSourceMessage>))
 }
 
 export class Through<T, R = T, E extends ValveError = ValveError>
@@ -81,5 +84,40 @@ export class Through<T, R = T, E extends ValveError = ValveError>
 
   public pipe() {
     return this.value
+  }
+
+  public map<_T, _R>(
+    fn: (value: ValveThrough<T, R, E>) => ValveThrough<_T, _R, E>
+  ): Through<_T, _R, E> {
+    return Through.of(fn(this.value))
+  }
+
+  public concat<_R>(value: Through<R, _R, E>): Through<T, _R, E> {
+    return value.map<T, _R>(x => cb => x(this.value(cb)))
+  }
+
+  // public concatLeft<_T>(value: Through<_T, T, E>): Through<_T, R, E> {
+  //   return value.map<_T, R>(x => cb => this.value(x(cb)))
+  // }
+
+  public ap(value: Source<T, E>): Source<R, E>
+  // public ap<_X>(value: Through<_X, T, E>): Through<_X, R, E>
+  public ap<_X>(value: Sink<R, _X, E>): Sink<T, _X, E>
+  public ap<_X>(
+    value: /* Through<_X, T, E> | */ Source<T, E> | Sink<R, _X, E>
+  ): /* Through<_X, R, E> | */ Source<R, E> | Sink<T, _X, E> {
+    switch (value.type) {
+      case ValveType.Source: {
+        return value.map(this.value)
+      }
+
+      // case ValveType.Through: {
+      //   return this.concatLeft(value)
+      // }
+
+      case ValveType.Sink: {
+        return value.map<T, _X>(sink => cb => sink(this.value(cb)))
+      }
+    }
   }
 }

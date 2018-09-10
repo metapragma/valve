@@ -93,13 +93,12 @@ export type ValveCallback<P, E, SA = ValveSinkMessage> = (
     : SA extends ValveMessageType.Error ? E : undefined
 ) => void
 
-export interface ValvePrimitiveStream<R, E> extends Observable<R, E> {
+export interface Stream<R, E> extends Observable<R, E> {
+  type: ValveType.Stream
   schedule(scheduler?: (tick: () => boolean) => void): void
 }
 
-export type ValveSink<P, R, E> = (
-  source: ValveSource<P, E>
-) => ValvePrimitiveStream<R, E>
+export type ValveSink<P, R, E> = (source: ValveSource<P, E>) => Stream<R, E>
 
 export type ValveSource<
   P,
@@ -143,12 +142,12 @@ export type ValveCompositeThrough<P, R, E> = ValveThroughFactory<P, R, E>
 //   type:
 // }
 
-export interface ValveStream<R, E> extends ValvePrimitiveStream<R, E> {}
+// export interface ValveStream<R, E> extends ValveStream<R, E> {}
 
 // TODO: composable instrumentation
-export type ValveScheduler = <R, E>(
-  stream: ValveStream<R, E>
-) => Observable<R, E>
+// export type ValveScheduler = <R, E>(
+//   stream: ValveStream<R, E>
+// ) => Observable<R, E>
 
 // export type ValveStateComposite<A> = A
 // // tslint:disable-next-line no-any
