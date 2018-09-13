@@ -11,8 +11,8 @@ const array = range(random(100, 150))
 
 const stream = pull(
   pull.values(array),
-  pull.reduce((x, y) => x + y, 0, (_, i) => {
-    console.log(i)
-    console.log('completed')
-  })
+  pull.unique()
 )
+
+console.log(stream)
+console.log('completed')

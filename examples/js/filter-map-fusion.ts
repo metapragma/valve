@@ -1,11 +1,6 @@
 /* tslint:disable no-console */
 
-import {
-  random,
-  range
-} from 'lodash'
-
-const array = range(random(90, 110))
+import array from '../smallArray'
 
 console.log(
   array.map(x => x + 1).filter(x => x % 2 !== 0).map(i => i + 1)

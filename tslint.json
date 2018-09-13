@@ -8,6 +8,7 @@
     "mocha-avoid-only": false,
     "mocha-no-side-effect-code": false,
     "mocha-unneeded-done": false,
-    "no-invalid-this": false
+    "no-invalid-this": false,
+    "ordered-imports": false
   }
 }
